@@ -1,57 +1,19 @@
-import { useState, useEffect } from 'react'
+import React from 'react'
+import Header from '@/components/Header'
 
-function App() {
-  const [groups, setGroups] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    async function fetchGroups() {
-      try {
-        const response = await fetch('https://groops.fun/groups', {
-          headers: {
-            'Accept': 'application/json'
-          }
-        })
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch groups')
-        }
-        
-        const data = await response.json()
-        setGroups(data)
-        setLoading(false)
-      } catch (err) {
-        setError(err.message)
-        setLoading(false)
-      }
-    }
-
-    fetchGroups()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-amber-300">Loading...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-red-500">Error: {error}</p>
-      </div>
-    )
-  }
-
+const App = () => {
   return (
-    <div className="flex flex-col items-center p-4">
-      <h2 className="text-amber-300 font-bold text-3xl mb-6">Groops Data</h2>
-      <pre className="text-amber-300 text-sm overflow-auto max-w-full">
-        {JSON.stringify(groups, null, 2)}
-      </pre>
+    <div className="min-h-screen" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
+      <Header />
+      
+      <main className="p-8">
+        <h1 className="text-4xl font-bold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
+          Welcome to Groops
+        </h1>
+        <p className="text-lg" style={{ color: 'rgb(238, 238, 238)' }}>
+          Find and connect with people in your area.
+        </p>
+      </main>
     </div>
   )
 }
