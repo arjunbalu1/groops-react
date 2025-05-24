@@ -72,11 +72,11 @@ const LocationSearch = () => {
     setIsLoading(true)
     
     try {
-      // Try IP detection first (fast)
-      console.log('Detecting location using ip-api.com...')
+      // Try IP detection first (fast) - using ipapi.co direct JSON endpoint
+      console.log('Detecting location using ipapi.co/json/...')
       setPlaceholder('Detecting location...')
       
-      const response = await fetch('http://ip-api.com/json/', {
+      const response = await fetch('https://ipapi.co/json/', {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -90,9 +90,14 @@ const LocationSearch = () => {
       const data = await response.json()
       console.log('IP location data received:', data)
       
+      // Check for error response from ipapi.co
+      if (data.error) {
+        throw new Error(data.reason || 'IP detection failed')
+      }
+      
       // If IP detection successful, use it and try GPS for better precision
-      if (data.status === 'success' && data.city && data.regionName) {
-        const ipLocation = `${data.city}, ${data.regionName}`
+      if (data.city && data.region) {
+        const ipLocation = `${data.city}, ${data.region}`
         console.log('IP location detected:', ipLocation)
         setLocation(ipLocation)
         setPlaceholder(ipLocation)
@@ -109,7 +114,7 @@ const LocationSearch = () => {
           // Keep the IP location if GPS fails
         }
       } else {
-        throw new Error('IP detection failed')
+        throw new Error('IP detection returned incomplete data')
       }
     } catch (ipError) {
       console.error('IP location detection failed:', ipError)
@@ -133,7 +138,7 @@ const LocationSearch = () => {
 
   useEffect(() => {
     detectLocation()
-  }, [])
+  }, [detectLocation])
 
   return (
     <div className="flex items-center space-x-2">
@@ -170,3 +175,4 @@ const LocationSearch = () => {
 }
 
 export default LocationSearch
+ 
