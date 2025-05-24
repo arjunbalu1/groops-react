@@ -1,6 +1,7 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import LocationSearch from './LocationSearch'
+import logoTransparent from '@/assets/logo-transparent.png'
 
 const Header = () => {
   return (
@@ -19,7 +20,7 @@ const Header = () => {
             {/* Logo */}
             <div className="flex-shrink-0">
               <img 
-                src="/logo-transparent.png" 
+                src={logoTransparent} 
                 alt="Groops" 
                 className="h-30"
                 style={{
