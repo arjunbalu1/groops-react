@@ -15,24 +15,44 @@ export const AuthProvider = ({ children }) => {
       console.log('🔍 Checking auth status via API call...')
       console.log('🌍 Using API base URL:', API_BASE_URL)
       
-      // Make authenticated request to backend
+      // Make authenticated request to new auth/me endpoint
       // The browser will automatically include HttpOnly cookies
-      const response = await fetch(`${API_BASE_URL}/dashboard`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
         method: 'GET',
-        credentials: 'include', // Re-enabled for proper authentication
+        credentials: 'include',
         headers: {
-          'Accept': 'text/html',
+          'Accept': 'application/json',
         },
       })
 
       if (response.ok) {
-        // If we get a successful response, user is authenticated
-        console.log('✅ User is authenticated')
-        setUser({ isAuthenticated: true })
+        // If we get a successful response, user is authenticated with full profile
+        const profileData = await response.json()
+        console.log('✅ User is authenticated with profile:', profileData)
+        setUser(profileData)
       } else if (response.status === 401) {
-        // 401 = Unauthorized, user not authenticated
-        console.log('❌ User not authenticated (401)')
-        setUser(null)
+        // 401 = Unauthorized - could be not authenticated or incomplete profile
+        console.log('🔍 Got 401 response, parsing error data...')
+        try {
+          const errorData = await response.json()
+          console.log('📄 Full 401 Response data:', errorData)
+          console.log('🔎 needsProfile check:', errorData.needsProfile, typeof errorData.needsProfile)
+          if (errorData.needsProfile) {
+            console.log('⚠️ User authenticated but needs to complete profile')
+            // Set user with needsProfile flag for UI handling
+            setUser({ 
+              authenticated: true,
+              needsProfile: true 
+            })
+          } else {
+            console.log('❌ User not authenticated (401)')
+            setUser(null)
+          }
+        } catch (parseError) {
+          // If we can't parse error response, assume not authenticated
+          console.log('❌ Failed to parse 401 response:', parseError)
+          setUser(null)
+        }
       } else {
         // Other errors - might be network issues
         console.log('⚠️ Auth check failed:', response.status)

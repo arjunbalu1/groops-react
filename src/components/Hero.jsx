@@ -1,6 +1,36 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 const Hero = () => {
+  const [stats, setStats] = useState({
+    activeUsers: '...',
+    groups: '...'
+  })
+
+  // Get API base URL from environment variables
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://groops.fun'
+
+  // Fetch real stats from stats API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/stats`)
+        if (response.ok) {
+          const data = await response.json()
+          
+          setStats({
+            activeUsers: data.users.toLocaleString(),
+            groups: data.groups.toLocaleString()
+          })
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error)
+        // Keep loading indicators on error
+      }
+    }
+
+    fetchStats()
+  }, [API_BASE_URL])
+
   return (
     <>
       {/* Custom CSS for animations */}
@@ -106,13 +136,13 @@ const Hero = () => {
                     className="text-2xl font-bold"
                     style={{ color: 'rgb(0, 173, 181)' }}
                   >
-                    10K+
+                    {stats.activeUsers}
                   </div>
                   <div 
                     className="text-sm"
                     style={{ color: 'rgb(156, 163, 175)' }}
                   >
-                    Active Users
+                    Users
                   </div>
                 </div>
                 <div className="text-center">
@@ -120,27 +150,13 @@ const Hero = () => {
                     className="text-2xl font-bold"
                     style={{ color: 'rgb(0, 173, 181)' }}
                   >
-                    500+
+                    {stats.groups}
                   </div>
                   <div 
                     className="text-sm"
                     style={{ color: 'rgb(156, 163, 175)' }}
                   >
-                    Communities
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div 
-                    className="text-2xl font-bold"
-                    style={{ color: 'rgb(0, 173, 181)' }}
-                  >
-                    50+
-                  </div>
-                  <div 
-                    className="text-sm"
-                    style={{ color: 'rgb(156, 163, 175)' }}
-                  >
-                    Cities
+                    Groops
                   </div>
                 </div>
               </div>

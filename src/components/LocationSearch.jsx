@@ -157,6 +157,7 @@ const LocationSearch = () => {
             backgroundColor: 'rgb(15, 20, 25)',
             color: 'rgb(238, 238, 238)',
             border: '1px solid rgb(0, 173, 181)',
+            boxShadow: '0 0 12px rgba(0, 173, 181, 0.4)',
           }}
         />
       </div>
