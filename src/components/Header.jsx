@@ -74,7 +74,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           
           {/* Left side: Logo and Location */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
             {/* Logo */}
             <div className="flex-shrink-0">
               <img 

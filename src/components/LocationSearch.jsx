@@ -7,6 +7,22 @@ const LocationSearch = () => {
   const [placeholder, setPlaceholder] = useState('Detecting location...')
   const [isLoading, setIsLoading] = useState(false)
 
+  // Get mobile-friendly placeholder text
+  const getMobilePlaceholder = (text) => {
+    const isMobile = window.innerWidth < 640 // sm breakpoint
+    if (!isMobile) return text
+    
+    // Shorter placeholders for mobile
+    const mobileMap = {
+      'Detecting location...': 'Detecting...',
+      'Getting precise location...': 'Getting GPS...',
+      'Getting GPS location...': 'Getting GPS...',
+      'Enter location...': 'Location...'
+    }
+    
+    return mobileMap[text] || (text.length > 12 ? text.substring(0, 10) + '...' : text)
+  }
+
   // Automatically get GPS location
   const getGPSLocation = async () => {
     return new Promise((resolve, reject) => {
@@ -74,7 +90,7 @@ const LocationSearch = () => {
     try {
       // Try IP detection first (fast) - using ipapi.co direct JSON endpoint
       console.log('Detecting location using ipapi.co/json/...')
-      setPlaceholder('Detecting location...')
+      setPlaceholder(getMobilePlaceholder('Detecting location...'))
       
       const response = await fetch('https://ipapi.co/json/', {
         method: 'GET',
@@ -100,15 +116,15 @@ const LocationSearch = () => {
         const ipLocation = `${data.city}, ${data.region}`
         console.log('IP location detected:', ipLocation)
         setLocation(ipLocation)
-        setPlaceholder(ipLocation)
+        setPlaceholder(getMobilePlaceholder(ipLocation))
         
         // Try GPS for better precision in the background
         try {
-          setPlaceholder('Getting precise location...')
+          setPlaceholder(getMobilePlaceholder('Getting precise location...'))
           const gpsLocation = await getGPSLocation()
           console.log('GPS improved location:', gpsLocation)
           setLocation(gpsLocation)
-          setPlaceholder(gpsLocation)
+          setPlaceholder(getMobilePlaceholder(gpsLocation))
         } catch (gpsError) {
           console.log('GPS failed, keeping IP location:', gpsError.message)
           // Keep the IP location if GPS fails
@@ -122,14 +138,14 @@ const LocationSearch = () => {
       // If IP fails, try GPS as fallback
       try {
         console.log('Trying GPS as fallback...')
-        setPlaceholder('Getting GPS location...')
+        setPlaceholder(getMobilePlaceholder('Getting GPS location...'))
         const gpsLocation = await getGPSLocation()
         console.log('GPS fallback location:', gpsLocation)
         setLocation(gpsLocation)
-        setPlaceholder(gpsLocation)
+        setPlaceholder(getMobilePlaceholder(gpsLocation))
       } catch (gpsError) {
         console.error('All location detection failed:', gpsError)
-        setPlaceholder('Enter location...')
+        setPlaceholder(getMobilePlaceholder('Enter location...'))
       }
     } finally {
       setIsLoading(false)
@@ -151,8 +167,8 @@ const LocationSearch = () => {
         <Input 
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          placeholder={placeholder}
-          className="w-64 h-8 pl-10 pr-3 text-sm"
+          placeholder={getMobilePlaceholder(placeholder)}
+          className="h-8 pl-10 pr-3 w-32 sm:w-48 md:w-56 lg:w-64 text-xs sm:text-sm"
           style={{ 
             backgroundColor: 'rgb(15, 20, 25)',
             color: 'rgb(238, 238, 238)',
