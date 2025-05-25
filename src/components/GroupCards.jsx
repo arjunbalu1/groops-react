@@ -10,7 +10,7 @@ const GroupCards = () => {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://groops.fun'
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
   const GROUPS_PER_PAGE = 6
 
   // Fetch member profile data including avatar URLs

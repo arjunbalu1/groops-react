@@ -7,7 +7,7 @@ const Hero = () => {
   })
 
   // Get API base URL from environment variables
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://groops.fun'
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
 
   // Fetch real stats from stats API
   useEffect(() => {

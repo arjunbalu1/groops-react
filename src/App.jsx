@@ -1,17 +1,32 @@
 import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from '@/components/Header'
-import Hero from '@/components/Hero'
-import GroupCards from '@/components/GroupCards'
+import HomePage from '@/components/HomePage'
+import CreateProfile from '@/components/CreateProfile'
 import { AuthProvider } from '@/context/AuthContext'
 
 const App = () => {
   return (
     <AuthProvider>
-      <div className="min-h-screen" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
-        <Header />
-        <Hero />
-        <GroupCards />
-      </div>
+      <Router>
+        <div className="min-h-screen" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                <>
+                  <Header />
+                  <HomePage />
+                </>
+              } 
+            />
+            <Route 
+              path="/create-profile" 
+              element={<CreateProfile />} 
+            />
+          </Routes>
+        </div>
+      </Router>
     </AuthProvider>
   )
 }

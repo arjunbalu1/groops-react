@@ -1,4 +1,5 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { LogIn, Settings, LogOut } from 'lucide-react'
 import LocationSearch from './LocationSearch'
@@ -7,11 +8,12 @@ import { useAuth } from '@/hooks/useAuth'
 
 const Header = () => {
   const { user, isLoading, signIn, signOut } = useAuth()
+  const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
 
   // Get API base URL for image proxy
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://groops.fun'
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -197,8 +199,7 @@ const Header = () => {
                             }}
                             onClick={() => {
                               setDropdownOpen(false)
-                              // TODO: Navigate to profile creation
-                              console.log('Navigate to create profile')
+                              navigate('/create-profile')
                             }}
                           >
                             <div className="text-sm font-medium">Create Profile</div>

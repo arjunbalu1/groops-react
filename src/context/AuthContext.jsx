@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect } from 'react'
 export const AuthContext = createContext()
 
 // Get API base URL from environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://groops.fun'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
@@ -39,10 +39,17 @@ export const AuthProvider = ({ children }) => {
           console.log('🔎 needsProfile check:', errorData.needsProfile, typeof errorData.needsProfile)
           if (errorData.needsProfile) {
             console.log('⚠️ User authenticated but needs to complete profile')
-            // Set user with needsProfile flag for UI handling
+            // Set user with needsProfile flag and Google profile data for prefilling
             setUser({ 
               authenticated: true,
-              needsProfile: true 
+              needsProfile: true,
+              username: errorData.username,
+              email: errorData.email,
+              name: errorData.name,
+              picture: errorData.picture,
+              avatarURL: errorData.picture, // Set avatarURL for consistency with complete profiles
+              given_name: errorData.given_name,
+              family_name: errorData.family_name
             })
           } else {
             console.log('❌ User not authenticated (401)')
