@@ -1,22 +1,61 @@
 {
-  "name": "Groops - Find and Connect with People",
+  "name": "Groops - Find Your People, Join Your Tribe",
   "short_name": "Groops",
-  "description": "Find and connect with people in your area",
+  "description": "Join activity-based groups in your area. From sports to social events, find like-minded people and create lasting connections.",
   "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "theme_color": "#00adb5",
+  "background_color": "#0f1419",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["social", "lifestyle", "sports", "entertainment"],
   "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
     {
       "src": "/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/android-chrome-512x512.png", 
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
       "type": "image/png"
     }
   ],
-  "theme_color": "#00adba",
-  "background_color": "#0f1419",
-  "display": "standalone",
-  "orientation": "portrait"
+  "shortcuts": [
+    {
+      "name": "Find Groups",
+      "short_name": "Find",
+      "description": "Discover groups in your area",
+      "url": "/?action=find",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
 }
