@@ -226,30 +226,35 @@ const GroupCards = () => {
                 {/* Header */}
                 <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-4 mb-2">
+                    <div className="mb-2">
+                      {/* Title */}
                       <h3 
-                        className="text-xl font-semibold group-hover:text-cyan-400 transition-colors truncate"
+                        className="text-xl font-semibold group-hover:text-cyan-400 transition-colors mb-2"
                         style={{ color: 'rgb(238, 238, 238)' }}
                       >
                         {group.name}
                       </h3>
-                      <div 
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0"
-                        style={{
-                          backgroundColor: getActivityTypeColor(group.activity_type) + '20',
-                          color: getActivityTypeColor(group.activity_type)
-                        }}
-                      >
-                        {group.activity_type}
-                      </div>
-                      <div
-                        className="px-2 py-1 rounded-full text-xs font-medium flex-shrink-0"
-                        style={{
-                          backgroundColor: skillStyle.bg,
-                          color: skillStyle.text
-                        }}
-                      >
-                        {group.skill_level}
+                      
+                      {/* Badges - stacked on mobile, inline on desktop */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div 
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: getActivityTypeColor(group.activity_type) + '20',
+                            color: getActivityTypeColor(group.activity_type)
+                          }}
+                        >
+                          {group.activity_type}
+                        </div>
+                        <div
+                          className="px-2 py-1 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: skillStyle.bg,
+                            color: skillStyle.text
+                          }}
+                        >
+                          {group.skill_level}
+                        </div>
                       </div>
                     </div>
                     
