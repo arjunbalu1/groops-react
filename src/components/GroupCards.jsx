@@ -224,17 +224,17 @@ const GroupCards = () => {
             >
               <div className="p-6">
                 {/* Header */}
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
+                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-4 mb-2">
                       <h3 
-                        className="text-xl font-semibold group-hover:text-cyan-400 transition-colors"
+                        className="text-xl font-semibold group-hover:text-cyan-400 transition-colors truncate"
                         style={{ color: 'rgb(238, 238, 238)' }}
                       >
                         {group.name}
                       </h3>
                       <div 
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0"
                         style={{
                           backgroundColor: getActivityTypeColor(group.activity_type) + '20',
                           color: getActivityTypeColor(group.activity_type)
@@ -243,7 +243,7 @@ const GroupCards = () => {
                         {group.activity_type}
                       </div>
                       <div
-                        className="px-2 py-1 rounded-full text-xs font-medium"
+                        className="px-2 py-1 rounded-full text-xs font-medium flex-shrink-0"
                         style={{
                           backgroundColor: skillStyle.bg,
                           color: skillStyle.text
@@ -285,13 +285,13 @@ const GroupCards = () => {
                   </div>
 
                   {/* Member Avatars - Right Side */}
-                  <div className="ml-6">
-                    <div className="flex items-center justify-end mb-2">
+                  <div className="lg:ml-6 flex-shrink-0">
+                    <div className="flex items-center justify-start lg:justify-end mb-2">
                       <span className="text-xs font-medium" style={{ color: 'rgb(156, 163, 175)' }}>
                         Members ({approvedMembers}/{group.max_members})
                       </span>
                     </div>
-                    <div className="flex items-center -space-x-2 justify-end">
+                    <div className="flex items-center -space-x-2 justify-start lg:justify-end overflow-hidden">
                       {/* Show approved members (up to 4 total) */}
                       {(() => {
                         const approvedMembersList = group.members?.filter(m => m.status === 'approved') || []
@@ -321,7 +321,7 @@ const GroupCards = () => {
                               return (
                                 <div
                                   key={member.username}
-                                  className="relative w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-medium"
+                                  className="relative w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-medium flex-shrink-0"
                                   style={{
                                     backgroundColor: bgColor + '20',
                                     borderColor: 'rgb(15, 20, 25)',
@@ -357,7 +357,7 @@ const GroupCards = () => {
                             {Array.from({ length: emptySlots }).map((_, index) => (
                               <div
                                 key={`empty-${index}`}
-                                className="relative w-8 h-8 rounded-full border-2 border-dashed flex items-center justify-center"
+                                className="relative w-8 h-8 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0"
                                 style={{
                                   borderColor: 'rgba(156, 163, 175, 0.4)',
                                   backgroundColor: 'rgba(156, 163, 175, 0.1)',
@@ -379,7 +379,7 @@ const GroupCards = () => {
 
                       {/* Show +X remaining if there are more spots beyond the 4 displayed */}
                       {group.max_members > 4 && (
-                        <div className="flex items-center ml-2">
+                        <div className="flex items-center ml-2 flex-shrink-0">
                           <span 
                             className="text-xs font-medium"
                             style={{ color: 'rgb(156, 163, 175)' }}
