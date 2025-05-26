@@ -80,6 +80,7 @@ const GroupCards = () => {
     } finally {
       setLoadingMore(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, API_BASE_URL])
 
   // Initial groups fetch
@@ -118,6 +119,7 @@ const GroupCards = () => {
     }
 
     fetchInitialGroups()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_BASE_URL])
 
   useEffect(() => {

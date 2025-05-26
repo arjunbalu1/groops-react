@@ -646,7 +646,7 @@ const GroupDetails = () => {
                   {isOrganizer && (
                     <button
                       onClick={() => handleRemoveMember(member.username)}
-                      className="absolute -top-2 -right-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10"
+                      className="absolute -top-2 -right-2 rounded-full flex items-center justify-center z-10"
                       style={{ 
                         width: '24px',
                         height: '24px',
