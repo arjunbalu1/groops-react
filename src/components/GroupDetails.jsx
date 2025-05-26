@@ -81,7 +81,7 @@ const GroupDetails = () => {
     }
 
     fetchPendingMembers()
-  }, [group, groupId])
+  }, [group, groupId, user])
 
   // Fetch member profile
   const fetchMemberProfile = async (username) => {
@@ -162,7 +162,7 @@ const GroupDetails = () => {
       })
       
       if (response.ok) {
-        navigate('/')
+        navigate(-1)
       } else {
         const data = await response.json()
         alert(data.error || 'Failed to leave group')
