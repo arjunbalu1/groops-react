@@ -82,14 +82,20 @@ const Header = () => {
           <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <img 
-                src={logoTransparent} 
-                alt="Groops" 
-                className="h-30"
-                style={{
-                  filter: 'drop-shadow(0 2px 4px rgba(238, 238, 238, 0.3))'
-                }}
-              />
+              <button 
+                onClick={() => navigate('/')}
+                className="cursor-pointer transition-opacity hover:scale-105 hover:rotate-350"
+                title="Go to Homepage"
+              >
+                <img 
+                  src={logoTransparent} 
+                  alt="Groops" 
+                  className="h-18"
+                  style={{
+                    filter: 'drop-shadow(0 2px 4px rgba(238, 238, 238, 0.3))'
+                  }}
+                />
+              </button>
             </div>
             
             {/* Location Search */}
