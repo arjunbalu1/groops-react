@@ -146,13 +146,18 @@ const GroupCards = () => {
           </div>
           <div className="text-center sm:text-right">
             <button
-              className="text-base font-medium transition-colors hover:underline"
-              style={{ color: 'rgb(0, 173, 181)' }}
+              className="text-xl font-bold transition-colors hover:underline"
+              style={{ 
+                color: 'rgb(34, 211, 238)',
+                textShadow: '0 0 10px rgba(34, 211, 238, 0.4), 0 0 20px rgba(34, 211, 238, 0.2)'
+              }}
               onMouseEnter={(e) => {
-                e.target.style.color = 'rgb(6, 182, 212)'
+                e.target.style.color = 'rgb(255, 255, 255)'
+                e.target.style.textShadow = '0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.3)'
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgb(0, 173, 181)'
+                e.target.style.color = 'rgb(34, 211, 238)'
+                e.target.style.textShadow = '0 0 10px rgba(34, 211, 238, 0.4), 0 0 20px rgba(34, 211, 238, 0.2)'
               }}
               onClick={() => {
                 // TODO: Navigate to all groups page or implement search/filter
