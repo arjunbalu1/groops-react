@@ -33,12 +33,12 @@ const Hero = () => {
 
   return (
     <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="relative py-8 sm:py-12 lg:py-16">
+      <div className="relative pt-4 pb-2 sm:pt-6 sm:pb-3 lg:pt-8 lg:pb-4">
         {/* Hero Content */}
         <div className="relative text-center">
             
             {/* Main Heading */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-3">
               <span style={{ color: 'rgb(238, 238, 238)' }}>Find Your </span>
               <span 
                 className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent"
@@ -52,7 +52,7 @@ const Hero = () => {
 
             {/* Subheading */}
             <p 
-              className="text-xl sm:text-2xl lg:text-3xl mb-12 max-w-4xl mx-auto leading-relaxed"
+              className="text-xl sm:text-2xl lg:text-3xl mb-6 max-w-4xl mx-auto leading-relaxed"
               style={{ color: 'rgb(156, 163, 175)' }}
             >
               Turn your interests into real connections. Find local groups, join exciting activities, 
@@ -60,18 +60,15 @@ const Hero = () => {
             </p>
 
             {/* Social Proof */}
-            <div className="flex flex-col items-center space-y-4">
-              <p 
-                className="text-sm font-medium tracking-wide uppercase"
-                style={{ color: 'rgb(107, 114, 128)' }}
-              >
-                Join thousands of people building connections
-              </p>
-              <div className="flex items-center space-x-8">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center space-x-6">
                 <div className="text-center">
                   <div 
-                    className="text-2xl font-bold"
-                    style={{ color: 'rgb(0, 173, 181)' }}
+                    className="text-4xl sm:text-5xl lg:text-6xl font-bold"
+                    style={{ 
+                      color: 'rgb(34, 211, 238)',
+                      textShadow: '0 0 20px rgba(34, 211, 238, 0.6), 0 0 40px rgba(34, 211, 238, 0.4), 0 0 60px rgba(34, 211, 238, 0.3)'
+                    }}
                   >
                     {stats.activeUsers}
                   </div>
@@ -84,8 +81,11 @@ const Hero = () => {
                 </div>
                 <div className="text-center">
                   <div 
-                    className="text-2xl font-bold"
-                    style={{ color: 'rgb(0, 173, 181)' }}
+                    className="text-4xl sm:text-5xl lg:text-6xl font-bold"
+                    style={{ 
+                      color: 'rgb(34, 211, 238)',
+                      textShadow: '0 0 20px rgba(34, 211, 238, 0.6), 0 0 40px rgba(34, 211, 238, 0.4), 0 0 60px rgba(34, 211, 238, 0.3)'
+                    }}
                   >
                     {stats.groups}
                   </div>

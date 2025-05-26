@@ -126,13 +126,13 @@ const GroupCards = () => {
   }
 
   return (
-    <section className="py-16">
+    <section className="py-6">
       {/* Section Header - Constrained */}
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end">
-          <div className="text-center sm:text-left mb-6 sm:mb-0">
+          <div className="text-center sm:text-left mb-4 sm:mb-0">
             <h2 
-              className="text-3xl sm:text-4xl font-bold mb-4"
+              className="text-3xl sm:text-4xl font-bold mb-2"
               style={{ color: 'rgb(238, 238, 238)' }}
             >
               Discover Local Groops
@@ -168,7 +168,7 @@ const GroupCards = () => {
       {/* Horizontal Scrolling Group Cards - Full Width */}
       <div className="relative">
         <div 
-          className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide pl-4 sm:pl-6 lg:pl-8 pr-4 sm:pr-6 lg:pr-8"
+          className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide pl-4 sm:pl-6 lg:pl-8 pr-4 sm:pr-6 lg:pr-8"
           style={{
             scrollSnapType: 'x mandatory',
             scrollbarWidth: 'none',
@@ -194,14 +194,14 @@ const GroupCards = () => {
               }}
               onClick={() => navigate(`/groups/${group.id}`)}
             >
-              <div className="p-6">
+              <div className="p-4">
                 {/* Header */}
-                <div className="flex flex-col gap-4 mb-4">
+                <div className="flex flex-col gap-2 mb-2">
                   <div className="flex-1 min-w-0">
-                    <div className="mb-3">
+                    <div className="mb-2">
                       {/* Title */}
                       <h3 
-                        className="text-lg font-semibold group-hover:text-cyan-400 transition-colors mb-2 line-clamp-2"
+                        className="text-lg font-semibold group-hover:text-cyan-400 transition-colors mb-1 line-clamp-2"
                         style={{ color: 'rgb(238, 238, 238)' }}
                       >
                         {group.name}
@@ -234,7 +234,7 @@ const GroupCards = () => {
                     
                     {/* Description */}
                     <p 
-                      className="text-sm mb-4 line-clamp-3"
+                      className="text-sm mb-2 line-clamp-2"
                       style={{ color: 'rgb(156, 163, 175)' }}
                     >
                       {group.description}
