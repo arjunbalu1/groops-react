@@ -21,6 +21,8 @@ const GroupCards = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
   const GROUPS_PER_PAGE = 6
 
+
+
   // Fetch member profile data including avatar URLs
   const fetchMemberProfile = async (username) => {
     if (memberProfiles[username]) return memberProfiles[username]

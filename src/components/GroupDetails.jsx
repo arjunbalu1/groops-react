@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, Users, IndianRupee, MessageCircle, Settings, UserPlus, UserX, Edit, Trash2, Check, X, Clock } from 'lucide-react'
+import { Calendar, MapPin, Users, IndianRupee, MessageCircle, Settings, UserPlus, UserX, Edit, Trash2, Check, X, Clock, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 const GroupDetails = () => {
@@ -16,6 +16,11 @@ const GroupDetails = () => {
   const [pendingMembers, setPendingMembers] = useState([])
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
+
+  // Scroll to top when entering group details
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [])
 
   // Fetch group details
   useEffect(() => {
@@ -38,15 +43,9 @@ const GroupDetails = () => {
         setGroup(data)
         
         // Fetch member profiles
-        const allMembers = [
-          data.organizer_username,
-          ...(data.members?.map(m => m.username) || [])
-        ]
+        const allMembers = [data.organizer_username, ...(data.members?.map(m => m.username) || [])]
         const uniqueMembers = [...new Set(allMembers)]
-        
-        uniqueMembers.forEach(username => {
-          fetchMemberProfile(username)
-        })
+        uniqueMembers.forEach(username => fetchMemberProfile(username))
         
       } catch (err) {
         console.error('Error fetching group details:', err)
@@ -64,7 +63,7 @@ const GroupDetails = () => {
   // Fetch pending members for organizers
   useEffect(() => {
     const fetchPendingMembers = async () => {
-      if (!group || !isOrganizer) return
+      if (!group || getUserMembershipStatus() !== 'organizer') return
       
       try {
         const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}/pending-members`, {
@@ -74,11 +73,7 @@ const GroupDetails = () => {
         if (response.ok) {
           const data = await response.json()
           setPendingMembers(data || [])
-          
-          // Fetch profiles for pending members
-          data.forEach(member => {
-            fetchMemberProfile(member.username)
-          })
+          data.forEach(member => fetchMemberProfile(member.username))
         }
       } catch (err) {
         console.error('Error fetching pending members:', err)
@@ -236,13 +231,6 @@ const GroupDetails = () => {
         
         // Remove from pending members if they were there
         setPendingMembers(prev => prev.filter(member => member.username !== username))
-        
-        // Remove from member profiles cache (optional cleanup)
-        setMemberProfiles(prev => {
-          const updated = { ...prev }
-          delete updated[username]
-          return updated
-        })
       } else {
         const data = await response.json()
         alert(data.error || 'Failed to remove member')
@@ -292,14 +280,14 @@ const GroupDetails = () => {
             {error}
           </h2>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 rounded-lg transition-colors"
             style={{
               backgroundColor: 'rgb(0, 173, 181)',
               color: 'white'
             }}
           >
-            Back to Home
+            Back
           </button>
         </div>
       </div>
@@ -321,6 +309,22 @@ const GroupDetails = () => {
   return (
     <div style={{ backgroundColor: 'rgb(15, 20, 25)', minHeight: '100vh' }}>
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Back Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors hover:bg-opacity-80"
+            style={{
+              backgroundColor: 'rgba(0, 173, 181, 0.1)',
+              color: 'rgb(0, 173, 181)',
+              border: '1px solid rgba(0, 173, 181, 0.3)'
+            }}
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
+        </div>
+
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
