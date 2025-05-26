@@ -128,8 +128,22 @@ const GroupDetails = () => {
       })
       
       if (response.ok) {
-        // Refresh group data
-        window.location.reload()
+        // Add user to group members with pending status
+        const newMember = {
+          group_id: groupId,
+          username: user.username,
+          status: 'pending',
+          joined_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        
+        setGroup(prev => ({
+          ...prev,
+          members: [...(prev.members || []), newMember]
+        }))
+        
+        // Fetch user's profile if not already cached
+        fetchMemberProfile(user.username)
       } else {
         const data = await response.json()
         alert(data.error || 'Failed to join group')
@@ -173,8 +187,26 @@ const GroupDetails = () => {
       })
       
       if (response.ok) {
-        // Refresh group data
-        window.location.reload()
+        if (action === 'approve') {
+          // Move member from pending to approved
+          setGroup(prev => ({
+            ...prev,
+            members: prev.members?.map(member => 
+              member.username === username 
+                ? { ...member, status: 'approved', updated_at: new Date().toISOString() }
+                : member
+            ) || []
+          }))
+        } else if (action === 'reject') {
+          // Remove member from group entirely
+          setGroup(prev => ({
+            ...prev,
+            members: prev.members?.filter(member => member.username !== username) || []
+          }))
+        }
+        
+        // Remove from pending members list
+        setPendingMembers(prev => prev.filter(member => member.username !== username))
       } else {
         const data = await response.json()
         alert(data.error || `Failed to ${action} member`)
@@ -196,8 +228,21 @@ const GroupDetails = () => {
       })
       
       if (response.ok) {
-        // Refresh group data
-        window.location.reload()
+        // Remove member from group
+        setGroup(prev => ({
+          ...prev,
+          members: prev.members?.filter(member => member.username !== username) || []
+        }))
+        
+        // Remove from pending members if they were there
+        setPendingMembers(prev => prev.filter(member => member.username !== username))
+        
+        // Remove from member profiles cache (optional cleanup)
+        setMemberProfiles(prev => {
+          const updated = { ...prev }
+          delete updated[username]
+          return updated
+        })
       } else {
         const data = await response.json()
         alert(data.error || 'Failed to remove member')
