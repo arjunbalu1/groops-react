@@ -163,7 +163,7 @@ const Header = () => {
                   alt="Groops" 
                   className="h-12 sm:h-16 md:h-18"
                   style={{
-                    filter: 'drop-shadow(0 2px 4px rgba(238, 238, 238, 0.5))'
+                    filter: 'drop-shadow(0 2px 4px rgba(238, 238, 238, 0.3))'
                   }}
                 />
               </button>
