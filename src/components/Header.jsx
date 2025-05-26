@@ -1,7 +1,7 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { LogIn, Settings, LogOut, Bell } from 'lucide-react'
+import { LogIn, Settings, LogOut, Bell, LayoutDashboard } from 'lucide-react'
 import LocationSearch from './LocationSearch'
 import logoTransparent from '@/assets/logo-transparent.png'
 import { useAuth } from '@/hooks/useAuth'
@@ -48,6 +48,7 @@ const Header = () => {
     } else {
       Object.assign(e.target.style, buttonBaseStyle)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleDropdownItemHover = useCallback((e, isEntering) => {
@@ -60,9 +61,9 @@ const Header = () => {
 
   const handleAvatarHover = useCallback((e, isEntering) => {
     if (isEntering) {
-      e.target.style.backgroundColor = 'rgba(0, 173, 181, 0.1)'
+      e.currentTarget.style.backgroundColor = 'rgba(0, 173, 181, 0.1)'
     } else {
-      e.target.style.backgroundColor = dropdownOpen ? 'rgba(0, 173, 181, 0.1)' : 'transparent'
+      e.currentTarget.style.backgroundColor = dropdownOpen ? 'rgba(0, 173, 181, 0.1)' : 'transparent'
     }
   }, [dropdownOpen])
 
@@ -90,7 +91,7 @@ const Header = () => {
                 <img 
                   src={logoTransparent} 
                   alt="Groops" 
-                  className="h-18"
+                  className="h-12 sm:h-16 md:h-18"
                   style={{
                     filter: 'drop-shadow(0 2px 4px rgba(238, 238, 238, 0.3))'
                   }}
@@ -112,7 +113,29 @@ const Header = () => {
                 />
               </div>
             ) : user?.authenticated ? (
-              <div className="relative" ref={dropdownRef}>
+              <div className="flex items-center gap-3">
+                {/* Dashboard Button */}
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="p-2 rounded-lg transition-colors flex items-center gap-2 hover:bg-opacity-20"
+                  style={{
+                    backgroundColor: 'rgba(0, 173, 181, 0.1)',
+                    color: 'rgb(0, 173, 181)',
+                    border: '1px solid rgba(0, 173, 181, 0.3)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 173, 181, 0.2)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 173, 181, 0.1)'
+                  }}
+                  title="Dashboard"
+                >
+                  <LayoutDashboard size={16} />
+                  <span className="hidden sm:inline text-sm font-medium pointer-events-none">Dashboard</span>
+                </button>
+
+                <div className="relative" ref={dropdownRef}>
                 {/* User Avatar - Clickable */}
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -172,7 +195,7 @@ const Header = () => {
                   {/* User Name - Hidden on mobile */}
                   {user.username && (
                     <span 
-                      className="text-sm font-medium hidden sm:block"
+                      className="text-sm font-medium hidden sm:block pointer-events-none"
                       style={{ color: 'rgb(238, 238, 238)' }}
                     >
                       {user.fullName || user.username}
@@ -182,7 +205,7 @@ const Header = () => {
                   {/* Show temp user status if needed */}
                   {user.needsProfile && (
                     <span 
-                      className="text-xs px-2 py-1 rounded ml-2"
+                      className="text-xs px-2 py-1 rounded ml-2 pointer-events-none"
                       style={{ 
                         backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         color: 'rgb(239, 68, 68)',
@@ -302,6 +325,7 @@ const Header = () => {
                   </div>
                 )}
               </div>
+            </div>
             ) : (
               <Button 
                 size="sm"
