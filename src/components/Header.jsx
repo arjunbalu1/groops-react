@@ -9,7 +9,7 @@ import { useNotificationCount } from '@/hooks/useNotificationCount'
 
 const Header = () => {
   const { user, isLoading, signIn, signOut } = useAuth()
-  const { unreadCount } = useNotificationCount()
+  const { unreadCount, refreshUnreadCount } = useNotificationCount()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
@@ -120,10 +120,12 @@ const Header = () => {
       // Reset state and fetch fresh notifications
       setNotificationsHasMore(true)
       fetchNotifications(false)
+      // Refresh unread count when opening notifications
+      refreshUnreadCount()
     }
     setNotificationsOpen(!notificationsOpen)
     setDropdownOpen(false) // Close user dropdown if open
-  }, [notificationsOpen, fetchNotifications])
+  }, [notificationsOpen, fetchNotifications, refreshUnreadCount])
 
   // Handle scroll in notifications dropdown
   const handleNotificationsScroll = useCallback((e) => {
@@ -152,7 +154,7 @@ const Header = () => {
             {/* Logo */}
             <div className="flex-shrink-0">
               <button 
-                onClick={() => navigate('/')}
+                onClick={() => window.location.href = '/'}
                 className="cursor-pointer transition-opacity hover:scale-105 hover:rotate-350"
                 title="Go to Homepage"
               >
@@ -292,6 +294,8 @@ const Header = () => {
                                 onClick={() => {
                                   if (notification.group_id) {
                                     setNotificationsOpen(false)
+                                    // Refresh unread count when clicking a notification
+                                    refreshUnreadCount()
                                     navigate(`/groups/${notification.group_id}`)
                                   }
                                 }}

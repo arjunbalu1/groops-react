@@ -19,6 +19,10 @@ const GroupDetails = () => {
 
   // Scroll to top when entering group details
   useEffect(() => {
+    // Disable scroll restoration and force scroll to top
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual'
+    }
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [])
 

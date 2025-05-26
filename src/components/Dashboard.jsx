@@ -39,6 +39,10 @@ const Dashboard = () => {
 
   // Scroll to top when entering dashboard
   useEffect(() => {
+    // Disable scroll restoration and force scroll to top
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual'
+    }
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [])
 

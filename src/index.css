@@ -116,8 +116,8 @@
   }
   
   html {
-    /* Smooth scrolling */
-    scroll-behavior: smooth;
+    /* Remove smooth scrolling to ensure instant scroll to top */
+    scroll-behavior: auto;
     /* Optimize text rendering on mobile */
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
@@ -222,5 +222,32 @@
   img {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar for horizontal group cards */
+  .scrollbar-hide {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer and Edge */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Opera */
+  }
+
+  /* Text truncation utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }

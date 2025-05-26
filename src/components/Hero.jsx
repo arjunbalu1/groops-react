@@ -32,80 +32,10 @@ const Hero = () => {
   }, [API_BASE_URL])
 
   return (
-    <>
-      {/* Custom CSS for animations */}
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-20px) scale(1.05); }
-        }
-        
-        @keyframes pulse-glow {
-          0%, 100% { opacity: 0.2; transform: scale(1); }
-          50% { opacity: 0.3; transform: scale(1.1); }
-        }
-        
-        @keyframes float-reverse {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(20px) scale(0.95); }
-        }
-        
-        .animate-float {
-          animation: float 2s ease-in-out infinite;
-        }
-        
-        .animate-pulse-glow {
-          animation: pulse-glow 1.5s ease-in-out infinite;
-        }
-        
-        .animate-float-reverse {
-          animation: float-reverse 2.5s ease-in-out infinite;
-        }
-        
-        /* Hide animated background on mobile */
-        @media (max-width: 768px) {
-          .desktop-only-bg {
-            display: none !important;
-          }
-        }
-      `}</style>
-      
-      {/* Hero Section */}
-      <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative py-16 sm:py-24 lg:py-32">
-          
-          {/* Animated Background Gradient */}
-          <div className="absolute inset-0 overflow-hidden">
-            
-            {/* Main floating glow */}
-            <div 
-              className="desktop-only-bg absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-3xl animate-float animate-pulse-glow"
-              style={{ backgroundColor: 'rgb(0, 173, 181)' }}
-            />
-            
-            {/* Secondary floating glow */}
-            <div 
-              className="desktop-only-bg absolute bottom-0 right-1/4 w-64 h-64 rounded-full blur-2xl animate-float-reverse"
-              style={{ 
-                backgroundColor: 'rgb(0, 173, 181)',
-                opacity: '0.15'
-              }}
-            />
-            
-            {/* Additional ambient glow */}
-            <div 
-              className="desktop-only-bg absolute top-1/3 left-1/4 w-48 h-48 rounded-full blur-3xl animate-pulse-glow"
-              style={{ 
-                backgroundColor: 'rgb(34, 211, 238)',
-                opacity: '0.1',
-                animationDelay: '2s'
-              }}
-            />
-            
-          </div>
-
-          {/* Hero Content */}
-          <div className="relative text-center">
+    <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative py-8 sm:py-12 lg:py-16">
+        {/* Hero Content */}
+        <div className="relative text-center">
             
             {/* Main Heading */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
@@ -169,10 +99,9 @@ const Hero = () => {
               </div>
             </div>
 
-          </div>
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   )
 }
 

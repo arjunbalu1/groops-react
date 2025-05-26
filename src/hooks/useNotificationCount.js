@@ -51,5 +51,5 @@ export const useNotificationCount = () => {
     }
   }, [])
 
-  return { unreadCount, loading }
+  return { unreadCount, loading, refreshUnreadCount: fetchUnreadCount }
 } 

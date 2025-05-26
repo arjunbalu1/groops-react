@@ -18,6 +18,15 @@ const CreateProfile = () => {
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
 
+  // Scroll to top when entering create profile
+  useEffect(() => {
+    // Disable scroll restoration and force scroll to top
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual'
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [])
+
   // Pre-fill form with Google data if available
   useEffect(() => {
     if (user && user.name) {

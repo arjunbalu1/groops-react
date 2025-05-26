@@ -1,25 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin, Users, IndianRupee } from 'lucide-react'
-import { useInView } from 'react-intersection-observer'
 
 const GroupCards = () => {
   const navigate = useNavigate()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(null)
   const [memberProfiles, setMemberProfiles] = useState({})
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
-
-  const { ref: sentinelRef, inView } = useInView({
-    threshold: 0,
-    rootMargin: '300px',
-  })
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
-  const GROUPS_PER_PAGE = 6
+  const GROUPS_TO_FETCH = 10
 
 
 
@@ -44,61 +35,16 @@ const GroupCards = () => {
     return null
   }
 
-  const loadMoreGroups = useCallback(async () => {
-    setLoadingMore(true)
-    try {
-      const offset = (page - 1) * GROUPS_PER_PAGE
-      const response = await fetch(`${API_BASE_URL}/groups?limit=${GROUPS_PER_PAGE}&offset=${offset}`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch more groups')
-      }
-      const newGroups = await response.json()
-      
-      if (newGroups.length === 0 || newGroups.length < GROUPS_PER_PAGE) {
-        setHasMore(false)
-      }
-      
-      if (newGroups.length > 0) {
-        setGroups(prev => {
-          const existingIds = new Set(prev.map(group => group.id))
-          const uniqueNewGroups = newGroups.filter(group => !existingIds.has(group.id))
-          return [...prev, ...uniqueNewGroups]
-        })
-        setPage(prev => prev + 1)
-        
-        const allMembers = newGroups.flatMap(group => 
-          group.members?.filter(m => m.status === 'approved').map(m => m.username) || []
-        )
-        const uniqueMembers = [...new Set(allMembers)]
-        
-        uniqueMembers.forEach(username => {
-          fetchMemberProfile(username)
-        })
-      }
-    } catch (err) {
-      console.error('Error loading more groups:', err)
-    } finally {
-      setLoadingMore(false)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, API_BASE_URL])
-
-  // Initial groups fetch
+  // Fetch groups
   useEffect(() => {
-    const fetchInitialGroups = async () => {
+    const fetchGroups = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/groups?limit=${GROUPS_PER_PAGE}&offset=0`)
+        const response = await fetch(`${API_BASE_URL}/groups?limit=${GROUPS_TO_FETCH}&sort=created_desc`)
         if (!response.ok) {
           throw new Error('Failed to fetch groups')
         }
         const data = await response.json()
         setGroups(data || [])
-        
-        if (data.length < GROUPS_PER_PAGE) {
-          setHasMore(false)
-        } else {
-          setPage(2)
-        }
         
         // Fetch member profiles for all approved members
         const allMembers = data.flatMap(group => 
@@ -118,15 +64,9 @@ const GroupCards = () => {
       }
     }
 
-    fetchInitialGroups()
+    fetchGroups()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_BASE_URL])
-
-  useEffect(() => {
-    if (inView && !loadingMore && hasMore) {
-      loadMoreGroups()
-    }
-  }, [inView, loadingMore, hasMore, loadMoreGroups])
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)
@@ -186,25 +126,55 @@ const GroupCards = () => {
   }
 
   return (
-    <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      {/* Section Header */}
-      <div className="text-center mb-12">
-        <h2 
-          className="text-3xl sm:text-4xl font-bold mb-4"
-          style={{ color: 'rgb(238, 238, 238)' }}
-        >
-          Discover Local Groups
-        </h2>
-        <p 
-          className="text-lg max-w-2xl mx-auto"
-          style={{ color: 'rgb(156, 163, 175)' }}
-        >
-          Join exciting activities and meet like-minded people in your area
-        </p>
+    <section className="py-16">
+      {/* Section Header - Constrained */}
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end">
+          <div className="text-center sm:text-left mb-6 sm:mb-0">
+            <h2 
+              className="text-3xl sm:text-4xl font-bold mb-4"
+              style={{ color: 'rgb(238, 238, 238)' }}
+            >
+              Discover Local Groops
+            </h2>
+            <p 
+              className="text-lg"
+              style={{ color: 'rgb(156, 163, 175)' }}
+            >
+              Join exciting activities and meet like-minded people in your area
+            </p>
+          </div>
+          <div className="text-center sm:text-right">
+            <button
+              className="text-base font-medium transition-colors hover:underline"
+              style={{ color: 'rgb(0, 173, 181)' }}
+              onMouseEnter={(e) => {
+                e.target.style.color = 'rgb(6, 182, 212)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = 'rgb(0, 173, 181)'
+              }}
+              onClick={() => {
+                // TODO: Navigate to all groups page or implement search/filter
+                console.log('Navigate to all groups')
+              }}
+            >
+              See all groops →
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Group Cards Grid */}
-      <div className="space-y-6">
+      {/* Horizontal Scrolling Group Cards - Full Width */}
+      <div className="relative">
+        <div 
+          className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide pl-4 sm:pl-6 lg:pl-8 pr-4 sm:pr-6 lg:pr-8"
+          style={{
+            scrollSnapType: 'x mandatory',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}
+        >
         {groups.map((group) => {
           const skillStyle = getSkillLevelBadge(group.skill_level)
           const approvedMembers = group.members?.filter(m => m.status === 'approved').length || 0
@@ -212,36 +182,32 @@ const GroupCards = () => {
           return (
             <div
               key={group.id}
-              className="group rounded-lg border backdrop-blur transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+              className="group rounded-lg border backdrop-blur cursor-pointer flex-shrink-0"
               style={{
                 backgroundColor: 'rgba(25, 30, 35, 0.8)',
                 borderColor: 'rgba(0, 173, 181, 0.2)',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                width: '380px',
+                maxWidth: '380px',
+                minWidth: '380px',
+                scrollSnapAlign: 'start'
               }}
               onClick={() => navigate(`/groups/${group.id}`)}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgb(0, 173, 181)'
-                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 173, 181, 0.15)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(0, 173, 181, 0.2)'
-                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)'
-              }}
             >
               <div className="p-6">
                 {/* Header */}
-                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4">
+                <div className="flex flex-col gap-4 mb-4">
                   <div className="flex-1 min-w-0">
-                    <div className="mb-2">
+                    <div className="mb-3">
                       {/* Title */}
                       <h3 
-                        className="text-xl font-semibold group-hover:text-cyan-400 transition-colors mb-2"
+                        className="text-lg font-semibold group-hover:text-cyan-400 transition-colors mb-2 line-clamp-2"
                         style={{ color: 'rgb(238, 238, 238)' }}
                       >
                         {group.name}
                       </h3>
                       
-                      {/* Badges - stacked on mobile, inline on desktop */}
+                      {/* Badges */}
                       <div className="flex flex-wrap items-center gap-2">
                         {group.skill_level && (
                           <div
@@ -268,47 +234,55 @@ const GroupCards = () => {
                     
                     {/* Description */}
                     <p 
-                      className="text-sm mb-4 max-w-2xl"
+                      className="text-sm mb-4 line-clamp-3"
                       style={{ color: 'rgb(156, 163, 175)' }}
                     >
                       {group.description}
                     </p>
 
-                    {/* Details Row */}
-                    <div className="flex flex-wrap items-center gap-6 text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
+                    {/* Details */}
+                    <div className="space-y-2 text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
                       <div className="flex items-center">
-                        <Calendar size={16} className="mr-2" />
-                        {formatDate(group.date_time)}
+                        <Calendar size={14} className="mr-2 flex-shrink-0" />
+                        <span className="truncate">{formatDate(group.date_time)}</span>
                       </div>
                       <div className="flex items-center">
-                        <MapPin size={16} className="mr-2" />
-                        {group.location?.formatted_address || group.location?.name || 'Location TBD'}
+                        <MapPin size={14} className="mr-2 flex-shrink-0" />
+                        <span className="truncate">{group.location?.formatted_address || group.location?.name || 'Location TBD'}</span>
                       </div>
-                      <div className="flex items-center">
-                        <Users size={16} className="mr-2" />
-                        {approvedMembers}/{group.max_members} members
-                      </div>
-                      {group.cost > 0 && (
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <IndianRupee size={16} className="mr-2" />
-                          ≈₹{group.cost}
+                          <Users size={14} className="mr-2 flex-shrink-0" />
+                          <span>{approvedMembers}/{group.max_members} members</span>
                         </div>
-                      )}
+                        {group.cost > 0 && (
+                          <div className="flex items-center">
+                            <IndianRupee size={14} className="mr-1" />
+                            <span>≈₹{group.cost}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Member Avatars - Right Side */}
-                  <div className="lg:ml-6 flex-shrink-0">
-                    <div className="flex items-center justify-start lg:justify-end mb-2">
+                  {/* Member Avatars */}
+                  <div className="pt-3 border-t" style={{ borderColor: 'rgba(75, 85, 99, 0.3)' }}>
+                    <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-medium" style={{ color: 'rgb(156, 163, 175)' }}>
                         Members ({approvedMembers}/{group.max_members})
                       </span>
+                      <span 
+                        className="text-xs font-medium"
+                        style={{ color: 'rgb(0, 173, 181)' }}
+                      >
+                        View Details →
+                      </span>
                     </div>
-                    <div className="flex items-center -space-x-2 justify-start lg:justify-end overflow-hidden">
-                      {/* Show approved members (up to 4 total) */}
+                    <div className="flex items-center -space-x-2 overflow-hidden">
+                      {/* Show approved members (up to 6 for horizontal layout) */}
                       {(() => {
                         const approvedMembersList = group.members?.filter(m => m.status === 'approved') || []
-                        const maxSlotsToShow = Math.min(4, group.max_members) // Total slots to display
+                        const maxSlotsToShow = Math.min(6, group.max_members)
                         const membersToShow = approvedMembersList.slice(0, maxSlotsToShow)
                         const emptySlots = Math.max(0, maxSlotsToShow - membersToShow.length)
                         
@@ -334,7 +308,7 @@ const GroupCards = () => {
                               return (
                                 <div
                                   key={member.username}
-                                  className="relative w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-medium flex-shrink-0"
+                                  className="relative w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-medium flex-shrink-0"
                                   style={{
                                     backgroundColor: bgColor + '20',
                                     borderColor: 'rgb(15, 20, 25)',
@@ -370,7 +344,7 @@ const GroupCards = () => {
                             {Array.from({ length: emptySlots }).map((_, index) => (
                               <div
                                 key={`empty-${index}`}
-                                className="relative w-8 h-8 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0"
+                                className="relative w-7 h-7 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0"
                                 style={{
                                   borderColor: 'rgba(156, 163, 175, 0.4)',
                                   backgroundColor: 'rgba(156, 163, 175, 0.1)',
@@ -390,69 +364,33 @@ const GroupCards = () => {
                         )
                       })()}
 
-                      {/* Show +X remaining if there are more spots beyond the 4 displayed */}
-                      {group.max_members > 4 && (
+                      {/* Show +X remaining if there are more spots beyond the 6 displayed */}
+                      {group.max_members > 6 && (
                         <div className="flex items-center ml-2 flex-shrink-0">
                           <span 
                             className="text-xs font-medium"
                             style={{ color: 'rgb(156, 163, 175)' }}
                           >
-                            +{group.max_members - 4}
+                            +{group.max_members - 6}
                           </span>
                         </div>
                       )}
                     </div>
+                    
+                    {/* Organizer */}
+                    <div className="mt-1 pt-1 border-t" style={{ borderColor: 'rgba(75, 85, 99, 0.2)' }}>
+                      <span className="text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
+                        By {group.organiser_id}
+                      </span>
+                    </div>
                   </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex justify-between items-center pt-4 border-t" style={{ borderColor: 'rgba(75, 85, 99, 0.3)' }}>
-                  <span className="text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
-                    By {group.organiser_id}
-                  </span>
-                  <span 
-                    className="text-xs font-medium"
-                    style={{ color: 'rgb(0, 173, 181)' }}
-                  >
-                    View Details →
-                  </span>
                 </div>
               </div>
             </div>
           )
         })}
+        </div>
       </div>
-
-      {/* Intersection Observer Sentinel */}
-      {hasMore && (
-        <div 
-          ref={sentinelRef}
-          className="h-4 w-full"
-          style={{ background: 'transparent' }}
-        />
-      )}
-
-      {/* Loading More Indicator */}
-      {loadingMore && (
-        <div className="text-center mt-12">
-          <div 
-            className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin mx-auto"
-            style={{ borderColor: 'rgb(0, 173, 181)', borderTopColor: 'transparent' }}
-          />
-          <p className="mt-4 text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
-            Loading more groups...
-          </p>
-        </div>
-      )}
-
-      {/* End of results indicator */}
-      {!hasMore && groups.length > 0 && (
-        <div className="text-center mt-12">
-          <p className="text-sm" style={{ color: 'rgb(107, 114, 128)' }}>
-            You've seen all available groops! 
-          </p>
-        </div>
-      )}
     </section>
   )
 }
