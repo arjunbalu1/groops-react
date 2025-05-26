@@ -1,13 +1,15 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { LogIn, Settings, LogOut } from 'lucide-react'
+import { LogIn, Settings, LogOut, Bell } from 'lucide-react'
 import LocationSearch from './LocationSearch'
 import logoTransparent from '@/assets/logo-transparent.png'
 import { useAuth } from '@/hooks/useAuth'
+import { useNotificationCount } from '@/hooks/useNotificationCount'
 
 const Header = () => {
   const { user, isLoading, signIn, signOut } = useAuth()
+  const { unreadCount } = useNotificationCount()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -64,6 +66,7 @@ const Header = () => {
     }
   }, [dropdownOpen])
 
+
   return (
     <header 
       className="sticky top-0 z-50 backdrop-blur border-b"
@@ -109,11 +112,25 @@ const Header = () => {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   onMouseEnter={(e) => handleAvatarHover(e, true)}
                   onMouseLeave={(e) => handleAvatarHover(e, false)}
-                  className="flex items-center gap-3 p-2 rounded-lg transition-colors"
+                  className="flex items-center gap-3 p-2 rounded-lg transition-colors relative"
                   style={{
                     backgroundColor: dropdownOpen ? 'rgba(0, 173, 181, 0.1)' : 'transparent',
                   }}
                 >
+                  {/* Unread Count Badge on Avatar */}
+                  {unreadCount > 0 && (
+                    <div 
+                      className="absolute -top-1 -right-1 w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center z-10"
+                      style={{
+                        backgroundColor: 'rgb(239, 68, 68)',
+                        color: 'white',
+                        fontSize: '12px',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </div>
+                  )}
                   {/* Avatar */}
                   <div 
                     className="w-9 h-9 rounded-full border-2 flex items-center justify-center overflow-hidden"
@@ -218,6 +235,35 @@ const Header = () => {
                       )}
 
                       {/* Menu Items */}
+                      <button
+                        className="w-full px-4 py-2 text-left text-sm flex items-center gap-3 transition-colors relative"
+                        style={{ color: 'rgb(238, 238, 238)' }}
+                        onMouseEnter={(e) => handleDropdownItemHover(e, true)}
+                        onMouseLeave={(e) => handleDropdownItemHover(e, false)}
+                        onClick={() => {
+                          setDropdownOpen(false)
+                          // TODO: Navigate to notifications
+                          console.log('Navigate to notifications')
+                        }}
+                      >
+                        <Bell size={16} />
+                        Notifications
+                        {/* Unread Count Badge */}
+                        {unreadCount > 0 && (
+                          <div 
+                            className="ml-auto w-6 h-6 rounded-full text-sm font-bold flex items-center justify-center"
+                            style={{
+                              backgroundColor: 'rgb(239, 68, 68)',
+                              color: 'white',
+                              fontSize: '12px',
+                              pointerEvents: 'none'
+                            }}
+                          >
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </div>
+                        )}
+                      </button>
+
                       <button
                         className="w-full px-4 py-2 text-left text-sm flex items-center gap-3 transition-colors"
                         style={{ color: 'rgb(238, 238, 238)' }}

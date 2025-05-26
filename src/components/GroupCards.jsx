@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Calendar, MapPin, Users, Banknote, IndianRupee } from 'lucide-react'
+import { Calendar, MapPin, Users, IndianRupee } from 'lucide-react'
+import { useInView } from 'react-intersection-observer'
 
 const GroupCards = () => {
   const [groups, setGroups] = useState([])
@@ -9,6 +10,11 @@ const GroupCards = () => {
   const [memberProfiles, setMemberProfiles] = useState({})
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+
+  const { ref: sentinelRef, inView } = useInView({
+    threshold: 0,
+    rootMargin: '300px',
+  })
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
   const GROUPS_PER_PAGE = 6
@@ -21,14 +27,12 @@ const GroupCards = () => {
       const response = await fetch(`${API_BASE_URL}/profiles/${username}`)
       if (response.ok) {
         const profile = await response.json()
-        console.log('Fetched profile for', username, ':', profile) // Debug log
+
         setMemberProfiles(prev => ({
           ...prev,
           [username]: profile
         }))
         return profile
-      } else {
-        console.log('Failed to fetch profile for', username, 'Status:', response.status)
       }
     } catch (err) {
       console.error('Error fetching member profile:', err)
@@ -36,10 +40,7 @@ const GroupCards = () => {
     return null
   }
 
-  // Load more groups function
   const loadMoreGroups = useCallback(async () => {
-    if (loadingMore || !hasMore) return
-    
     setLoadingMore(true)
     try {
       const offset = (page - 1) * GROUPS_PER_PAGE
@@ -54,10 +55,13 @@ const GroupCards = () => {
       }
       
       if (newGroups.length > 0) {
-        setGroups(prev => [...prev, ...newGroups])
+        setGroups(prev => {
+          const existingIds = new Set(prev.map(group => group.id))
+          const uniqueNewGroups = newGroups.filter(group => !existingIds.has(group.id))
+          return [...prev, ...uniqueNewGroups]
+        })
         setPage(prev => prev + 1)
         
-        // Fetch member profiles for new groups
         const allMembers = newGroups.flatMap(group => 
           group.members?.filter(m => m.status === 'approved').map(m => m.username) || []
         )
@@ -72,7 +76,7 @@ const GroupCards = () => {
     } finally {
       setLoadingMore(false)
     }
-  }, [page, loadingMore, hasMore, API_BASE_URL, memberProfiles])
+  }, [page, API_BASE_URL])
 
   // Initial groups fetch
   useEffect(() => {
@@ -87,6 +91,8 @@ const GroupCards = () => {
         
         if (data.length < GROUPS_PER_PAGE) {
           setHasMore(false)
+        } else {
+          setPage(2)
         }
         
         // Fetch member profiles for all approved members
@@ -110,18 +116,11 @@ const GroupCards = () => {
     fetchInitialGroups()
   }, [API_BASE_URL])
 
-  // Scroll event listener for infinite scrolling
   useEffect(() => {
-    const handleScroll = () => {
-      // Trigger when user is within 200px of the bottom
-      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 200) {
-        loadMoreGroups()
-      }
+    if (inView && !loadingMore && hasMore) {
+      loadMoreGroups()
     }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [loadMoreGroups])
+  }, [inView, loadingMore, hasMore, loadMoreGroups])
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)
@@ -237,6 +236,17 @@ const GroupCards = () => {
                       
                       {/* Badges - stacked on mobile, inline on desktop */}
                       <div className="flex flex-wrap items-center gap-2">
+                        {group.skill_level && (
+                          <div
+                            className="px-2 py-1 rounded-full text-xs font-medium"
+                            style={{
+                              backgroundColor: skillStyle.bg,
+                              color: skillStyle.text
+                            }}
+                          >
+                            {group.skill_level}
+                          </div>
+                        )}
                         <div 
                           className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                           style={{
@@ -245,15 +255,6 @@ const GroupCards = () => {
                           }}
                         >
                           {group.activity_type}
-                        </div>
-                        <div
-                          className="px-2 py-1 rounded-full text-xs font-medium"
-                          style={{
-                            backgroundColor: skillStyle.bg,
-                            color: skillStyle.text
-                          }}
-                        >
-                          {group.skill_level}
                         </div>
                       </div>
                     </div>
@@ -415,6 +416,15 @@ const GroupCards = () => {
         })}
       </div>
 
+      {/* Intersection Observer Sentinel */}
+      {hasMore && (
+        <div 
+          ref={sentinelRef}
+          className="h-4 w-full"
+          style={{ background: 'transparent' }}
+        />
+      )}
+
       {/* Loading More Indicator */}
       {loadingMore && (
         <div className="text-center mt-12">
@@ -432,7 +442,7 @@ const GroupCards = () => {
       {!hasMore && groups.length > 0 && (
         <div className="text-center mt-12">
           <p className="text-sm" style={{ color: 'rgb(107, 114, 128)' }}>
-            You've seen all available groups! 
+            You've seen all available groops! 
           </p>
         </div>
       )}
