@@ -4,6 +4,7 @@ import Header from '@/components/Header'
 import HomePage from '@/components/HomePage'
 import CreateProfile from '@/components/CreateProfile'
 import GroupDetails from '@/components/GroupDetails'
+import Dashboard from '@/components/Dashboard'
 import { AuthProvider } from '@/context/AuthContext'
 
 const AppContent = () => {
@@ -35,6 +36,15 @@ const AppContent = () => {
         <Route 
           path="/create-profile" 
           element={<CreateProfile />} 
+        />
+        <Route 
+          path="/dashboard" 
+          element={
+            <>
+              <Header />
+              <Dashboard />
+            </>
+          } 
         />
         <Route 
           path="/groups/:groupId" 

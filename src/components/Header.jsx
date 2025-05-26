@@ -129,10 +129,10 @@ const Header = () => {
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = 'rgba(0, 173, 181, 0.1)'
                   }}
-                  title="Dashboard"
+                  title="My Groops"
                 >
                   <LayoutDashboard size={16} />
-                  <span className="hidden sm:inline text-sm font-medium pointer-events-none">Dashboard</span>
+                  <span className="hidden sm:inline text-sm font-medium pointer-events-none">My Groops</span>
                 </button>
 
                 <div className="relative" ref={dropdownRef}>
