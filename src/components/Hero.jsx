@@ -41,9 +41,9 @@ const Hero = () => {
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-3">
               <span style={{ color: 'rgb(238, 238, 238)' }}>Find Your </span>
               <span 
-                className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent"
+                className="bg-gradient-to-r from-cyan-300 to-white bg-clip-text text-transparent"
                 style={{ 
-                  backgroundImage: 'linear-gradient(to right, rgb(0, 173, 181), rgb(34, 211, 238))'
+                  textShadow: '0 0 30px rgba(34, 211, 238, 0.6), 0 0 60px rgba(34, 211, 238, 0.4), 0 0 90px rgba(34, 211, 238, 0.3)'
                 }}
               >
                 Groops
@@ -74,7 +74,10 @@ const Hero = () => {
                   </div>
                   <div 
                     className="text-sm"
-                    style={{ color: 'rgb(156, 163, 175)' }}
+                    style={{ 
+                      color: 'rgb(255, 255, 255)',
+                      textShadow: '0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3), 0 0 45px rgba(255, 255, 255, 0.2)'
+                    }}
                   >
                     Users
                   </div>
@@ -91,7 +94,10 @@ const Hero = () => {
                   </div>
                   <div 
                     className="text-sm"
-                    style={{ color: 'rgb(156, 163, 175)' }}
+                    style={{ 
+                      color: 'rgb(255, 255, 255)',
+                      textShadow: '0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3), 0 0 45px rgba(255, 255, 255, 0.2)'
+                    }}
                   >
                     Groops
                   </div>
