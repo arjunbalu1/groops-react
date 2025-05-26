@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin, Users, IndianRupee } from 'lucide-react'
 import { useInView } from 'react-intersection-observer'
 
 const GroupCards = () => {
+  const navigate = useNavigate()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -212,6 +214,7 @@ const GroupCards = () => {
                 borderColor: 'rgba(0, 173, 181, 0.2)',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
               }}
+              onClick={() => navigate(`/groups/${group.id}`)}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'rgb(0, 173, 181)'
                 e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 173, 181, 0.15)'
