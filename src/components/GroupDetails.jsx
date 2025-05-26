@@ -58,6 +58,7 @@ const GroupDetails = () => {
     if (groupId) {
       fetchGroupDetails()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId])
 
   // Fetch pending members for organizers
@@ -81,6 +82,7 @@ const GroupDetails = () => {
     }
 
     fetchPendingMembers()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [group, groupId, user])
 
   // Fetch member profile
