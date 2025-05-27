@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { LayoutDashboard, Users, Star, Calendar, ChevronDown } from 'lucide-react'
-import { useInView } from 'react-intersection-observer'
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -38,10 +37,7 @@ const Dashboard = () => {
   const [showFriendsDropdown, setShowFriendsDropdown] = useState(false)
   const [showActivityDropdown, setShowActivityDropdown] = useState(false)
   
-  // Intersection observers
-  const { ref: ratingsRef, inView: ratingsInView } = useInView({ threshold: 0, rootMargin: '100px' })
-  const { ref: friendsRef, inView: friendsInView } = useInView({ threshold: 0, rootMargin: '100px' })
-  const { ref: pastGroupsRef, inView: pastGroupsInView } = useInView({ threshold: 0, rootMargin: '100px' })
+  // Intersection observers (removed - no longer needed with dropdown design)
 
   // API base URL
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
@@ -222,24 +218,7 @@ const Dashboard = () => {
     }
   }, [pastGroupsPage, pastGroupsLoading, pastGroupsHasMore, dashboardData])
 
-  // Intersection observer effects
-  useEffect(() => {
-    if (ratingsInView && !ratingsLoading && ratingsHasMore) {
-      loadMoreRatings()
-    }
-  }, [ratingsInView, ratingsLoading, ratingsHasMore, loadMoreRatings])
-
-  useEffect(() => {
-    if (friendsInView && !friendsLoading && friendsHasMore) {
-      loadMoreFriends()
-    }
-  }, [friendsInView, friendsLoading, friendsHasMore, loadMoreFriends])
-
-  useEffect(() => {
-    if (pastGroupsInView && !pastGroupsLoading && pastGroupsHasMore) {
-      loadMorePastGroups()
-    }
-  }, [pastGroupsInView, pastGroupsLoading, pastGroupsHasMore, loadMorePastGroups])
+  // Intersection observer effects (removed - no longer needed with dropdown design)
 
   // Loading state
   if (loading) {
