@@ -252,15 +252,16 @@ const GroupCards = () => {
                         <MapPin size={14} className="mr-2 flex-shrink-0" />
                         <span className="truncate">{group.location?.formatted_address || group.location?.name || 'Location TBD'}</span>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Users size={14} className="mr-2 flex-shrink-0" />
-                          <span>{approvedMembers}/{group.max_members} members</span>
-                        </div>
+                      <div className="flex items-center">
+                        <Users size={14} className="mr-2 flex-shrink-0" />
+                        <span>{approvedMembers}/{group.max_members} members</span>
+                        {group.cost > 0 && (
+                          <span className="mx-2">•</span>
+                        )}
                         {group.cost > 0 && (
                           <div className="flex items-center">
                             <IndianRupee size={14} className="mr-1" />
-                            <span>≈₹{group.cost}</span>
+                            <span>{group.cost}</span>
                           </div>
                         )}
                       </div>
@@ -269,17 +270,6 @@ const GroupCards = () => {
 
                   {/* Member Avatars */}
                   <div className="pt-3 border-t" style={{ borderColor: 'rgba(75, 85, 99, 0.3)' }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium" style={{ color: 'rgb(156, 163, 175)' }}>
-                        Members ({approvedMembers}/{group.max_members})
-                      </span>
-                      <span 
-                        className="text-xs font-medium"
-                        style={{ color: 'rgb(0, 173, 181)' }}
-                      >
-                        View Details →
-                      </span>
-                    </div>
                     <div className="flex items-center -space-x-2 overflow-hidden">
                       {/* Show approved members (up to 6 for horizontal layout) */}
                       {(() => {
@@ -381,9 +371,17 @@ const GroupCards = () => {
                     
                     {/* Organizer */}
                     <div className="mt-1 pt-1 border-t" style={{ borderColor: 'rgba(75, 85, 99, 0.2)' }}>
-                      <span className="text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
-                        By {group.organiser_id}
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
+                          By {group.organiser_id}
+                        </span>
+                        <span 
+                          className="text-xs font-medium"
+                          style={{ color: 'rgb(0, 173, 181)' }}
+                        >
+                          View Details →
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
