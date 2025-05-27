@@ -81,8 +81,8 @@ const Header = () => {
     
     setNotificationsLoading(true)
     try {
-      // Progressive loading: start with 20, then load 50, then 100
-      const currentLimit = loadMore ? Math.min(notifications.length + 20, 100) : 20
+      // Progressive loading: start with 50, then load in chunks of 50 (no upper limit)
+      const currentLimit = loadMore ? notifications.length + 50 : 50
       const response = await fetch(`${API_BASE_URL}/api/notifications?limit=${currentLimit}`, {
         credentials: 'include'
       })
@@ -93,8 +93,8 @@ const Header = () => {
         
         setNotifications(newNotifications)
         
-        // Check if we have more notifications to load
-        setNotificationsHasMore(newNotifications.length === currentLimit && currentLimit < 100)
+        // Check if we have more notifications to load (no upper limit)
+        setNotificationsHasMore(newNotifications.length === currentLimit)
       } else {
         console.error('Failed to fetch notifications')
         setNotifications([])
