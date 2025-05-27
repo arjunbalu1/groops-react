@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
-import { LayoutDashboard, Users, Star, Calendar } from 'lucide-react'
+import { LayoutDashboard, Users, Star, Calendar, ChevronDown } from 'lucide-react'
 import { useInView } from 'react-intersection-observer'
 
 const Dashboard = () => {
@@ -12,14 +12,14 @@ const Dashboard = () => {
   const [error, setError] = useState(null)
   
   // Infinite scroll state for ratings
-  const [ratings, setRatings] = useState([])
-  const [ratingsPage, setRatingsPage] = useState(1)
+  const [ratings, _setRatings] = useState([])
+  const [_ratingsPage, _setRatingsPage] = useState(1)
   const [ratingsLoading, setRatingsLoading] = useState(false)
   const [ratingsHasMore, setRatingsHasMore] = useState(true)
   
   // Infinite scroll state for friends
-  const [friends, setFriends] = useState([])
-  const [friendsPage, setFriendsPage] = useState(1)
+  const [friends, _setFriends] = useState([])
+  const [_friendsPage, _setFriendsPage] = useState(1)
   const [friendsLoading, setFriendsLoading] = useState(false)
   const [friendsHasMore, setFriendsHasMore] = useState(true)
   
@@ -28,6 +28,15 @@ const Dashboard = () => {
   const [pastGroupsPage, setPastGroupsPage] = useState(1)
   const [pastGroupsLoading, setPastGroupsLoading] = useState(false)
   const [pastGroupsHasMore, setPastGroupsHasMore] = useState(true)
+  
+  // Upcoming groups state
+  const [upcomingGroups, setUpcomingGroups] = useState([])
+  const [upcomingGroupsLoading, setUpcomingGroupsLoading] = useState(false)
+  
+  // Dropdown states
+  const [showRatingsDropdown, setShowRatingsDropdown] = useState(false)
+  const [showFriendsDropdown, setShowFriendsDropdown] = useState(false)
+  const [showActivityDropdown, setShowActivityDropdown] = useState(false)
   
   // Intersection observers
   const { ref: ratingsRef, inView: ratingsInView } = useInView({ threshold: 0, rootMargin: '100px' })
@@ -91,6 +100,68 @@ const Dashboard = () => {
 
     fetchDashboardData()
   }, [user?.username, API_BASE_URL])
+
+  // Fetch upcoming groups
+  const fetchUpcomingGroups = useCallback(async () => {
+    if (!dashboardData) return
+    
+    setUpcomingGroupsLoading(true)
+    try {
+      const now = new Date()
+      
+      // Get approved joined groups and fetch their details
+      // This includes both groups the user joined AND groups they organize (since organizers are auto-approved members)
+      const approvedJoinedMemberships = (dashboardData.joined_groups || [])
+        .filter(membership => membership.status === 'approved')
+      
+      const upcomingGroups = []
+      
+      for (const membership of approvedJoinedMemberships) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/groups/${membership.group_id}`)
+          if (response.ok) {
+            const group = await response.json()
+            if (new Date(group.date_time) > now) {
+              upcomingGroups.push(group)
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching group:', membership.group_id, err)
+        }
+      }
+      
+      // Sort by date
+      const sortedUpcomingGroups = upcomingGroups.sort((a, b) => new Date(a.date_time) - new Date(b.date_time))
+      
+      setUpcomingGroups(sortedUpcomingGroups)
+    } catch (err) {
+      console.error('Error fetching upcoming groups:', err)
+    } finally {
+      setUpcomingGroupsLoading(false)
+    }
+  }, [dashboardData, API_BASE_URL])
+
+  // Fetch upcoming groups when dashboard data changes
+  useEffect(() => {
+    fetchUpcomingGroups()
+  }, [fetchUpcomingGroups])
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Close all dropdowns if clicking outside
+      if (!event.target.closest('.dropdown-container')) {
+        setShowRatingsDropdown(false)
+        setShowFriendsDropdown(false)
+        setShowActivityDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   // Load more functions
   const loadMoreRatings = useCallback(async () => {
@@ -203,241 +274,270 @@ const Dashboard = () => {
         
         {/* Dashboard Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3 mb-6">
             <LayoutDashboard size={32} style={{ color: 'rgb(0, 173, 181)' }} />
             <h1 className="text-3xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
               Dashboard
             </h1>
           </div>
-          <p style={{ color: 'rgb(156, 163, 175)' }}>
-            Welcome {dashboardData?.full_name || dashboardData?.username}!
-          </p>
-        </div>
-
-        {/* Interactive Dropdown Sections */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           
-          {/* Your Ratings Section */}
-          <div 
-            className="rounded-lg border"
-            style={{
-              backgroundColor: 'rgb(25, 30, 35)',
-              borderColor: 'rgba(0, 173, 181, 0.2)'
-            }}
-          >
-            <div className="p-6 flex items-center gap-4 border-b" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
-              <Star size={24} style={{ color: 'rgb(0, 173, 181)' }} />
-              <div className="text-left">
-                <p className="text-sm font-medium" style={{ color: 'rgb(156, 163, 175)' }}>
-                  Your Rating
-                </p>
-                <p className="text-2xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
-                  {dashboardData?.rating?.toFixed(1) || '0.0'}
-                </p>
-              </div>
-            </div>
-            
-            <div className="p-4">
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {/* Dynamically loaded ratings */}
-                {ratings.map((rating) => (
-                  <div key={rating.id} className="flex items-center gap-3 p-2 rounded" style={{ backgroundColor: 'rgba(0, 173, 181, 0.05)' }}>
-                    <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs">
-                      {rating.username.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm" style={{ color: 'rgb(238, 238, 238)' }}>{rating.username}</p>
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, idx) => (
-                          <Star key={idx} size={12} fill={idx < rating.rating ? 'rgb(0, 173, 181)' : 'none'} color="rgb(0, 173, 181)" />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+          {/* Dropdown Buttons */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 
-                {/* Skeleton loaders when empty */}
-                {ratings.length === 0 && !ratingsLoading && (
-                  <>
-                    <p className="text-sm text-center py-4" style={{ color: 'rgb(156, 163, 175)' }}>
-                      No ratings yet
-                    </p>
-                    {[1, 2, 3].map(i => (
-                      <div key={`rating-skeleton-${i}`} className="flex items-center gap-3 p-2 rounded animate-pulse" style={{ backgroundColor: 'rgba(0, 173, 181, 0.05)' }}>
-                        <div className="w-8 h-8 rounded-full" style={{ backgroundColor: 'rgba(156, 163, 175, 0.3)' }} />
-                        <div className="flex-1">
-                          <div className="h-4 w-20 rounded mb-1" style={{ backgroundColor: 'rgba(156, 163, 175, 0.3)' }} />
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, idx) => (
-                              <div key={idx} className="w-3 h-3 rounded" style={{ backgroundColor: 'rgba(156, 163, 175, 0.3)' }} />
+                {/* Friends Dropdown */}
+                <div className="relative dropdown-container flex-1">
+                  <button
+                    onClick={() => {
+                      setShowFriendsDropdown(!showFriendsDropdown)
+                      setShowRatingsDropdown(false)
+                      setShowActivityDropdown(false)
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors hover:border-opacity-60"
+                    style={{
+                      backgroundColor: 'rgba(25, 30, 35, 0.8)',
+                      borderColor: 'rgba(0, 173, 181, 0.3)',
+                      color: 'rgb(238, 238, 238)'
+                    }}
+                  >
+                    <Users size={16} style={{ color: 'rgb(0, 173, 181)' }} />
+                    <span className="text-sm font-medium">Friends</span>
+                    <span className="text-sm font-medium">({dashboardData?.friends?.length || 0})</span>
+                    <ChevronDown size={14} className={`transition-transform ${showFriendsDropdown ? 'rotate-180' : ''}`} style={{ color: 'rgb(156, 163, 175)' }} />
+                  </button>
+                  
+                  {showFriendsDropdown && (
+                    <div 
+                      className="absolute top-full left-0 mt-2 w-80 rounded-lg border shadow-lg z-50"
+                      style={{
+                        backgroundColor: 'rgb(25, 30, 35)',
+                        borderColor: 'rgba(0, 173, 181, 0.2)'
+                      }}
+                    >
+                      <div className="p-4 border-b" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
+                        <p className="text-sm font-medium" style={{ color: 'rgb(0, 173, 181)' }}>Friends</p>
+                      </div>
+                      <div className="p-4 max-h-64 overflow-y-auto">
+                        {friends.length === 0 ? (
+                          <p className="text-sm text-center py-4" style={{ color: 'rgb(156, 163, 175)' }}>
+                            No friends yet
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            {friends.map((friend) => (
+                              <div key={friend.id} className="flex items-center gap-3 p-2 rounded" style={{ backgroundColor: 'rgba(0, 173, 181, 0.05)' }}>
+                                <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs">
+                                  {friend.username.slice(0, 2).toUpperCase()}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-sm" style={{ color: 'rgb(238, 238, 238)' }}>{friend.username}</p>
+                                  <p className="text-xs" style={{ color: 'rgb(156, 163, 175)' }}>{friend.status}</p>
+                                </div>
+                              </div>
                             ))}
                           </div>
-                        </div>
+                        )}
                       </div>
-                    ))}
-                  </>
-                )}
-                
-                {/* Intersection observer sentinel */}
-                {ratingsHasMore && (
-                  <div ref={ratingsRef} className="h-4 w-full" />
-                )}
-                
-                {/* Loading indicator */}
-                {ratingsLoading && (
-                  <div className="text-center py-2">
-                    <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mx-auto" style={{ borderColor: 'rgb(0, 173, 181)', borderTopColor: 'transparent' }} />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+                    </div>
+                  )}
+                </div>
 
-          {/* Friends List Section */}
-          <div 
-            className="rounded-lg border"
-            style={{
-              backgroundColor: 'rgb(25, 30, 35)',
-              borderColor: 'rgba(0, 173, 181, 0.2)'
-            }}
-          >
-            <div className="p-6 flex items-center gap-4 border-b" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
-              <Users size={24} style={{ color: 'rgb(0, 173, 181)' }} />
-              <div className="text-left">
-                <p className="text-sm font-medium" style={{ color: 'rgb(156, 163, 175)' }}>
-                  Friends
-                </p>
-                <p className="text-2xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
-                  {dashboardData?.friends?.length || 0}
-                </p>
-              </div>
-            </div>
-            
-            <div className="p-4">
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {/* Dynamically loaded friends */}
-                {friends.map((friend) => (
-                  <div key={friend.id} className="flex items-center gap-3 p-2 rounded" style={{ backgroundColor: 'rgba(0, 173, 181, 0.05)' }}>
-                    <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs">
-                      {friend.username.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm" style={{ color: 'rgb(238, 238, 238)' }}>{friend.username}</p>
-                      <p className="text-xs" style={{ color: 'rgb(156, 163, 175)' }}>{friend.status}</p>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Skeleton loaders when empty */}
-                {friends.length === 0 && !friendsLoading && (
-                  <>
-                    <p className="text-sm text-center py-4" style={{ color: 'rgb(156, 163, 175)' }}>
-                      No friends yet
-                    </p>
-                    {[1, 2, 3].map(i => (
-                      <div key={`friend-skeleton-${i}`} className="flex items-center gap-3 p-2 rounded animate-pulse" style={{ backgroundColor: 'rgba(0, 173, 181, 0.05)' }}>
-                        <div className="w-8 h-8 rounded-full" style={{ backgroundColor: 'rgba(156, 163, 175, 0.3)' }} />
-                        <div className="flex-1">
-                          <div className="h-4 w-24 rounded mb-1" style={{ backgroundColor: 'rgba(156, 163, 175, 0.3)' }} />
-                          <div className="h-3 w-16 rounded" style={{ backgroundColor: 'rgba(156, 163, 175, 0.2)' }} />
-                        </div>
+                {/* Rating Dropdown */}
+                <div className="relative dropdown-container flex-1">
+                  <button
+                    onClick={() => {
+                      setShowRatingsDropdown(!showRatingsDropdown)
+                      setShowFriendsDropdown(false)
+                      setShowActivityDropdown(false)
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors hover:border-opacity-60"
+                    style={{
+                      backgroundColor: 'rgba(25, 30, 35, 0.8)',
+                      borderColor: 'rgba(0, 173, 181, 0.3)',
+                      color: 'rgb(238, 238, 238)'
+                    }}
+                  >
+                    <Star size={16} style={{ color: 'rgb(0, 173, 181)' }} />
+                    <span className="text-sm font-medium">Rating</span>
+                    <span className="text-sm font-medium">({dashboardData?.rating?.toFixed(1) || '0.0'})</span>
+                    <ChevronDown size={14} className={`transition-transform ${showRatingsDropdown ? 'rotate-180' : ''}`} style={{ color: 'rgb(156, 163, 175)' }} />
+                  </button>
+                  
+                  {showRatingsDropdown && (
+                    <div 
+                      className="absolute top-full left-0 mt-2 w-80 rounded-lg border shadow-lg z-50"
+                      style={{
+                        backgroundColor: 'rgb(25, 30, 35)',
+                        borderColor: 'rgba(0, 173, 181, 0.2)'
+                      }}
+                    >
+                      <div className="p-4 border-b" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
+                        <p className="text-sm font-medium" style={{ color: 'rgb(0, 173, 181)' }}>Rating</p>
                       </div>
-                    ))}
-                  </>
-                )}
-                
-                {/* Intersection observer sentinel */}
-                {friendsHasMore && (
-                  <div ref={friendsRef} className="h-4 w-full" />
-                )}
-                
-                {/* Loading indicator */}
-                {friendsLoading && (
-                  <div className="text-center py-2">
-                    <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mx-auto" style={{ borderColor: 'rgb(0, 173, 181)', borderTopColor: 'transparent' }} />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+                      <div className="p-4 max-h-64 overflow-y-auto">
+                        {ratings.length === 0 ? (
+                          <p className="text-sm text-center py-4" style={{ color: 'rgb(156, 163, 175)' }}>
+                            No ratings yet
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            {ratings.map((rating) => (
+                              <div key={rating.id} className="flex items-center gap-3 p-2 rounded" style={{ backgroundColor: 'rgba(0, 173, 181, 0.05)' }}>
+                                <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs">
+                                  {rating.username.slice(0, 2).toUpperCase()}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-sm" style={{ color: 'rgb(238, 238, 238)' }}>{rating.username}</p>
+                                  <div className="flex items-center gap-1">
+                                    {[...Array(5)].map((_, idx) => (
+                                      <Star key={idx} size={12} fill={idx < rating.rating ? 'rgb(0, 173, 181)' : 'none'} color="rgb(0, 173, 181)" />
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-          {/* Recent Activity Section */}
-          <div 
-            className="rounded-lg border"
-            style={{
-              backgroundColor: 'rgb(25, 30, 35)',
-              borderColor: 'rgba(0, 173, 181, 0.2)'
-            }}
-          >
-            <div className="p-6 flex items-center gap-4 border-b" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
-              <Calendar size={24} style={{ color: 'rgb(0, 173, 181)' }} />
-              <div className="text-left">
-                <p className="text-sm font-medium" style={{ color: 'rgb(156, 163, 175)' }}>
-                  Activity History
-                </p>
-                <p className="text-2xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
-                  {pastGroups?.length || 0}
-                </p>
-              </div>
-            </div>
-            
-            <div className="p-4">
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {pastGroups.map((group, index) => (
-                  <div 
-                    key={group.id || index} 
-                    className="flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-opacity-80 transition-colors" 
-                    style={{ backgroundColor: 'rgba(0, 173, 181, 0.05)' }}
-                    onClick={() => navigate(`/groups/${group.id}`)}
+                {/* History Dropdown */}
+                <div className="relative dropdown-container flex-1">
+                  <button
+                    onClick={() => {
+                      setShowActivityDropdown(!showActivityDropdown)
+                      setShowFriendsDropdown(false)
+                      setShowRatingsDropdown(false)
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors hover:border-opacity-60"
+                    style={{
+                      backgroundColor: 'rgba(25, 30, 35, 0.8)',
+                      borderColor: 'rgba(0, 173, 181, 0.3)',
+                      color: 'rgb(238, 238, 238)'
+                    }}
                   >
                     <Calendar size={16} style={{ color: 'rgb(0, 173, 181)' }} />
-                    <div className="flex-1">
-                      <p className="text-sm" style={{ color: 'rgb(238, 238, 238)' }}>
-                        {group.name}
-                      </p>
-                      <p className="text-xs" style={{ color: 'rgb(156, 163, 175)' }}>
-                        {new Date(group.date_time).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Skeleton loaders when empty */}
-                {pastGroups.length === 0 && !pastGroupsLoading && (
-                  <>
-                    <p className="text-sm text-center py-4" style={{ color: 'rgb(156, 163, 175)' }}>
-                      No past groups yet
-                    </p>
-                    {[1, 2, 3].map(i => (
-                      <div key={`group-skeleton-${i}`} className="flex items-center gap-3 p-2 rounded animate-pulse" style={{ backgroundColor: 'rgba(0, 173, 181, 0.05)' }}>
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(156, 163, 175, 0.3)' }} />
-                        <div className="flex-1">
-                          <div className="h-4 w-32 rounded mb-1" style={{ backgroundColor: 'rgba(156, 163, 175, 0.3)' }} />
-                          <div className="h-3 w-20 rounded" style={{ backgroundColor: 'rgba(156, 163, 175, 0.2)' }} />
-                        </div>
+                    <span className="text-sm font-medium">History</span>
+                    <span className="text-sm font-medium">({pastGroups?.length || 0})</span>
+                    <ChevronDown size={14} className={`transition-transform ${showActivityDropdown ? 'rotate-180' : ''}`} style={{ color: 'rgb(156, 163, 175)' }} />
+                  </button>
+                  
+                  {showActivityDropdown && (
+                    <div 
+                      className="absolute top-full left-0 mt-2 w-80 rounded-lg border shadow-lg z-50"
+                      style={{
+                        backgroundColor: 'rgb(25, 30, 35)',
+                        borderColor: 'rgba(0, 173, 181, 0.2)'
+                      }}
+                    >
+                      <div className="p-4 border-b" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
+                        <p className="text-sm font-medium" style={{ color: 'rgb(0, 173, 181)' }}>History</p>
                       </div>
-                    ))}
-                  </>
-                )}
+                      <div className="p-4 max-h-64 overflow-y-auto">
+                        {pastGroups.length === 0 ? (
+                          <p className="text-sm text-center py-4" style={{ color: 'rgb(156, 163, 175)' }}>
+                            No past groups yet
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            {pastGroups.map((group, index) => (
+                              <div 
+                                key={group.id || index} 
+                                className="flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-opacity-80 transition-colors" 
+                                style={{ backgroundColor: 'rgba(0, 173, 181, 0.05)' }}
+                                onClick={() => navigate(`/groups/${group.id}`)}
+                              >
+                                <Calendar size={16} style={{ color: 'rgb(0, 173, 181)' }} />
+                                <div className="flex-1">
+                                  <p className="text-sm" style={{ color: 'rgb(238, 238, 238)' }}>
+                                    {group.name}
+                                  </p>
+                                  <p className="text-xs" style={{ color: 'rgb(156, 163, 175)' }}>
+                                    {new Date(group.date_time).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 
-                {/* Intersection observer sentinel */}
-                {pastGroupsHasMore && (
-                  <div ref={pastGroupsRef} className="h-4 w-full" />
-                )}
-                
-                {/* Loading indicator */}
-                {pastGroupsLoading && (
-                  <div className="text-center py-2">
-                    <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mx-auto" style={{ borderColor: 'rgb(0, 173, 181)', borderTopColor: 'transparent' }} />
-                  </div>
-                )}
+          </div>
+        </div>
+        {/* Main Content - Upcoming Groups */}
+
+        {/* Upcoming Groups Section */}
+        <div 
+          className="rounded-lg border"
+          style={{
+            backgroundColor: 'rgb(25, 30, 35)',
+            borderColor: 'rgba(0, 173, 181, 0.2)'
+          }}
+        >
+          <div className="p-4 flex items-center justify-between border-b" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
+            <div className="flex items-center gap-3">
+              <Calendar size={20} style={{ color: 'rgb(0, 173, 181)' }} />
+              <div className="text-left">
+                <p className="text-xs font-medium" style={{ color: 'rgb(156, 163, 175)' }}>
+                  Upcoming Groups
+                </p>
+                <p className="text-xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
+                  {upcomingGroups?.length || 0}
+                </p>
               </div>
             </div>
+            {upcomingGroupsLoading && (
+              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'rgb(0, 173, 181)', borderTopColor: 'transparent' }} />
+            )}
           </div>
-
+          
+          <div className="p-4">
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {upcomingGroups.map((group) => (
+                <div 
+                  key={group.id} 
+                  className="flex items-center gap-3 p-3 rounded cursor-pointer hover:bg-opacity-80 transition-colors" 
+                  style={{ backgroundColor: 'rgba(0, 173, 181, 0.05)' }}
+                  onClick={() => navigate(`/groups/${group.id}`)}
+                >
+                  <div className="flex-shrink-0">
+                    <Calendar size={16} style={{ color: 'rgb(0, 173, 181)' }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: 'rgb(238, 238, 238)' }}>
+                      {group.name}
+                    </p>
+                    <p className="text-xs truncate" style={{ color: 'rgb(156, 163, 175)' }}>
+                      {new Date(group.date_time).toLocaleDateString()} at {new Date(group.date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    <p className="text-xs truncate" style={{ color: 'rgb(156, 163, 175)' }}>
+                      {group.activity_type} • {group.location?.name || 'Location TBD'}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(0, 173, 181, 0.2)', color: 'rgb(0, 173, 181)' }}>
+                    {group.organizer_username === user?.username ? 'Organizer' : 'Member'}
+                  </div>
+                </div>
+              ))}
+              
+              {upcomingGroups.length === 0 && !upcomingGroupsLoading && (
+                <div className="text-center py-8">
+                  <Calendar size={32} className="mx-auto mb-3 opacity-50" style={{ color: 'rgb(156, 163, 175)' }} />
+                  <p className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
+                    No upcoming groups
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: 'rgb(107, 114, 128)' }}>
+                    Join or create a group to see it here
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-
-
 
       </div>
     </div>
