@@ -16,6 +16,7 @@ const Header = () => {
   const [notifications, setNotifications] = useState([])
   const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [notificationsHasMore, setNotificationsHasMore] = useState(true)
+  const [notificationsPage, setNotificationsPage] = useState(1)
   const dropdownRef = useRef(null)
   const notificationsRef = useRef(null)
 
@@ -75,15 +76,16 @@ const Header = () => {
     }
   }, [dropdownOpen])
 
-  // Fetch notifications with progressive loading
-  const fetchNotifications = useCallback(async (loadMore = false) => {
+  // Fetch notifications with proper pagination
+  const fetchNotifications = useCallback(async (pageNum = 1, append = false) => {
     if (!user?.authenticated || notificationsLoading) return
     
     setNotificationsLoading(true)
     try {
-      // Progressive loading: start with 50, then load in chunks of 50 (no upper limit)
-      const currentLimit = loadMore ? notifications.length + 50 : 50
-      const response = await fetch(`${API_BASE_URL}/api/notifications?limit=${currentLimit}`, {
+      // Use offset/limit pagination like groops
+      const limit = 10
+      const offset = (pageNum - 1) * limit
+      const response = await fetch(`${API_BASE_URL}/api/notifications?offset=${offset}&limit=${limit}`, {
         credentials: 'include'
       })
       
@@ -91,10 +93,14 @@ const Header = () => {
         const data = await response.json()
         const newNotifications = data || []
         
-        setNotifications(newNotifications)
+        if (append && pageNum > 1) {
+          setNotifications(prev => [...prev, ...newNotifications])
+        } else {
+          setNotifications(newNotifications)
+        }
         
-        // Check if we have more notifications to load (no upper limit)
-        setNotificationsHasMore(newNotifications.length === currentLimit)
+        // Check if we have more notifications to load
+        setNotificationsHasMore(newNotifications.length === limit)
       } else {
         console.error('Failed to fetch notifications')
         setNotifications([])
@@ -105,21 +111,24 @@ const Header = () => {
     } finally {
       setNotificationsLoading(false)
     }
-  }, [user?.authenticated, API_BASE_URL, notificationsLoading, notifications.length])
+  }, [user?.authenticated, API_BASE_URL, notificationsLoading])
 
   // Load more notifications
   const loadMoreNotifications = useCallback(() => {
     if (notificationsHasMore && !notificationsLoading) {
-      fetchNotifications(true)
+      const nextPage = notificationsPage + 1
+      setNotificationsPage(nextPage)
+      fetchNotifications(nextPage, true)
     }
-  }, [fetchNotifications, notificationsHasMore, notificationsLoading])
+  }, [fetchNotifications, notificationsHasMore, notificationsLoading, notificationsPage])
 
   // Handle notifications button click
   const handleNotificationsClick = useCallback(() => {
     if (!notificationsOpen) {
       // Reset state and fetch fresh notifications
+      setNotificationsPage(1)
       setNotificationsHasMore(true)
-      fetchNotifications(false)
+      fetchNotifications(1, false)
       // Refresh unread count when opening notifications
       refreshUnreadCount()
     }
@@ -127,15 +136,7 @@ const Header = () => {
     setDropdownOpen(false) // Close user dropdown if open
   }, [notificationsOpen, fetchNotifications, refreshUnreadCount])
 
-  // Handle scroll in notifications dropdown
-  const handleNotificationsScroll = useCallback((e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target
-    
-    // Load more when scrolled to bottom (with small buffer)
-    if (scrollHeight - scrollTop <= clientHeight + 100) {
-      loadMoreNotifications()
-    }
-  }, [loadMoreNotifications])
+
 
 
   return (
@@ -260,7 +261,7 @@ const Header = () => {
                       </div>
 
                       {/* Content */}
-                      <div className="max-h-80 overflow-y-auto" onScroll={handleNotificationsScroll}>
+                      <div className="max-h-80 overflow-y-auto">
                         {notificationsLoading && notifications.length === 0 ? (
                           <div className="flex items-center justify-center py-8">
                             <div 
@@ -347,13 +348,41 @@ const Header = () => {
                               </div>
                             ))}
                             
-                            {/* Load more indicator */}
-                            {notificationsLoading && notifications.length > 0 && (
-                              <div className="flex items-center justify-center py-4">
-                                <div 
-                                  className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
-                                  style={{ borderColor: 'rgb(0, 173, 181)', borderTopColor: 'transparent' }}
-                                />
+                            {/* Load More Button */}
+                            {notificationsHasMore && notifications.length > 0 && (
+                              <div className="px-4 py-3 border-t" style={{ borderColor: 'rgba(75, 85, 99, 0.3)' }}>
+                                <button
+                                  onClick={loadMoreNotifications}
+                                  disabled={notificationsLoading}
+                                  className="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                                  style={{
+                                    backgroundColor: notificationsLoading ? 'rgba(0, 173, 181, 0.1)' : 'rgba(0, 173, 181, 0.2)',
+                                    color: notificationsLoading ? 'rgba(0, 173, 181, 0.5)' : 'rgb(0, 173, 181)',
+                                    border: '1px solid rgba(0, 173, 181, 0.3)'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!notificationsLoading) {
+                                      e.target.style.backgroundColor = 'rgba(0, 173, 181, 0.3)'
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (!notificationsLoading) {
+                                      e.target.style.backgroundColor = 'rgba(0, 173, 181, 0.2)'
+                                    }
+                                  }}
+                                >
+                                  {notificationsLoading ? (
+                                    <>
+                                      <div 
+                                        className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mr-2 inline-block"
+                                        style={{ borderColor: 'rgba(0, 173, 181, 0.5)', borderTopColor: 'transparent' }}
+                                      />
+                                      Loading...
+                                    </>
+                                  ) : (
+                                    'Load More'
+                                  )}
+                                </button>
                               </div>
                             )}
                             

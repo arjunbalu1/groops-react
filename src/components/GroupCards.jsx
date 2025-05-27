@@ -10,7 +10,7 @@ const GroupCards = () => {
   const [memberProfiles, setMemberProfiles] = useState({})
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
-  const GROUPS_TO_FETCH = 10
+  const GROUPS_TO_FETCH = 6
 
 
 

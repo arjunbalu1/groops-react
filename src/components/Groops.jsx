@@ -81,8 +81,11 @@ const Groops = () => {
     if (selectedActivityType) params.append('activity_type', selectedActivityType)
     if (selectedSkillLevel) params.append('skill_level', selectedSkillLevel)
     
-    params.append('page', pageNum.toString())
-    params.append('limit', '20')
+    // Backend expects offset and limit, not page
+    const limit = 9
+    const offset = (pageNum - 1) * limit
+    params.append('offset', offset.toString())
+    params.append('limit', limit.toString())
     params.append('sort', 'created_desc')
     
     return params.toString()
@@ -115,7 +118,7 @@ const Groops = () => {
       }
       
       // Check if there are more groups to load
-      setHasMore(newGroups.length === 20)
+      setHasMore(newGroups.length === 9)
       
       // Fetch member profiles for all approved members
       const allMembers = newGroups.flatMap(group => 
@@ -153,14 +156,14 @@ const Groops = () => {
     fetchGroups(1, false)
   }, [fetchGroups])
 
-  // Load more groups
-  const loadMore = () => {
+  // Load more groups manually
+  const loadMore = useCallback(() => {
     if (hasMore && !loadingMore) {
       const nextPage = page + 1
       setPage(nextPage)
       fetchGroups(nextPage, true)
     }
-  }
+  }, [hasMore, loadingMore, page, fetchGroups])
 
   // Clear all filters
   const clearFilters = () => {
@@ -627,7 +630,7 @@ const Groops = () => {
 
             {/* Load More Button */}
             {hasMore && (
-              <div className="text-center">
+              <div className="text-center py-8">
                 <Button
                   onClick={loadMore}
                   disabled={loadingMore}
@@ -649,6 +652,15 @@ const Groops = () => {
                     'Load More'
                   )}
                 </Button>
+              </div>
+            )}
+            
+            {/* End of Results Indicator */}
+            {!hasMore && groups.length > 0 && (
+              <div className="text-center py-8">
+                <p className="text-sm" style={{ color: 'rgb(107, 114, 128)' }}>
+                  No more groups to load
+                </p>
               </div>
             )}
           </>

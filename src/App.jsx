@@ -48,7 +48,7 @@ const AppContent = () => {
           element={
             <>
               <Header />
-              <GroupDetails />
+              <GroupDetails key={`${window.location.pathname}-${Date.now()}`} />
             </>
           } 
         />

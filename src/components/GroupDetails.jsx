@@ -26,6 +26,42 @@ const GroupDetails = () => {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [])
 
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!groupId) return
+
+    const fetchGroupData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
+          credentials: 'include'
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setGroup(data)
+          
+          // Fetch member profiles for any new members
+          const allMembers = [data.organizer_username, ...(data.members?.map(m => m.username) || [])]
+          const uniqueMembers = [...new Set(allMembers)]
+          uniqueMembers.forEach(username => fetchMemberProfile(username))
+        }
+      } catch (err) {
+        console.error('Error auto-refreshing group data:', err)
+      }
+    }
+
+    // Set up auto-refresh interval
+    const interval = setInterval(() => {
+      // Only refresh if page is visible (user hasn't switched tabs)
+      if (!document.hidden) {
+        fetchGroupData()
+      }
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId, API_BASE_URL])
+
   // Fetch group details
   useEffect(() => {
     const fetchGroupDetails = async () => {
@@ -86,6 +122,17 @@ const GroupDetails = () => {
     }
 
     fetchPendingMembers()
+
+    // Auto-refresh pending members every 30 seconds for organizers
+    if (group && getUserMembershipStatus() === 'organizer') {
+      const interval = setInterval(() => {
+        if (!document.hidden) {
+          fetchPendingMembers()
+        }
+      }, 30000) // 30 seconds
+
+      return () => clearInterval(interval)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [group, groupId, user])
 
@@ -168,7 +215,7 @@ const GroupDetails = () => {
       })
       
       if (response.ok) {
-        navigate(-1)
+        navigate('/')
       } else {
         const data = await response.json()
         alert(data.error || 'Failed to leave group')

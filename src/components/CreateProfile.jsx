@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 const CreateProfile = () => {
-  const { user, checkAuthStatus } = useAuth()
+  const navigate = useNavigate()
+  const { user, isLoading, checkAuthStatus } = useAuth()
   const [formData, setFormData] = useState({
     username: '',
     fullName: '',
@@ -155,14 +157,21 @@ const CreateProfile = () => {
     }
   }
 
+  // Redirect non-authenticated users to home page
+  useEffect(() => {
+    if (!isLoading && !user?.authenticated) {
+      navigate('/')
+    }
+  }, [isLoading, user, navigate])
+
   // Redirect if user already has a complete profile
   if (user && !user.needsProfile) {
-    window.location.href = '/'
+    navigate('/')
     return null
   }
 
   // Show loading if we're still checking auth
-  if (!user) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
         <div className="text-center">
