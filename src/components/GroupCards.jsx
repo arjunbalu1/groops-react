@@ -195,7 +195,7 @@ const GroupCards = () => {
                 width: '380px',
                 maxWidth: '380px',
                 minWidth: '380px',
-                scrollSnapAlign: 'start'
+                scrollSnapAlign: 'center'
               }}
               onClick={() => navigate(`/groups/${group.id}`)}
             >
