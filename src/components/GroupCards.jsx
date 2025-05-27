@@ -159,10 +159,7 @@ const GroupCards = () => {
                 e.target.style.color = 'rgb(34, 211, 238)'
                 e.target.style.textShadow = '0 0 10px rgba(34, 211, 238, 0.4), 0 0 20px rgba(34, 211, 238, 0.2)'
               }}
-              onClick={() => {
-                // TODO: Navigate to all groups page or implement search/filter
-                console.log('Navigate to all groups')
-              }}
+              onClick={() => navigate('/groops')}
             >
               See all groops →
             </button>

@@ -5,6 +5,7 @@ import HomePage from '@/components/HomePage'
 import CreateProfile from '@/components/CreateProfile'
 import GroupDetails from '@/components/GroupDetails'
 import Dashboard from '@/components/Dashboard'
+import Groops from '@/components/Groops'
 import { AuthProvider } from '@/context/AuthContext'
 
 const AppContent = () => {
@@ -17,6 +18,15 @@ const AppContent = () => {
             <>
               <Header />
               <HomePage />
+            </>
+          } 
+        />
+        <Route 
+          path="/groops" 
+          element={
+            <>
+              <Header />
+              <Groops />
             </>
           } 
         />
