@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Calendar, MapPin, Users, IndianRupee, Search, Filter, X } from 'lucide-react'
+import { Calendar, MapPin, Users, IndianRupee, Search, Filter, X, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -217,13 +217,57 @@ const Groops = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
-            All Groops
-          </h1>
-          <p style={{ color: 'rgb(156, 163, 175)' }}>
-            Discover and join groups that match your interests
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
+              All Groops
+            </h1>
+            <p style={{ color: 'rgb(156, 163, 175)' }}>
+              Discover and join groups that match your interests
+            </p>
+          </div>
+          
+          {/* Create Group Button */}
+          <div className="flex-shrink-0">
+            <button
+              onClick={() => navigate('/create-group')}
+              className="group relative inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-bold text-base transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgb(0, 173, 181) 0%, rgb(0, 200, 210) 50%, rgb(0, 173, 181) 100%)',
+                color: 'rgb(15, 20, 25)',
+                boxShadow: '0 8px 32px rgba(0, 173, 181, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}
+            >
+              {/* Animated background effect */}
+              <div 
+                className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
+                style={{
+                  background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%)',
+                  transform: 'translateX(-100%)',
+                }}
+              />
+              
+              {/* Plus icon with animation */}
+              <div className="relative flex items-center justify-center w-5 h-5 rounded-full transition-transform duration-300 group-hover:rotate-90" 
+                   style={{ backgroundColor: 'rgba(15, 20, 25, 0.2)' }}>
+                <Plus size={14} className="transition-all duration-300" />
+              </div>
+              
+              <span className="relative z-10 tracking-wide">Host Groop</span>
+              
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <div 
+                  className="w-full h-full rounded-xl animate-pulse"
+                  style={{
+                    background: 'conic-gradient(from 0deg, transparent, rgba(0, 173, 181, 0.4), transparent)',
+                    filter: 'blur(1px)'
+                  }}
+                />
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Search and Filter Bar */}

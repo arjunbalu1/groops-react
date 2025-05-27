@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, Users, IndianRupee, MessageCircle, Settings, UserPlus, UserX, Edit, Trash2, Check, X, Clock, ArrowLeft } from 'lucide-react'
+import { Calendar, MapPin, Users, IndianRupee, MessageCircle, Settings, UserPlus, UserX, Edit, Trash2, Check, X, Clock } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 const GroupDetails = () => {
@@ -361,33 +361,17 @@ const GroupDetails = () => {
 
   return (
     <div style={{ backgroundColor: 'rgb(15, 20, 25)', minHeight: '100vh' }}>
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Back Button */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors hover:bg-opacity-80"
-            style={{
-              backgroundColor: 'rgba(0, 173, 181, 0.1)',
-              color: 'rgb(0, 173, 181)',
-              border: '1px solid rgba(0, 173, 181, 0.3)'
-            }}
-          >
-            <ArrowLeft size={16} />
-            Back
-          </button>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-6">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
+              {/* Group Name and Badges */}
+              <h1 className="text-3xl font-bold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
                 {group.name}
               </h1>
               
-              {/* Badges */}
-              <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-6">
                 {group.skill_level && (
                   <div
                     className="px-3 py-1 rounded-full text-sm font-medium"
@@ -407,6 +391,55 @@ const GroupDetails = () => {
                   }}
                 >
                   {group.activity_type}
+                </div>
+                <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: 'rgba(156, 163, 175, 0.2)', color: 'rgb(156, 163, 175)' }}>
+                  <Users size={14} />
+                  <span>
+                    {approvedMembers.length}/{group.max_members}
+                    {pendingMembers.length > 0 && ` • ${pendingMembers.length} pending`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Organizer Info */}
+              <div className="flex items-start gap-4">
+                <div className="w-16 h-16 rounded-full border-2 flex-shrink-0" style={{ borderColor: 'rgb(0, 173, 181)' }}>
+                  <div className="w-full h-full rounded-full" style={{ backgroundColor: memberProfiles[group.organizer_username]?.avatar_url ? 'transparent' : 'rgba(0, 173, 181, 0.2)' }}>
+                    {memberProfiles[group.organizer_username]?.avatar_url ? (
+                      <img
+                        src={`${API_BASE_URL}/profiles/${group.organizer_username}/image`}
+                        alt={group.organizer_username}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-lg font-bold" style={{ color: 'rgb(0, 173, 181)' }}>
+                        {group.organizer_username?.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg font-semibold" style={{ color: 'rgb(238, 238, 238)' }}>
+                      {memberProfiles[group.organizer_username]?.full_name || group.organizer_username}
+                    </span>
+                    <span className="text-sm px-2 py-1 rounded-full" style={{ backgroundColor: 'rgba(0, 173, 181, 0.2)', color: 'rgb(0, 173, 181)' }}>
+                      Organizer
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-1">
+                      <span className="text-yellow-400">★</span>
+                      <span className="text-sm font-medium" style={{ color: 'rgb(238, 238, 238)' }}>
+                        {memberProfiles[group.organizer_username]?.rating || '5.0'}
+                      </span>
+                    </div>
+                    {memberProfiles[group.organizer_username]?.bio && (
+                      <p className="text-sm flex-1" style={{ color: 'rgb(201, 209, 217)' }}>
+                        {memberProfiles[group.organizer_username].bio}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -470,20 +503,10 @@ const GroupDetails = () => {
               )}
             </div>
           </div>
-
-          {/* Member Count */}
-          <div className="flex items-center gap-2 text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
-            <Users size={16} />
-            <span>
-              {approvedMembers.length}/{group.max_members} members
-              {pendingMembers.length > 0 && ` • ${pendingMembers.length} pending`}
-            </span>
-          </div>
         </div>
 
-        {/* Group Details Grid */}
-        <div className="grid gap-6 mb-8">
-          {/* Basic Info Card */}
+        {/* Combined Event Details, About, Location, and Members Box */}
+        <div className="mb-8">
           <div 
             className="p-6 rounded-lg border"
             style={{
@@ -491,83 +514,163 @@ const GroupDetails = () => {
               borderColor: 'rgba(75, 85, 99, 0.3)'
             }}
           >
-            <h3 className="font-semibold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
-              Event Details
-            </h3>
-            <div className="grid gap-4">
-              <div className="flex items-center gap-3">
-                <Calendar size={16} style={{ color: 'rgb(0, 173, 181)' }} />
-                <span style={{ color: 'rgb(238, 238, 238)' }}>
-                  {new Date(group.date_time).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit'
-                  })}
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <MapPin size={16} style={{ color: 'rgb(0, 173, 181)' }} />
-                <span style={{ color: 'rgb(238, 238, 238)' }}>
-                  {group.location?.formatted_address || group.location?.name || group.location}
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <IndianRupee size={16} style={{ color: 'rgb(0, 173, 181)' }} />
-                <span style={{ color: 'rgb(238, 238, 238)' }}>
-                  {group.cost === 0 ? 'Free' : `₹${group.cost}`}
-                </span>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 mt-0.5 rounded-full border-2 flex-shrink-0" style={{ borderColor: 'rgb(0, 173, 181)' }}>
-                  <div className="w-full h-full rounded-full" style={{ backgroundColor: memberProfiles[group.organizer_username]?.avatar_url ? 'transparent' : 'rgba(0, 173, 181, 0.2)' }}>
-                    {memberProfiles[group.organizer_username]?.avatar_url ? (
-                      <img
-                        src={`${API_BASE_URL}/profiles/${group.organizer_username}/image`}
-                        alt={group.organizer_username}
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-sm" style={{ color: 'rgb(0, 173, 181)' }}>
-                        {group.organizer_username?.slice(0, 1).toUpperCase()}
+            <div className="space-y-8">
+              {/* Top Section: Event Details + Map */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Column: Event Details + About */}
+                <div className="flex flex-col justify-center h-full min-h-[240px]">
+                  <div className="space-y-6">
+                    {/* Event Details Section */}
+                    <div>
+                      <div className="grid gap-4">
+                        <div className="flex items-center gap-3">
+                          <Calendar size={16} style={{ color: 'rgb(0, 173, 181)' }} />
+                          <span style={{ color: 'rgb(238, 238, 238)' }}>
+                            {new Date(group.date_time).toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <MapPin size={16} style={{ color: 'rgb(0, 173, 181)' }} />
+                          <span style={{ color: 'rgb(238, 238, 238)' }}>
+                            {group.location?.formatted_address || group.location?.name || group.location}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <IndianRupee size={16} style={{ color: 'rgb(0, 173, 181)' }} />
+                          <span style={{ color: 'rgb(238, 238, 238)' }}>
+                            {group.cost === 0 ? 'Free' : `₹${group.cost}`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* About Section - Immediately under Event Details */}
+                    {group.description && (
+                      <div>
+                        <p style={{ color: 'rgb(201, 209, 217)', lineHeight: '1.6' }}>
+                          {group.description}
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
+
+                {/* Right Column: Location/Map */}
                 <div>
-                  <div style={{ color: 'rgb(238, 238, 238)' }}>
-                    Organized by {memberProfiles[group.organizer_username]?.full_name || group.organizer_username}
+                  <div 
+                    className="w-full rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: 'rgba(75, 85, 99, 0.2)', height: '240px' }}
+                  >
+                    <div className="text-center">
+                      <MapPin size={36} style={{ color: 'rgba(75, 85, 99, 0.5)' }} className="mx-auto mb-2" />
+                      <h4 className="font-medium mb-1" style={{ color: 'rgb(156, 163, 175)' }}>
+                        Interactive Map
+                      </h4>
+                      <p className="text-sm" style={{ color: 'rgba(75, 85, 99, 0.8)' }}>
+                        Map integration coming soon
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
-                    Host
+                </div>
+              </div>
+
+              {/* Bottom Section: Members */}
+              <div className="border-t pt-6" style={{ borderColor: 'rgba(75, 85, 99, 0.3)' }}>
+                <h3 className="font-semibold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
+                  Members ({approvedMembers.length})
+                </h3>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  {/* Organizer */}
+                  <div className="flex flex-col items-center text-center">
+                    <div className="relative mb-2">
+                      <div className="w-16 h-16 rounded-full border-2 overflow-hidden" style={{ borderColor: 'rgb(0, 173, 181)' }}>
+                        {memberProfiles[group.organizer_username]?.avatar_url ? (
+                          <img
+                            src={`${API_BASE_URL}/profiles/${group.organizer_username}/image`}
+                            alt={group.organizer_username}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 173, 181, 0.2)', color: 'rgb(0, 173, 181)' }}>
+                            {group.organizer_username?.slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div 
+                        className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+                        style={{ backgroundColor: 'rgb(0, 173, 181)', color: 'white' }}
+                      >
+                        ★
+                      </div>
+                    </div>
+                    <div className="text-sm font-medium" style={{ color: 'rgb(238, 238, 238)' }}>
+                      {memberProfiles[group.organizer_username]?.full_name || group.organizer_username}
+                    </div>
+                    <div className="text-xs" style={{ color: 'rgb(0, 173, 181)' }}>
+                      Organizer
+                    </div>
                   </div>
+
+                  {/* Approved Members (excluding organizer) */}
+                  {nonOrganizerMembers.map((member) => (
+                    <div key={member.username} className="flex flex-col items-center text-center group">
+                      <div className="relative mb-2">
+                        <div className="w-16 h-16 rounded-full border-2 overflow-hidden" style={{ borderColor: 'rgba(75, 85, 99, 0.5)' }}>
+                          {memberProfiles[member.username]?.avatar_url ? (
+                            <img
+                              src={`${API_BASE_URL}/profiles/${member.username}/image`}
+                              alt={member.username}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'rgba(75, 85, 99, 0.3)', color: 'rgb(156, 163, 175)' }}>
+                              {member.username?.slice(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Remove button for organizers */}
+                        {isOrganizer && (
+                          <button
+                            onClick={() => handleRemoveMember(member.username)}
+                            className="absolute -top-2 -right-2 rounded-full flex items-center justify-center z-10"
+                            style={{ 
+                              width: '24px',
+                              height: '24px',
+                              backgroundColor: 'rgb(185, 28, 28)', 
+                              color: 'white',
+                              border: '2px solid rgb(220, 38, 38)',
+                              minWidth: '24px',
+                              minHeight: '24px'
+                            }}
+                            title="Remove member"
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
+                      </div>
+                      <div className="text-sm font-medium" style={{ color: 'rgb(238, 238, 238)' }}>
+                        {memberProfiles[member.username]?.full_name || member.username}
+                      </div>
+                      <div className="text-xs" style={{ color: 'rgb(156, 163, 175)' }}>
+                        Member
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Description */}
-          {group.description && (
-            <div 
-              className="p-6 rounded-lg border"
-              style={{
-                backgroundColor: 'rgba(25, 30, 35, 0.8)',
-                borderColor: 'rgba(75, 85, 99, 0.3)'
-              }}
-            >
-              <h3 className="font-semibold mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
-                About
-              </h3>
-              <p style={{ color: 'rgb(201, 209, 217)', lineHeight: '1.6' }}>
-                {group.description}
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Pending Requests - Prominent for Organizers */}
@@ -631,98 +734,7 @@ const GroupDetails = () => {
           </div>
         )}
 
-        {/* Members Section */}
-        <div 
-          className="p-6 rounded-lg border"
-          style={{
-            backgroundColor: 'rgba(25, 30, 35, 0.8)',
-            borderColor: 'rgba(75, 85, 99, 0.3)'
-          }}
-        >
-          <h3 className="font-semibold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
-            Members ({approvedMembers.length})
-          </h3>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {/* Organizer */}
-            <div className="flex flex-col items-center text-center">
-              <div className="relative mb-2">
-                <div className="w-16 h-16 rounded-full border-2 overflow-hidden" style={{ borderColor: 'rgb(0, 173, 181)' }}>
-                  {memberProfiles[group.organizer_username]?.avatar_url ? (
-                    <img
-                      src={`${API_BASE_URL}/profiles/${group.organizer_username}/image`}
-                      alt={group.organizer_username}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 173, 181, 0.2)', color: 'rgb(0, 173, 181)' }}>
-                      {group.organizer_username?.slice(0, 2).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div 
-                  className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-                  style={{ backgroundColor: 'rgb(0, 173, 181)', color: 'white' }}
-                >
-                  ★
-                </div>
-              </div>
-              <div className="text-sm font-medium" style={{ color: 'rgb(238, 238, 238)' }}>
-                {memberProfiles[group.organizer_username]?.full_name || group.organizer_username}
-              </div>
-              <div className="text-xs" style={{ color: 'rgb(0, 173, 181)' }}>
-                Organizer
-              </div>
-            </div>
 
-            {/* Approved Members (excluding organizer) */}
-            {nonOrganizerMembers.map((member) => (
-              <div key={member.username} className="flex flex-col items-center text-center group">
-                <div className="relative mb-2">
-                  <div className="w-16 h-16 rounded-full border-2 overflow-hidden" style={{ borderColor: 'rgba(75, 85, 99, 0.5)' }}>
-                    {memberProfiles[member.username]?.avatar_url ? (
-                      <img
-                        src={`${API_BASE_URL}/profiles/${member.username}/image`}
-                        alt={member.username}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'rgba(75, 85, 99, 0.3)', color: 'rgb(156, 163, 175)' }}>
-                        {member.username?.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Remove button for organizers */}
-                  {isOrganizer && (
-                    <button
-                      onClick={() => handleRemoveMember(member.username)}
-                      className="absolute -top-2 -right-2 rounded-full flex items-center justify-center z-10"
-                      style={{ 
-                        width: '24px',
-                        height: '24px',
-                        backgroundColor: 'rgb(185, 28, 28)', 
-                        color: 'white',
-                        border: '2px solid rgb(220, 38, 38)',
-                        minWidth: '24px',
-                        minHeight: '24px'
-                      }}
-                      title="Remove member"
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
-                </div>
-                <div className="text-sm font-medium" style={{ color: 'rgb(238, 238, 238)' }}>
-                  {memberProfiles[member.username]?.full_name || member.username}
-                </div>
-                <div className="text-xs" style={{ color: 'rgb(156, 163, 175)' }}>
-                  Member
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Chat Section - Placeholder for approved members */}
         {(isMember || isOrganizer) && (
@@ -746,33 +758,6 @@ const GroupDetails = () => {
             </div>
           </div>
         )}
-
-        {/* Map Section - Placeholder */}
-        <div 
-          className="p-6 rounded-lg border mt-6"
-          style={{
-            backgroundColor: 'rgba(25, 30, 35, 0.8)',
-            borderColor: 'rgba(75, 85, 99, 0.3)'
-          }}
-        >
-          <h3 className="font-semibold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
-            Location
-          </h3>
-          <div 
-            className="w-full h-64 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: 'rgba(75, 85, 99, 0.2)' }}
-          >
-            <div className="text-center">
-              <MapPin size={48} style={{ color: 'rgba(75, 85, 99, 0.5)' }} className="mx-auto mb-3" />
-              <h4 className="font-medium mb-2" style={{ color: 'rgb(156, 163, 175)' }}>
-                Interactive Map
-              </h4>
-              <p className="text-sm" style={{ color: 'rgba(75, 85, 99, 0.8)' }}>
-                Map integration coming soon
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

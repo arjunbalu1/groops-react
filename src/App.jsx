@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from '@/components/Header'
 import HomePage from '@/components/HomePage'
 import CreateProfile from '@/components/CreateProfile'
+import CreateGroup from '@/components/CreateGroup'
 import GroupDetails from '@/components/GroupDetails'
 import Dashboard from '@/components/Dashboard'
 import Groops from '@/components/Groops'
@@ -33,6 +34,15 @@ const AppContent = () => {
         <Route 
           path="/create-profile" 
           element={<CreateProfile />} 
+        />
+        <Route 
+          path="/create-group" 
+          element={
+            <>
+              <Header />
+              <CreateGroup />
+            </>
+          } 
         />
         <Route 
           path="/dashboard" 

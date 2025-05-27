@@ -161,7 +161,7 @@ const GroupCards = () => {
               }}
               onClick={() => navigate('/groops')}
             >
-              See all groops →
+              See all Groops →
             </button>
           </div>
         </div>

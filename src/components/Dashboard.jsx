@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
-import { LayoutDashboard, Users, Star, Calendar, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, Users, Star, Calendar, ChevronDown, Bell, Plus } from 'lucide-react'
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -31,6 +31,9 @@ const Dashboard = () => {
   // Upcoming groups state
   const [upcomingGroups, setUpcomingGroups] = useState([])
   const [upcomingGroupsLoading, setUpcomingGroupsLoading] = useState(false)
+  
+  // Pending members state for groups where user is organizer
+  const [groupPendingMembers, setGroupPendingMembers] = useState({})
   
   // Dropdown states
   const [showRatingsDropdown, setShowRatingsDropdown] = useState(false)
@@ -111,6 +114,7 @@ const Dashboard = () => {
         .filter(membership => membership.status === 'approved')
       
       const upcomingGroups = []
+      const pendingMembersData = {}
       
       for (const membership of approvedJoinedMemberships) {
         try {
@@ -119,6 +123,23 @@ const Dashboard = () => {
             const group = await response.json()
             if (new Date(group.date_time) > now) {
               upcomingGroups.push(group)
+              
+              // If user is the organizer, fetch pending members
+              if (group.organizer_username === user?.username) {
+                try {
+                  const pendingResponse = await fetch(`${API_BASE_URL}/api/groups/${membership.group_id}/pending-members`, {
+                    credentials: 'include'
+                  })
+                  if (pendingResponse.ok) {
+                    const pendingMembers = await pendingResponse.json()
+                    pendingMembersData[membership.group_id] = pendingMembers
+                    console.log(`Fetched ${pendingMembers.length} pending members for group ${membership.group_id}`)
+                  }
+                } catch (pendingErr) {
+                  console.error('Error fetching pending members for group:', membership.group_id, pendingErr)
+                  pendingMembersData[membership.group_id] = []
+                }
+              }
             }
           }
         } catch (err) {
@@ -130,17 +151,29 @@ const Dashboard = () => {
       const sortedUpcomingGroups = upcomingGroups.sort((a, b) => new Date(a.date_time) - new Date(b.date_time))
       
       setUpcomingGroups(sortedUpcomingGroups)
+      setGroupPendingMembers(pendingMembersData)
     } catch (err) {
       console.error('Error fetching upcoming groups:', err)
     } finally {
       setUpcomingGroupsLoading(false)
     }
-  }, [dashboardData, API_BASE_URL])
+  }, [dashboardData, API_BASE_URL, user?.username])
 
   // Fetch upcoming groups when dashboard data changes
   useEffect(() => {
     fetchUpcomingGroups()
   }, [fetchUpcomingGroups])
+
+  // Format date helper (consistent with other components)
+  const formatDate = (dateString) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -433,7 +466,7 @@ const Dashboard = () => {
                                     {group.name}
                                   </p>
                                   <p className="text-xs" style={{ color: 'rgb(156, 163, 175)' }}>
-                                    {new Date(group.date_time).toLocaleDateString()}
+                                    {formatDate(group.date_time)}
                                   </p>
                                 </div>
                               </div>
@@ -447,6 +480,49 @@ const Dashboard = () => {
                 
           </div>
         </div>
+
+        {/* Create Group Button */}
+        <div className="mb-6 text-center">
+          <button
+            onClick={() => navigate('/create-group')}
+            className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgb(0, 173, 181) 0%, rgb(0, 200, 210) 50%, rgb(0, 173, 181) 100%)',
+              color: 'rgb(15, 20, 25)',
+              boxShadow: '0 8px 32px rgba(0, 173, 181, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            {/* Animated background effect */}
+            <div 
+              className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
+              style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%)',
+                transform: 'translateX(-100%)',
+              }}
+            />
+            
+            {/* Plus icon with animation */}
+            <div className="relative flex items-center justify-center w-6 h-6 rounded-full transition-transform duration-300 group-hover:rotate-90" 
+                 style={{ backgroundColor: 'rgba(15, 20, 25, 0.2)' }}>
+              <Plus size={16} className="transition-all duration-300" />
+            </div>
+            
+            <span className="relative z-10 tracking-wide">Host Groop</span>
+            
+            {/* Shimmer effect */}
+            <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <div 
+                className="w-full h-full rounded-xl animate-pulse"
+                style={{
+                  background: 'conic-gradient(from 0deg, transparent, rgba(0, 173, 181, 0.4), transparent)',
+                  filter: 'blur(1px)'
+                }}
+              />
+            </div>
+          </button>
+        </div>
+
         {/* Main Content - Upcoming Groups */}
 
         {/* Upcoming Groups Section */}
@@ -462,7 +538,7 @@ const Dashboard = () => {
               <Calendar size={20} style={{ color: 'rgb(0, 173, 181)' }} />
               <div className="text-left">
                 <p className="text-xs font-medium" style={{ color: 'rgb(156, 163, 175)' }}>
-                  Upcoming Groups
+                  Upcoming Groops
                 </p>
                 <p className="text-xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
                   {upcomingGroups?.length || 0}
@@ -491,14 +567,31 @@ const Dashboard = () => {
                       {group.name}
                     </p>
                     <p className="text-xs truncate" style={{ color: 'rgb(156, 163, 175)' }}>
-                      {new Date(group.date_time).toLocaleDateString()} at {new Date(group.date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {formatDate(group.date_time)}
                     </p>
                     <p className="text-xs truncate" style={{ color: 'rgb(156, 163, 175)' }}>
                       {group.activity_type} • {group.location?.name || 'Location TBD'}
                     </p>
+                    {/* Show pending requests if user is organizer and there are pending members */}
+                    {group.organizer_username === user?.username && groupPendingMembers[group.id]?.length > 0 && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Bell size={12} style={{ color: 'rgb(251, 191, 36)' }} />
+                        <p className="text-xs" style={{ color: 'rgb(251, 191, 36)' }}>
+                          {groupPendingMembers[group.id].length} join request{groupPendingMembers[group.id].length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-shrink-0 text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(0, 173, 181, 0.2)', color: 'rgb(0, 173, 181)' }}>
-                    {group.organizer_username === user?.username ? 'Organizer' : 'Member'}
+                  <div className="flex-shrink-0 flex items-center gap-2">
+                    <div className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(0, 173, 181, 0.2)', color: 'rgb(0, 173, 181)' }}>
+                      {group.organizer_username === user?.username ? 'Organizer' : 'Member'}
+                    </div>
+                    {/* Show notification badge for pending requests */}
+                    {group.organizer_username === user?.username && groupPendingMembers[group.id]?.length > 0 && (
+                      <div className="flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold" style={{ backgroundColor: 'rgb(251, 191, 36)', color: 'rgb(15, 20, 25)' }}>
+                        {groupPendingMembers[group.id].length}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -507,7 +600,7 @@ const Dashboard = () => {
                 <div className="text-center py-8">
                   <Calendar size={32} className="mx-auto mb-3 opacity-50" style={{ color: 'rgb(156, 163, 175)' }} />
                   <p className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
-                    No upcoming groups
+                    No Upcoming Groops
                   </p>
                   <p className="text-xs mt-1" style={{ color: 'rgb(107, 114, 128)' }}>
                     Join or create a group to see it here

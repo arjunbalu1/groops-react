@@ -71,6 +71,7 @@ const CreateProfile = () => {
     }, 500)
     
     return () => clearTimeout(timeoutId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.username])
 
   const handleInputChange = (e) => {
