@@ -134,6 +134,7 @@ const Groops = () => {
       setLoading(false)
       setLoadingMore(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_BASE_URL, buildQueryString])
 
   // Update URL params when filters change
