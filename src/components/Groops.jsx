@@ -367,10 +367,10 @@ const Groops = () => {
           </div>
         )}
 
-        {/* Groups List - Horizontal Cards */}
+        {/* Groups Grid - 3 Column Layout */}
         {!loading && groups.length > 0 && (
           <>
-            <div className="space-y-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {groups.map((group) => {
                 const skillStyle = getSkillLevelBadge(group.skill_level)
                 const approvedMembers = group.members?.filter(m => m.status === 'approved').length || 0
@@ -386,21 +386,20 @@ const Groops = () => {
                     }}
                     onClick={() => navigate(`/groups/${group.id}`)}
                   >
-                    <div className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                        {/* Left Section - Main Info */}
-                        <div className="flex-1">
-                          {/* Header */}
-                          <div className="mb-3">
+                    <div className="p-4">
+                      <div className="flex flex-col gap-2 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-2">
+                            {/* Title */}
                             <h3 
-                              className="text-xl font-semibold group-hover:text-cyan-400 transition-colors mb-2"
+                              className="text-lg font-semibold group-hover:text-cyan-400 transition-colors mb-1 line-clamp-2"
                               style={{ color: 'rgb(238, 238, 238)' }}
                             >
                               {group.name}
                             </h3>
                             
                             {/* Badges */}
-                            <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <div className="flex flex-wrap items-center gap-2">
                               {group.skill_level && (
                                 <div
                                   className="px-2 py-1 rounded-full text-xs font-medium"
@@ -413,7 +412,7 @@ const Groops = () => {
                                 </div>
                               )}
                               <div 
-                                className="px-2 py-1 rounded-full text-xs font-medium"
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                 style={{
                                   backgroundColor: getActivityTypeColor(group.activity_type) + '20',
                                   color: getActivityTypeColor(group.activity_type)
@@ -422,49 +421,50 @@ const Groops = () => {
                                 {group.activity_type}
                               </div>
                             </div>
-                            
-                            {/* Description */}
-                            <p 
-                              className="text-sm line-clamp-2"
-                              style={{ color: 'rgb(156, 163, 175)' }}
-                            >
-                              {group.description}
-                            </p>
                           </div>
-                        </div>
+                          
+                          {/* Description */}
+                          <p 
+                            className="text-sm mb-2 line-clamp-2"
+                            style={{ color: 'rgb(156, 163, 175)' }}
+                          >
+                            {group.description}
+                          </p>
 
-                        {/* Right Section - Details */}
-                        <div className="lg:w-80 lg:flex-shrink-0">
-                          <div className="space-y-3 text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
+                          {/* Details */}
+                          <div className="space-y-2 text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
                             <div className="flex items-center">
-                              <Calendar size={16} className="mr-3 flex-shrink-0" />
+                              <Calendar size={14} className="mr-2 flex-shrink-0" />
                               <span className="truncate">{formatDate(group.date_time)}</span>
                             </div>
                             <div className="flex items-center">
-                              <MapPin size={16} className="mr-3 flex-shrink-0" />
+                              <MapPin size={14} className="mr-2 flex-shrink-0" />
                               <span className="truncate">{group.location?.formatted_address || group.location?.name || 'Location TBD'}</span>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center">
-                                <Users size={16} className="mr-3" />
-                                <span>{approvedMembers}/{group.max_members} members</span>
-                              </div>
+                            <div className="flex items-center">
+                              <Users size={14} className="mr-2 flex-shrink-0" />
+                              <span>{approvedMembers}/{group.max_members} members</span>
+                              {group.cost > 0 && (
+                                <span className="mx-2">•</span>
+                              )}
                               {group.cost > 0 && (
                                 <div className="flex items-center">
-                                  <IndianRupee size={16} className="mr-1" />
+                                  <IndianRupee size={14} className="mr-1" />
                                   <span>{group.cost}</span>
                                 </div>
                               )}
                             </div>
+                          </div>
+                        </div>
                             
                             {/* Member Avatars */}
-                            <div className="pt-2 border-t" style={{ borderColor: 'rgba(75, 85, 99, 0.3)' }}>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-medium" style={{ color: 'rgb(156, 163, 175)' }}>
-                                  Members ({approvedMembers}/{group.max_members})
-                                </span>
+                            <div className="pt-4 border-t" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
+                              <div className="mb-3">
+                                <p className="text-xs font-semibold mb-3" style={{ color: 'rgb(0, 173, 181)' }}>
+                                  WHO'S JOINING
+                                </p>
                               </div>
-                              <div className="flex items-center -space-x-2 overflow-hidden mb-2">
+                              <div className="flex items-center -space-x-2 overflow-hidden mb-3">
                                 {/* Show approved members (up to 8 for horizontal layout) */}
                                 {(() => {
                                   const approvedMembersList = group.members?.filter(m => m.status === 'approved') || []
@@ -564,17 +564,62 @@ const Groops = () => {
                               </div>
                               
                               {/* Organizer */}
-                              <div className="pt-1 border-t" style={{ borderColor: 'rgba(75, 85, 99, 0.2)' }}>
-                                <span className="text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
-                                  By {group.organiser_id}
-                                </span>
+                              <div className="pt-3 border-t" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center">
+                                    <div 
+                                      className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold mr-3 overflow-hidden"
+                                      style={{ 
+                                        borderColor: 'rgb(0, 173, 181)', 
+                                        backgroundColor: 'rgba(0, 173, 181, 0.2)', 
+                                        color: 'rgb(0, 173, 181)' 
+                                      }}
+                                    >
+                                      {memberProfiles[group.organiser_id] && memberProfiles[group.organiser_id].avatar_url ? (
+                                        <img
+                                          src={`${API_BASE_URL}/profiles/${group.organiser_id}/image`}
+                                          alt={group.organiser_id}
+                                          className="w-full h-full object-cover rounded-full"
+                                          onError={(e) => {
+                                            e.target.style.display = 'none'
+                                            e.target.nextSibling.style.display = 'flex'
+                                          }}
+                                        />
+                                      ) : null}
+                                      <div
+                                        className="w-full h-full flex items-center justify-center text-xs font-bold"
+                                        style={{
+                                          display: memberProfiles[group.organiser_id] && memberProfiles[group.organiser_id].avatar_url ? 'none' : 'flex'
+                                        }}
+                                      >
+                                        {group.organiser_id?.slice(0, 1).toUpperCase()}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-medium" style={{ color: 'rgb(156, 163, 175)' }}>
+                                        Organized by
+                                      </p>
+                                      <p className="text-sm font-semibold" style={{ color: 'rgb(238, 238, 238)' }}>
+                                        {group.organiser_id}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div 
+                                    className="px-4 py-2 rounded-lg text-xs font-semibold transition-colors hover:bg-opacity-80"
+                                    style={{ 
+                                      backgroundColor: 'rgba(0, 173, 181, 0.2)', 
+                                      color: 'rgb(0, 173, 181)',
+                                      border: '1px solid rgba(0, 173, 181, 0.3)'
+                                    }}
+                                  >
+                                    View Details →
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
                 )
               })}
             </div>
