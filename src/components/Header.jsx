@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -57,7 +58,6 @@ const Header = () => {
     } else {
       Object.assign(e.target.style, buttonBaseStyle)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleDropdownItemHover = useCallback((e, isEntering) => {

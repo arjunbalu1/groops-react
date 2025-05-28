@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin, Users, IndianRupee } from 'lucide-react'
@@ -65,7 +66,6 @@ const GroupCards = () => {
     }
 
     fetchGroups()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_BASE_URL])
 
   const formatDate = (dateString) => {

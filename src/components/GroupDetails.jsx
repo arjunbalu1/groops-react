@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Calendar, MapPin, Users, IndianRupee, MessageCircle, Settings, UserPlus, UserX, Edit, Trash2, Check, X, Clock } from 'lucide-react'
@@ -61,7 +62,6 @@ const GroupDetails = () => {
     }, 30000) // 30 seconds
 
     return () => clearInterval(interval)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId, API_BASE_URL])
 
   // Fetch group details
@@ -100,7 +100,7 @@ const GroupDetails = () => {
     if (groupId) {
       fetchGroupDetails()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // -disable-next-line react-hooks/exhaustive-deps
   }, [groupId])
 
   // Fetch pending members for organizers
@@ -135,7 +135,6 @@ const GroupDetails = () => {
 
       return () => clearInterval(interval)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [group, groupId, user])
 
   // Fetch member profile

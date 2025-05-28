@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Calendar, MapPin, Users, IndianRupee, Search, Filter, X, Plus } from 'lucide-react'
@@ -137,7 +138,6 @@ const Groops = () => {
       setLoading(false)
       setLoadingMore(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [API_BASE_URL, buildQueryString])
 
   // Update URL params when filters change
