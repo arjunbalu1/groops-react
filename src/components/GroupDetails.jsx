@@ -887,7 +887,7 @@ const GroupDetails = () => {
                     <div>
                       <div className="grid gap-4">
                         <div className="flex items-center gap-3">
-                          <Calendar size={16} style={{ color: 'rgb(0, 173, 181)' }} />
+                          <Calendar size={16} className="flex-shrink-0" style={{ color: 'rgb(0, 173, 181)' }} />
                           <span style={{ color: 'rgb(238, 238, 238)' }}>
                             {new Date(group.date_time).toLocaleDateString('en-US', {
                               weekday: 'long',
@@ -901,14 +901,14 @@ const GroupDetails = () => {
                         </div>
                         
                         <div className="flex items-center gap-3">
-                          <MapPin size={16} style={{ color: 'rgb(0, 173, 181)' }} />
+                          <MapPin size={16} className="flex-shrink-0" style={{ color: 'rgb(0, 173, 181)' }} />
                           <span style={{ color: 'rgb(238, 238, 238)' }}>
                             {group.location?.formatted_address || group.location?.name || group.location}
                           </span>
                         </div>
                         
                         <div className="flex items-center gap-3">
-                          <IndianRupee size={16} style={{ color: 'rgb(0, 173, 181)' }} />
+                          <IndianRupee size={16} className="flex-shrink-0" style={{ color: 'rgb(0, 173, 181)' }} />
                           <span style={{ color: 'rgb(238, 238, 238)' }}>
                             {group.cost === 0 ? 'Free' : `₹${group.cost}`}
                           </span>
