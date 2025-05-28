@@ -35,6 +35,7 @@ const CreateGroup = () => {
   const [locationSearch, setLocationSearch] = useState('')
   const [locationResults, setLocationResults] = useState([])
   const [showLocationResults, setShowLocationResults] = useState(false)
+  const [debouncedLocationSearch, setDebouncedLocationSearch] = useState('')
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
@@ -134,9 +135,28 @@ const CreateGroup = () => {
     setError('')
   }
 
+  // Debounce location search to reduce API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedLocationSearch(locationSearch)
+    }, 500) // 500ms delay - only search after user stops typing
+
+    return () => clearTimeout(timer)
+  }, [locationSearch])
+
+  // Trigger search when debounced value changes
+  useEffect(() => {
+    if (debouncedLocationSearch.trim().length >= 3) {
+      searchLocations(debouncedLocationSearch)
+    } else if (debouncedLocationSearch.trim().length === 0) {
+      setLocationResults([])
+      setShowLocationResults(false)
+    }
+  }, [debouncedLocationSearch])
+
   // Location search with Google Places API
   const searchLocations = async (query) => {
-    if (!query.trim()) {
+    if (!query.trim() || query.trim().length < 3) {
       setLocationResults([])
       setShowLocationResults(false)
       return
@@ -553,7 +573,6 @@ const CreateGroup = () => {
                         value={locationSearch}
                         onChange={(e) => {
                           setLocationSearch(e.target.value)
-                          searchLocations(e.target.value)
                         }}
                         placeholder="Search for a location..."
                         className="w-full pl-10"
