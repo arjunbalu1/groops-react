@@ -321,85 +321,126 @@ const GroupDetails = () => {
       return
     }
 
-    // Dark theme map styles to match your app
+    // Enhanced dark theme map styles to match Groops branding
     const darkMapStyles = [
-      { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-      { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-      { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+      // Main background - matches app background
+      { elementType: "geometry", stylers: [{ color: "#0f1419" }] }, // rgb(15, 20, 25)
+      
+      // Label styling - matches app text colors
+      { elementType: "labels.text.stroke", stylers: [{ color: "#0f1419" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }] }, // Subtle gray text
+      
+      // Administrative areas with subtle cyan accents
       {
         featureType: "administrative.locality",
         elementType: "labels.text.fill",
-        stylers: [{ color: "#d59563" }],
+        stylers: [{ color: "#00adb5" }], // Groops brand cyan
       },
+      {
+        featureType: "administrative.province",
+        elementType: "labels.text.fill", 
+        stylers: [{ color: "#6b7280" }],
+      },
+      
+      // Points of interest with brand colors
       {
         featureType: "poi",
         elementType: "labels.text.fill",
-        stylers: [{ color: "#d59563" }],
+        stylers: [{ color: "#00adb5" }], // Brand cyan for POIs
       },
       {
         featureType: "poi.park",
         elementType: "geometry",
-        stylers: [{ color: "#263c3f" }],
+        stylers: [{ color: "#1a2e23" }], // Dark green for parks
       },
       {
         featureType: "poi.park",
         elementType: "labels.text.fill",
-        stylers: [{ color: "#6b9a76" }],
+        stylers: [{ color: "#4ade80" }], // Brighter green for park labels
       },
+      
+      // Road network with cyan accents
       {
         featureType: "road",
         elementType: "geometry",
-        stylers: [{ color: "#38414e" }],
+        stylers: [{ color: "#2a3441" }], // Slightly lighter than background
       },
       {
         featureType: "road",
         elementType: "geometry.stroke",
-        stylers: [{ color: "#212a37" }],
+        stylers: [{ color: "#1a202c" }], // Darker stroke
       },
       {
         featureType: "road",
         elementType: "labels.text.fill",
-        stylers: [{ color: "#9ca5b3" }],
+        stylers: [{ color: "#d1d5db" }], // Light gray for road labels
       },
+      
+      // Highways with subtle cyan glow
       {
         featureType: "road.highway",
         elementType: "geometry",
-        stylers: [{ color: "#746855" }],
+        stylers: [{ color: "#374151" }], // Lighter for highways
       },
       {
         featureType: "road.highway",
         elementType: "geometry.stroke",
-        stylers: [{ color: "#1f2835" }],
+        stylers: [{ color: "#00adb5", lightness: -60 }], // Dark cyan stroke
       },
       {
         featureType: "road.highway",
         elementType: "labels.text.fill",
-        stylers: [{ color: "#f3d19c" }],
+        stylers: [{ color: "#f3f4f6" }], // Bright text for highways
       },
+      
+      // Transit with brand accent
       {
         featureType: "transit",
         elementType: "geometry",
-        stylers: [{ color: "#2f3948" }],
+        stylers: [{ color: "#1f2937" }],
       },
       {
         featureType: "transit.station",
         elementType: "labels.text.fill",
-        stylers: [{ color: "#d59563" }],
+        stylers: [{ color: "#00adb5" }], // Cyan for transit stations
       },
+      
+      // Water with enhanced cyan theme
       {
         featureType: "water",
         elementType: "geometry",
-        stylers: [{ color: "#17263c" }],
+        stylers: [{ color: "#0c4a6e" }], // Deep blue-cyan for water
       },
       {
         featureType: "water",
         elementType: "labels.text.fill",
-        stylers: [{ color: "#515c6d" }],
+        stylers: [{ color: "#00adb5" }], // Brand cyan for water labels
       },
       {
         featureType: "water",
         elementType: "labels.text.stroke",
-        stylers: [{ color: "#17263c" }],
+        stylers: [{ color: "#0c4a6e" }],
+      },
+      
+      // Business and commercial areas
+      {
+        featureType: "poi.business",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#fbbf24" }], // Golden accent for businesses
+      },
+      
+      // Enhance visibility of important locations
+      {
+        featureType: "poi.attraction",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#00adb5" }], // Cyan for attractions
+      },
+      
+      // School and educational with different accent
+      {
+        featureType: "poi.school",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#a78bfa" }], // Purple for schools
       },
     ]
 
@@ -418,7 +459,7 @@ const GroupDetails = () => {
       keyboardShortcuts: false,
     })
 
-    // Custom marker with your brand colors
+    // Custom marker with dark theme and cyan border
     const marker = new window.google.maps.Marker({
       position: {
         lat: group.location.latitude,
@@ -428,9 +469,9 @@ const GroupDetails = () => {
       title: group.location.name || group.name,
       icon: {
         path: window.google.maps.SymbolPath.CIRCLE,
-        fillColor: '#00adb5', // Your brand cyan color
+        fillColor: '#1f2937', // Dark gray fill to match app theme
         fillOpacity: 1,
-        strokeColor: '#ffffff',
+        strokeColor: '#67e8f9', // Bright cyan with more saturation
         strokeWeight: 3,
         scale: 12,
       },
@@ -456,14 +497,49 @@ const GroupDetails = () => {
 
     mapInstanceRef.current = map
 
-    // Add custom CSS to move zoom controls up
+    // Add custom CSS to move zoom controls up and remove glow effects
     const style = document.createElement('style')
     style.textContent = `
       .gm-bundled-control-on-bottom {
-        transform: translateY(-10px) !important;
+        transform: translateY(-50px) !important;
       }
       .gm-bundled-control {
         transform: translateY(-50px) !important;
+      }
+      
+      /* Remove glow effects from Google Maps buttons */
+      .gm-control-active > img,
+      .gm-control-hover > img,
+      .gm-control-active,
+      .gm-control-hover,
+      .gmnoprint button,
+      .gmnoprint div[role="button"],
+      .gm-style button,
+      .gm-style div[role="button"] {
+        box-shadow: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+      }
+      
+      /* Remove text glow/shadow effects */
+      .gm-style div,
+      .gm-style span,
+      .gm-style label,
+      .gm-style a {
+        text-shadow: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+      }
+      
+      /* Remove glow from fullscreen and zoom buttons specifically */
+      .gm-fullscreen-control,
+      .gm-zoom-control,
+      .gm-zoom-control button {
+        box-shadow: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(0, 0, 0, 0.2) !important;
       }
     `
     document.head.appendChild(style)
