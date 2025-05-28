@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Calendar, MapPin, Users, IndianRupee, MessageCircle, Settings, UserPlus, UserX, Edit, Trash2, Check, X, Clock } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
@@ -14,6 +14,8 @@ const GroupDetails = () => {
   const [memberProfiles, setMemberProfiles] = useState({})
   const [joinLoading, setJoinLoading] = useState(false)
   const [pendingMembers, setPendingMembers] = useState([])
+  const mapRef = useRef(null)
+  const mapInstanceRef = useRef(null)
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
 
@@ -314,6 +316,196 @@ const GroupDetails = () => {
     return styles[level?.toLowerCase()] || { bg: 'rgba(107, 114, 128, 0.2)', text: '#6b7280' }
   }
 
+  // Initialize Google Map
+  const initializeMap = () => {
+    if (!group?.location?.latitude || !group?.location?.longitude || !mapRef.current || mapInstanceRef.current) {
+      return
+    }
+
+    // Dark theme map styles to match your app
+    const darkMapStyles = [
+      { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+      { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+      {
+        featureType: "administrative.locality",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#d59563" }],
+      },
+      {
+        featureType: "poi",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#d59563" }],
+      },
+      {
+        featureType: "poi.park",
+        elementType: "geometry",
+        stylers: [{ color: "#263c3f" }],
+      },
+      {
+        featureType: "poi.park",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#6b9a76" }],
+      },
+      {
+        featureType: "road",
+        elementType: "geometry",
+        stylers: [{ color: "#38414e" }],
+      },
+      {
+        featureType: "road",
+        elementType: "geometry.stroke",
+        stylers: [{ color: "#212a37" }],
+      },
+      {
+        featureType: "road",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#9ca5b3" }],
+      },
+      {
+        featureType: "road.highway",
+        elementType: "geometry",
+        stylers: [{ color: "#746855" }],
+      },
+      {
+        featureType: "road.highway",
+        elementType: "geometry.stroke",
+        stylers: [{ color: "#1f2835" }],
+      },
+      {
+        featureType: "road.highway",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#f3d19c" }],
+      },
+      {
+        featureType: "transit",
+        elementType: "geometry",
+        stylers: [{ color: "#2f3948" }],
+      },
+      {
+        featureType: "transit.station",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#d59563" }],
+      },
+      {
+        featureType: "water",
+        elementType: "geometry",
+        stylers: [{ color: "#17263c" }],
+      },
+      {
+        featureType: "water",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#515c6d" }],
+      },
+      {
+        featureType: "water",
+        elementType: "labels.text.stroke",
+        stylers: [{ color: "#17263c" }],
+      },
+    ]
+
+    const map = new window.google.maps.Map(mapRef.current, {
+      zoom: 15,
+      center: {
+        lat: group.location.latitude,
+        lng: group.location.longitude,
+      },
+      styles: darkMapStyles,
+      disableDefaultUI: true,
+      zoomControl: true,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+      keyboardShortcuts: false,
+    })
+
+    // Custom marker with your brand colors
+    const marker = new window.google.maps.Marker({
+      position: {
+        lat: group.location.latitude,
+        lng: group.location.longitude,
+      },
+      map: map,
+      title: group.location.name || group.name,
+      icon: {
+        path: window.google.maps.SymbolPath.CIRCLE,
+        fillColor: '#00adb5', // Your brand cyan color
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3,
+        scale: 12,
+      },
+    })
+
+    // Info window with location details
+    const infoWindow = new window.google.maps.InfoWindow({
+      content: `
+        <div style="color: #1f2937; padding: 8px;">
+          <h3 style="margin: 0 0 8px 0; font-weight: bold; color: #00adb5;">
+            ${group.location.name || group.name}
+          </h3>
+          <p style="margin: 0; font-size: 14px; color: #4b5563;">
+            ${group.location.formatted_address}
+          </p>
+        </div>
+      `,
+    })
+
+    marker.addListener('click', () => {
+      infoWindow.open(map, marker)
+    })
+
+    mapInstanceRef.current = map
+
+    // Add custom CSS to move zoom controls up
+    const style = document.createElement('style')
+    style.textContent = `
+      .gm-bundled-control-on-bottom {
+        transform: translateY(-10px) !important;
+      }
+      .gm-bundled-control {
+        transform: translateY(-50px) !important;
+      }
+    `
+    document.head.appendChild(style)
+  }
+
+  // Load Google Maps script and initialize map
+  useEffect(() => {
+    if (!group?.location?.latitude || !group?.location?.longitude) return
+
+    if (typeof window.google !== 'undefined') {
+      initializeMap()
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`
+    script.async = true
+    script.defer = true
+    script.onload = () => {
+      initializeMap()
+    }
+    
+    if (!document.querySelector('script[src*="maps.googleapis.com"]')) {
+      document.head.appendChild(script)
+    }
+
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script)
+      }
+    }
+  }, [group])
+
+  // Reinitialize map when group data changes
+  useEffect(() => {
+    if (group && typeof window.google !== 'undefined') {
+      mapInstanceRef.current = null
+      setTimeout(initializeMap, 100) // Small delay to ensure DOM is ready
+    }
+  }, [group?.location?.latitude, group?.location?.longitude])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
@@ -566,20 +758,28 @@ const GroupDetails = () => {
 
                 {/* Right Column: Location/Map */}
                 <div>
-                  <div 
-                    className="w-full rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(75, 85, 99, 0.2)', height: '240px' }}
-                  >
-                    <div className="text-center">
-                      <MapPin size={36} style={{ color: 'rgba(75, 85, 99, 0.5)' }} className="mx-auto mb-2" />
-                      <h4 className="font-medium mb-1" style={{ color: 'rgb(156, 163, 175)' }}>
-                        Interactive Map
-                      </h4>
-                      <p className="text-sm" style={{ color: 'rgba(75, 85, 99, 0.8)' }}>
-                        Map integration coming soon
-                      </p>
+                  {group.location?.latitude && group.location?.longitude ? (
+                    <div 
+                      ref={mapRef}
+                      className="w-full rounded-lg"
+                      style={{ height: '240px' }}
+                    />
+                  ) : (
+                    <div 
+                      className="w-full rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: 'rgba(75, 85, 99, 0.2)', height: '240px' }}
+                    >
+                      <div className="text-center">
+                        <MapPin size={36} style={{ color: 'rgba(75, 85, 99, 0.5)' }} className="mx-auto mb-2" />
+                        <h4 className="font-medium mb-1" style={{ color: 'rgb(156, 163, 175)' }}>
+                          Location Details
+                        </h4>
+                        <p className="text-sm" style={{ color: 'rgb(238, 238, 238)' }}>
+                          {group.location?.formatted_address || group.location?.name || group.location}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -733,8 +933,6 @@ const GroupDetails = () => {
             </div>
           </div>
         )}
-
-
 
         {/* Chat Section - Placeholder for approved members */}
         {(isMember || isOrganizer) && (
