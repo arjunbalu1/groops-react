@@ -17,6 +17,7 @@ const GroupDetails = () => {
   const [pendingMembers, setPendingMembers] = useState([])
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
+  const [mapLoading, setMapLoading] = useState(true)
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
 
@@ -451,6 +452,7 @@ const GroupDetails = () => {
         lng: group.location.longitude,
       },
       styles: darkMapStyles,
+      backgroundColor: '#0f1419', // Prevent white flash during map initialization
       disableDefaultUI: true,
       zoomControl: true,
       mapTypeControl: false,
@@ -459,23 +461,112 @@ const GroupDetails = () => {
       keyboardShortcuts: false,
     })
 
-    // Custom marker with dark theme and cyan border
-    const marker = new window.google.maps.Marker({
-      position: {
-        lat: group.location.latitude,
-        lng: group.location.longitude,
-      },
-      map: map,
-      title: group.location.name || group.name,
-      icon: {
-        path: window.google.maps.SymbolPath.CIRCLE,
-        fillColor: '#1f2937', // Dark gray fill to match app theme
-        fillOpacity: 1,
-        strokeColor: '#67e8f9', // Bright cyan with more saturation
-        strokeWeight: 3,
-        scale: 12,
-      },
-    })
+    // Custom marker with pulsating white glow effect
+    const markerElement = document.createElement('div')
+    markerElement.className = 'custom-map-marker'
+    markerElement.innerHTML = `
+      <div class="marker-glow"></div>
+      <div class="marker-core"></div>
+    `
+
+    // Add styles for the pulsating glow effect
+    const markerStyles = document.createElement('style')
+    markerStyles.textContent = `
+      .custom-map-marker {
+        position: relative;
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+      }
+      
+      .marker-core {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 16px;
+        height: 16px;
+        background-color: #1f2937;
+        border: 3px solid #67e8f9;
+        border-radius: 50%;
+        z-index: 2;
+      }
+      
+      .marker-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        animation: pulse-glow 2s ease-in-out infinite;
+        z-index: 1;
+      }
+      
+      @keyframes pulse-glow {
+        0% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 0.5;
+          box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.1);
+          opacity: 0.7;
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 0.5;
+          box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+        }
+      }
+    `
+    
+    if (!document.querySelector('.marker-glow-styles')) {
+      markerStyles.className = 'marker-glow-styles'
+      document.head.appendChild(markerStyles)
+    }
+
+    // Create custom overlay
+    class CustomMarker extends window.google.maps.OverlayView {
+      constructor(position, map) {
+        super()
+        this.position = position
+        this.map = map
+        this.div = null
+      }
+
+      onAdd() {
+        this.div = markerElement
+        const panes = this.getPanes()
+        panes.overlayMouseTarget.appendChild(this.div)
+      }
+
+      draw() {
+        const overlayProjection = this.getProjection()
+        const position = overlayProjection.fromLatLngToDivPixel(this.position)
+        
+        if (this.div) {
+          this.div.style.left = position.x - 14 + 'px'
+          this.div.style.top = position.y - 14 + 'px'
+        }
+      }
+
+      onRemove() {
+        if (this.div) {
+          this.div.parentNode.removeChild(this.div)
+          this.div = null
+        }
+      }
+    }
+
+    const marker = new CustomMarker(
+      new window.google.maps.LatLng(group.location.latitude, group.location.longitude),
+      map
+    )
+    marker.setMap(map)
 
     // Info window with location details
     const infoWindow = new window.google.maps.InfoWindow({
@@ -491,11 +582,16 @@ const GroupDetails = () => {
       `,
     })
 
-    marker.addListener('click', () => {
-      infoWindow.open(map, marker)
+    // Add click listener to custom marker
+    markerElement.addEventListener('click', () => {
+      infoWindow.setPosition(new window.google.maps.LatLng(group.location.latitude, group.location.longitude))
+      infoWindow.open(map)
     })
 
     mapInstanceRef.current = map
+
+    // Set loading to false after map is initialized
+    setMapLoading(false)
 
     // Add custom CSS to move zoom controls up and remove glow effects
     const style = document.createElement('style')
@@ -835,10 +931,31 @@ const GroupDetails = () => {
                 <div>
                   {group.location?.latitude && group.location?.longitude ? (
                     <div 
-                      ref={mapRef}
-                      className="w-full rounded-lg"
-                      style={{ height: '240px' }}
-                    />
+                      className="relative w-full rounded-lg"
+                      style={{ 
+                        height: '240px',
+                        backgroundColor: '#0f1419' // Dark background to prevent white flash during loading
+                      }}
+                    >
+                      {/* Map container */}
+                      <div 
+                        ref={mapRef}
+                        className="w-full h-full rounded-lg"
+                      />
+                      
+                      {/* Loading overlay */}
+                      {mapLoading && (
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center rounded-lg"
+                          style={{ backgroundColor: '#0f1419' }}
+                        >
+                          <div 
+                            className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+                            style={{ borderColor: 'rgb(0, 173, 181)', borderTopColor: 'transparent' }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div 
                       className="w-full rounded-lg flex items-center justify-center"
