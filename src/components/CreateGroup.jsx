@@ -1,13 +1,14 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
-import { Calendar, MapPin, Users, IndianRupee, Plus, AlertCircle, CheckCircle, ChevronRight } from 'lucide-react'
+import { Calendar, MapPin, Users, IndianRupee, Plus, AlertCircle, CheckCircle, ChevronRight, ArrowLeft, ArrowRight, Loader2, Sparkles, Tag, Target, Minus, DollarSign, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 const CreateGroup = () => {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -31,6 +32,10 @@ const CreateGroup = () => {
     }
   })
 
+  // Multi-step questionnaire state
+  const [currentStep, setCurrentStep] = useState(1)
+  const totalSteps = 5
+
   // Location search state
   const [locationSearch, setLocationSearch] = useState('')
   const [locationResults, setLocationResults] = useState([])
@@ -38,59 +43,37 @@ const CreateGroup = () => {
   const [debouncedLocationSearch, setDebouncedLocationSearch] = useState('')
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
-  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
-  // Load Google Maps API
+  // Check if Google Maps is already loaded (it should be loaded by LocationSearch in Header)
   useEffect(() => {
-    if (!GOOGLE_MAPS_API_KEY) {
-      console.error('Google Maps API key not found in environment variables')
-      return
-    }
-
     // Check if Google Maps is already loaded
-    if (window.google && window.google.maps) {
+    if (window.google && window.google.maps && window.google.maps.places) {
       setGoogleMapsLoaded(true)
       return
     }
 
-    // Suppress Google Maps Places API deprecation warning
-    const originalWarn = console.warn
-    console.warn = (...args) => {
-      const message = args.join(' ')
-      if (message.includes('google.maps.places.PlacesService is not available to new customers') ||
-          message.includes('google.maps.places.Place is recommended over google.maps.places.PlacesService') ||
-          message.includes('Google Maps JavaScript API has been loaded directly without loading=async') ||
-          message.includes('suboptimal performance') ||
-          message.includes('https://goo.gle/js-api-loading')) {
-        return // Suppress these Google Maps warnings
+    // If not loaded, wait for it to be loaded by LocationSearch
+    const checkGoogleMaps = () => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        setGoogleMapsLoaded(true)
       }
-      originalWarn.apply(console, args)
     }
 
-    // Load Google Maps JavaScript API
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`
-    script.async = true
-    script.defer = true
-    script.onload = () => {
-      setGoogleMapsLoaded(true)
-    }
-    script.onerror = () => {
-      console.error('Failed to load Google Maps API')
-      setError('Failed to load location services')
-    }
-    
-    document.head.appendChild(script)
+    // Check every 100ms for up to 10 seconds
+    const interval = setInterval(checkGoogleMaps, 100)
+    const timeout = setTimeout(() => {
+      clearInterval(interval)
+      if (!window.google || !window.google.maps || !window.google.maps.places) {
+        console.error('Google Maps API not available after waiting')
+        setError('Failed to load location services')
+      }
+    }, 10000)
 
     return () => {
-      // Cleanup script if component unmounts
-      if (script.parentNode) {
-        script.parentNode.removeChild(script)
-      }
-      // Restore original console.warn
-      console.warn = originalWarn
+      clearInterval(interval)
+      clearTimeout(timeout)
     }
-  }, [GOOGLE_MAPS_API_KEY])
+  }, [])
 
   // Activity types and skill levels
   const activityTypes = [
@@ -147,6 +130,14 @@ const CreateGroup = () => {
   // Trigger search when debounced value changes
   useEffect(() => {
     if (debouncedLocationSearch.trim().length >= 3) {
+      // Don't search if we already have a location selected and the search term matches
+      if (formData.location.place_id && 
+          (debouncedLocationSearch === formData.location.formatted_address || 
+           debouncedLocationSearch === formData.location.name)) {
+        setLocationResults([])
+        setShowLocationResults(false)
+        return
+      }
       searchLocations(debouncedLocationSearch)
     } else if (debouncedLocationSearch.trim().length === 0) {
       setLocationResults([])
@@ -318,19 +309,405 @@ const CreateGroup = () => {
 
   // Calculate form completion percentage
   const getFormCompletionPercentage = () => {
-    const fields = [
-      formData.name.trim(),
-      formData.description.trim(),
-      formData.date_time,
-      formData.activity_type,
-      formData.location.place_id
-    ]
-    const completedFields = fields.filter(field => field).length
-    return Math.round((completedFields / fields.length) * 100)
+    return Math.round((currentStep / totalSteps) * 100)
   }
 
-  // Check auth
-  if (!user || user.needsProfile) {
+  // Step navigation
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  // Check if current step is valid
+  const isCurrentStepValid = () => {
+    switch (currentStep) {
+      case 1: return formData.activity_type !== ''
+      case 2: return formData.name.trim() !== ''
+      case 3: return formData.description.trim() !== '' && formData.date_time !== '' && formData.location.place_id !== ''
+      case 4: return true // Optional fields
+      case 5: return validateForm() === null
+      default: return false
+    }
+  }
+
+  // Step titles and messages
+  const getStepInfo = () => {
+    switch (currentStep) {
+      case 1:
+        return {
+          title: "What kind of activity are you organizing?",
+          subtitle: "This helps us connect you with the right people!",
+          encouragement: "Let's get started! 🚀"
+        }
+      case 2:
+        return {
+          title: "What should we call your groop?",
+          subtitle: "Pick something fun and descriptive!",
+          encouragement: "Great choice! 🎯"
+        }
+      case 3:
+        return {
+          title: "Let's add the essential details",
+          subtitle: "When, where, and what's it all about?",
+          encouragement: "Almost there! 📍"
+        }
+      case 4:
+        return {
+          title: "Just a little bit more info!",
+          subtitle: "These optional details help make your groop even better",
+          encouragement: "Looking good! ✨"
+        }
+      case 5:
+        return {
+          title: "Ready to launch your groop?",
+          subtitle: "Review everything and let's make it happen!",
+          encouragement: "You're all set! 🎉"
+        }
+      default:
+        return { title: "", subtitle: "", encouragement: "" }
+    }
+  }
+
+  // Step 1: Activity Type Selection
+  const renderStep1 = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {activityTypes.map((type) => (
+          <button
+            key={type}
+            type="button"
+            onClick={() => handleInputChange('activity_type', type)}
+            className={`p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+              formData.activity_type === type
+                ? 'border-teal-500 bg-teal-500/10 text-teal-300'
+                : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:border-teal-400'
+            }`}
+          >
+            <div className="text-lg">
+              {type === 'games' ? '🎮' : type === 'social' ? '🍽️' : type === 'educational' ? '📚' : '🏃‍♂️'}
+            </div>
+            <div className="text-sm font-medium">{type.charAt(0).toUpperCase() + type.slice(1)}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
+  // Step 2: Group Name
+  const renderStep2 = () => (
+    <div className="space-y-6">
+      <div>
+        <input
+          type="text"
+          placeholder="e.g., Morning Runners Club, Beach Volleyball Squad..."
+          value={formData.name}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-lg"
+          maxLength={100}
+        />
+        <div className="mt-2 text-sm text-gray-400">
+          {formData.name.length}/100 characters
+        </div>
+      </div>
+    </div>
+  )
+
+  // Step 3: Essential Details
+  const renderStep3 = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
+        <textarea
+          placeholder="Tell people what this groop is about..."
+          value={formData.description}
+          onChange={(e) => handleInputChange('description', e.target.value)}
+          rows={4}
+          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+          maxLength={500}
+        />
+        <div className="mt-2 text-sm text-gray-400">
+          {formData.description.length}/500 characters
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Date & Time *</label>
+        <input
+          type="datetime-local"
+          value={formData.date_time}
+          onChange={(e) => handleInputChange('date_time', e.target.value)}
+          min={new Date().toISOString().slice(0, 16)}
+          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Location *</label>
+        <div className="relative">
+          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search for a location..."
+            value={locationSearch}
+            onChange={(e) => {
+              const newValue = e.target.value
+              setLocationSearch(newValue)
+              
+              // Clear selected location if user is typing something different
+              if (formData.location.place_id && 
+                  newValue !== formData.location.formatted_address && 
+                  newValue !== formData.location.name) {
+                setFormData(prev => ({
+                  ...prev,
+                  location: {
+                    name: '',
+                    formatted_address: '',
+                    place_id: '',
+                    latitude: null,
+                    longitude: null
+                  }
+                }))
+              }
+            }}
+            className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          />
+          {showLocationResults && locationResults.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+              {locationResults.map((suggestion) => (
+                <button
+                  key={suggestion.place_id}
+                  type="button"
+                  onClick={() => selectLocation(suggestion)}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-700 first:rounded-t-xl last:rounded-b-xl focus:outline-none focus:bg-gray-700"
+                >
+                  <div className="text-white">{suggestion.name}</div>
+                  <div className="text-gray-400 text-sm">{suggestion.formatted_address}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        {formData.location.name && (
+          <div className="mt-2 flex items-center text-sm text-green-400">
+            <Check className="w-4 h-4 mr-1" />
+            {formData.location.name}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  // Step 4: Optional Details
+  const renderStep4 = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Skill Level (Optional)</label>
+        <select
+          value={formData.skill_level}
+          onChange={(e) => handleInputChange('skill_level', e.target.value)}
+          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        >
+          <option value="">Any level</option>
+          {skillLevels.map((level) => (
+            <option key={level} value={level}>
+              {level.charAt(0).toUpperCase() + level.slice(1)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Max Members (Optional)</label>
+        <div className="flex items-center space-x-4">
+          <button
+            type="button"
+            onClick={() => formData.max_members > 2 && handleInputChange('max_members', formData.max_members - 1)}
+            className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors"
+          >
+            <Minus className="w-4 h-4" />
+          </button>
+          <span className="text-xl font-semibold w-8 text-center">{formData.max_members}</span>
+          <button
+            type="button"
+            onClick={() => formData.max_members < 20 && handleInputChange('max_members', formData.max_members + 1)}
+            className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Cost per Person (Optional)</label>
+        <div className="relative">
+          <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="number"
+            placeholder="0"
+            value={formData.cost || ''}
+            onChange={(e) => handleInputChange('cost', parseFloat(e.target.value) || 0)}
+            min="0"
+            step="0.01"
+            className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          />
+        </div>
+      </div>
+    </div>
+  )
+
+  // Step 5: Review
+  const renderStep5 = () => (
+    <div className="space-y-6">
+      <div className="bg-gray-800/30 rounded-xl p-6 space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-2">{formData.name}</h3>
+          <p className="text-gray-300">{formData.description}</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="flex items-center text-gray-300">
+            <Calendar className="w-4 h-4 mr-2 text-teal-400" />
+            {new Date(formData.date_time).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })} at {new Date(formData.date_time).toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit'
+            })}
+          </div>
+          
+          <div className="flex items-center text-gray-300">
+            <MapPin className="w-4 h-4 mr-2 text-teal-400" />
+            {formData.location.name}
+          </div>
+          
+          <div className="flex items-center text-gray-300">
+            <Tag className="w-4 h-4 mr-2 text-teal-400" />
+            {formData.activity_type}
+          </div>
+          
+          <div className="flex items-center text-gray-300">
+            <Users className="w-4 h-4 mr-2 text-teal-400" />
+            Up to {formData.max_members} members
+          </div>
+          
+          {formData.skill_level && (
+            <div className="flex items-center text-gray-300">
+              <Target className="w-4 h-4 mr-2 text-teal-400" />
+              {formData.skill_level} level
+            </div>
+          )}
+          
+          {formData.cost > 0 && (
+            <div className="flex items-center text-gray-300">
+              <DollarSign className="w-4 h-4 mr-2 text-teal-400" />
+              ${formData.cost} per person
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
+  // Navigation buttons
+  const renderNavigationButtons = () => (
+    <div className="flex justify-between items-center pt-6">
+      {currentStep > 1 ? (
+        <button
+          type="button"
+          onClick={prevStep}
+          className="flex items-center px-6 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </button>
+      ) : (
+        <div></div>
+      )}
+
+      {currentStep < totalSteps ? (
+        <button
+          type="button"
+          onClick={nextStep}
+          disabled={!isCurrentStepValid()}
+          className={`flex items-center px-6 py-3 rounded-xl transition-colors ${
+            isCurrentStepValid()
+              ? 'bg-teal-600 text-white hover:bg-teal-700'
+              : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+          }`}
+        >
+          Continue
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </button>
+      ) : (
+        <button
+          type="submit"
+          disabled={loading || validateForm() !== null}
+          className={`flex items-center px-8 py-3 rounded-xl font-semibold transition-colors ${
+            loading || validateForm() !== null
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700'
+          }`}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            <>
+              Create Groop
+              <Sparkles className="w-4 h-4 ml-2" />
+            </>
+          )}
+        </button>
+      )}
+    </div>
+  )
+
+  // Check auth - show loading while checking, then appropriate state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
+        <div className="text-center">
+          <Loader2 size={48} className="mx-auto mb-4 animate-spin" style={{ color: 'rgb(0, 173, 181)' }} />
+          <h2 className="text-xl font-bold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
+            Loading...
+          </h2>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
+        <div className="text-center">
+          <AlertCircle size={48} className="mx-auto mb-4" style={{ color: 'rgb(239, 68, 68)' }} />
+          <h2 className="text-xl font-bold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
+            Login Required
+          </h2>
+          <p className="mb-4" style={{ color: 'rgb(156, 163, 175)' }}>
+            You need to be logged in to create a group.
+          </p>
+          <Button onClick={() => navigate('/login')}>
+            Sign In
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (user.needsProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
         <div className="text-center">
@@ -425,265 +802,59 @@ const CreateGroup = () => {
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            {/* Left Column - Main Form */}
+            {/* Left Column - Form */}
             <div className="lg:col-span-2">
-              
-              {/* Combined Form Section */}
               <div 
-                className="p-6 sm:p-8 rounded-xl border backdrop-blur-sm space-y-8"
+                className="p-8 rounded-2xl shadow-2xl"
                 style={{
-                  backgroundColor: 'rgba(25, 30, 35, 0.8)',
-                  borderColor: 'rgba(0, 173, 181, 0.2)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+                  background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.15) 0%, rgba(0, 200, 210, 0.15) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(0, 173, 181, 0.3)'
                 }}
               >
-                
-                {/* Group Name */}
-                <div>
-                  <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
-                    Group Name <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>
-                  </label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="e.g., Weekend Soccer, Book Club, Hiking Adventure"
-                    className="w-full"
-                    maxLength={100}
-                    style={{
-                      backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                      borderColor: 'rgba(75, 85, 99, 0.3)',
-                      color: 'rgb(238, 238, 238)',
-                      fontSize: '16px',
-                      padding: '12px 16px'
-                    }}
-                  />
+                {/* Header with step info */}
+                <div className="text-center mb-8">
+                  <div className="inline-block px-4 py-2 bg-teal-500/20 rounded-full text-teal-300 text-sm font-medium mb-4">
+                    Step {currentStep} of {totalSteps}
                 </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
-                    Description <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Tell people what this group is about, what to expect, and any requirements..."
-                    rows={4}
-                    maxLength={1000}
-                    className="w-full px-4 py-3 rounded-md border text-sm resize-none"
-                    style={{
-                      backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                      borderColor: 'rgba(75, 85, 99, 0.3)',
-                      color: 'rgb(238, 238, 238)',
-                      fontSize: '16px'
-                    }}
-                  />
-                  <div className="text-xs mt-2 flex justify-between" style={{ color: 'rgb(156, 163, 175)' }}>
-                    <span>{formData.description.length}/1000 characters</span>
-                    <span>Be specific and welcoming</span>
+                  <h1 className="text-3xl font-bold text-white mb-2">
+                    {getStepInfo().title}
+                  </h1>
+                  <p className="text-gray-300 text-lg">
+                    {getStepInfo().subtitle}
+                  </p>
+                  {formData.activity_type && currentStep > 1 && (
+                    <div className="mt-4 text-teal-300 font-medium">
+                      {getStepInfo().encouragement}
                   </div>
+                  )}
                 </div>
 
-                {/* Activity Type */}
-                <div>
-                  <label className="block text-sm font-medium mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
-                    Activity Type <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                    {activityTypes.map(type => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => handleInputChange('activity_type', type)}
-                        className="p-3 rounded-lg text-sm font-medium transition-all duration-200 text-center hover:scale-105"
-                        style={{
-                          backgroundColor: formData.activity_type === type ? getActivityTypeColor(type) + '20' : 'rgba(75, 85, 99, 0.2)',
-                          color: formData.activity_type === type ? getActivityTypeColor(type) : 'rgb(156, 163, 175)',
-                          border: formData.activity_type === type ? `2px solid ${getActivityTypeColor(type)}` : '2px solid rgba(75, 85, 99, 0.3)'
-                        }}
-                      >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </button>
-                    ))}
+                {/* Progress Bar */}
+                <div className="mb-8">
+                  <div className="flex justify-between text-sm text-gray-400 mb-2">
+                    <span>Progress</span>
+                    <span>{getFormCompletionPercentage()}%</span>
                   </div>
-                </div>
-
-                {/* Skill Level */}
-                <div>
-                  <label className="block text-sm font-medium mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
-                    Skill Level
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {skillLevels.map(level => {
-                      const skillStyle = getSkillLevelStyle(level)
-                      return (
-                        <button
-                          key={level}
-                          type="button"
-                          onClick={() => handleInputChange('skill_level', level)}
-                          className="p-4 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105"
-                          style={{
-                            backgroundColor: formData.skill_level === level ? skillStyle.bg : 'rgba(75, 85, 99, 0.2)',
-                            color: formData.skill_level === level ? skillStyle.text : 'rgb(156, 163, 175)',
-                            border: formData.skill_level === level ? `2px solid ${skillStyle.text}` : '2px solid rgba(75, 85, 99, 0.3)'
-                          }}
-                        >
-                          {level.charAt(0).toUpperCase() + level.slice(1)}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Date and Time */}
-                  <div>
-                    <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
-                      Date & Time <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>
-                    </label>
-                    <div className="relative">
-                      <Calendar size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: 'rgb(156, 163, 175)' }} />
-                      <input
-                        type="datetime-local"
-                        value={formData.date_time}
-                        onChange={(e) => handleInputChange('date_time', e.target.value)}
-                        min={new Date().toISOString().slice(0, 16)}
-                        className="w-full pl-10 pr-3 py-3 rounded-md border text-sm"
-                        style={{
-                          backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                          borderColor: 'rgba(75, 85, 99, 0.3)',
-                          color: 'rgb(238, 238, 238)',
-                          fontSize: '16px'
-                        }}
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-teal-500 to-cyan-400 h-2 rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${getFormCompletionPercentage()}%` }}
                       />
                     </div>
-                    <div className="text-xs mt-2" style={{ color: 'rgb(156, 163, 175)' }}>
-                      Time will be displayed in your local timezone
-                    </div>
                   </div>
 
-                  {/* Location */}
-                  <div className="relative">
-                    <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
-                      Location <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>
-                    </label>
-                    <div className="relative">
-                      <MapPin size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: 'rgb(156, 163, 175)' }} />
-                      <Input
-                        value={locationSearch}
-                        onChange={(e) => {
-                          setLocationSearch(e.target.value)
-                        }}
-                        placeholder="Search for a location..."
-                        className="w-full pl-10"
-                        style={{
-                          backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                          borderColor: 'rgba(75, 85, 99, 0.3)',
-                          color: 'rgb(238, 238, 238)',
-                          fontSize: '16px',
-                          padding: '12px 16px 12px 40px'
-                        }}
-                      />
+                {/* Step Content */}
+                <div className="min-h-[400px]">
+                  {currentStep === 1 && renderStep1()}
+                  {currentStep === 2 && renderStep2()}
+                  {currentStep === 3 && renderStep3()}
+                  {currentStep === 4 && renderStep4()}
+                  {currentStep === 5 && renderStep5()}
                     </div>
 
-                    {/* Location Results */}
-                    {showLocationResults && locationResults.length > 0 && (
-                      <div 
-                        className="absolute top-full left-0 right-0 mt-1 border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto"
-                        style={{
-                          backgroundColor: 'rgb(25, 30, 35)',
-                          borderColor: 'rgba(0, 173, 181, 0.2)'
-                        }}
-                      >
-                        {locationResults.map(location => (
-                          <button
-                            key={location.place_id}
-                            type="button"
-                            onClick={() => selectLocation(location)}
-                            className="w-full text-left px-4 py-3 border-b transition-colors hover:bg-opacity-80"
-                            style={{
-                              borderColor: 'rgba(75, 85, 99, 0.3)',
-                              backgroundColor: 'transparent'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.backgroundColor = 'rgba(0, 173, 181, 0.1)'
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.backgroundColor = 'transparent'
-                            }}
-                          >
-                            <div className="font-medium" style={{ color: 'rgb(238, 238, 238)' }}>
-                              {location.name}
-                            </div>
-                            <div className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
-                              {location.formatted_address}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Max Members */}
-                  <div>
-                    <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
-                      Maximum Members <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>
-                    </label>
-                    <div className="relative">
-                      <Users size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: 'rgb(156, 163, 175)' }} />
-                      <Input
-                        type="number"
-                        value={formData.max_members}
-                        onChange={(e) => handleInputChange('max_members', e.target.value)}
-                        min={2}
-                        max={50}
-                        className="w-full pl-10"
-                        style={{
-                          backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                          borderColor: 'rgba(75, 85, 99, 0.3)',
-                          color: 'rgb(238, 238, 238)',
-                          fontSize: '16px',
-                          padding: '12px 16px 12px 40px'
-                        }}
-                      />
-                    </div>
-                    <div className="text-xs mt-2" style={{ color: 'rgb(156, 163, 175)' }}>
-                      Including yourself (2-50 people)
-                    </div>
-                  </div>
-
-                  {/* Cost */}
-                  <div>
-                    <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
-                      Cost per Person (₹)
-                    </label>
-                    <div className="relative">
-                      <IndianRupee size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: 'rgb(156, 163, 175)' }} />
-                      <Input
-                        type="number"
-                        value={formData.cost}
-                        onChange={(e) => handleInputChange('cost', e.target.value)}
-                        min={0}
-                        max={100000}
-                        step="0.01"
-                        placeholder="0"
-                        className="w-full pl-10"
-                        style={{
-                          backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                          borderColor: 'rgba(75, 85, 99, 0.3)',
-                          color: 'rgb(238, 238, 238)',
-                          fontSize: '16px',
-                          padding: '12px 16px 12px 40px'
-                        }}
-                      />
-                    </div>
-                    <div className="text-xs mt-2" style={{ color: 'rgb(156, 163, 175)' }}>
-                      Leave as 0 for free events (max ₹1,00,000)
-                    </div>
-                  </div>
-                </div>
+                {/* Navigation */}
+                {renderNavigationButtons()}
               </div>
             </div>
 
@@ -751,32 +922,7 @@ const CreateGroup = () => {
 
                 {/* Action Buttons */}
                 <div className="space-y-4">
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full px-6 py-4 font-semibold text-base transition-all duration-300 hover:scale-105"
-                    style={{
-                      backgroundColor: loading ? 'rgba(0, 173, 181, 0.5)' : 'rgb(0, 173, 181)',
-                      color: 'white',
-                      borderRadius: '12px'
-                    }}
-                  >
-                    {loading ? (
-                      <>
-                        <div 
-                          className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mr-3"
-                          style={{ borderColor: 'white', borderTopColor: 'transparent' }}
-                        />
-                        Creating Group...
-                      </>
-                    ) : (
-                      <>
-                        <Plus size={18} className="mr-2" />
-                        Create Groop
-                        <ChevronRight size={16} className="ml-2" />
-                      </>
-                    )}
-                  </Button>
+                  {renderNavigationButtons()}
                   
                   <Button
                     type="button"

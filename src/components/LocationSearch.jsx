@@ -6,6 +6,72 @@ const LocationSearch = () => {
   const [location, setLocation] = useState('')
   const [placeholder, setPlaceholder] = useState('Detecting location...')
   const [isLoading, setIsLoading] = useState(false)
+  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false)
+
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+
+  // Load Google Maps API if not already loaded
+  useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.error('Google Maps API key not found in environment variables')
+      setPlaceholder(getMobilePlaceholder('Enter location...'))
+      return
+    }
+
+    // Check if Google Maps is already loaded
+    if (window.google && window.google.maps && window.google.maps.places) {
+      setGoogleMapsLoaded(true)
+      return
+    }
+
+    // Prevent multiple script loading attempts
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]')
+    if (existingScript) {
+      // Script is already being loaded, wait for it
+      const checkLoaded = () => {
+        if (window.google && window.google.maps && window.google.maps.places) {
+          setGoogleMapsLoaded(true)
+        }
+      }
+      
+      existingScript.addEventListener('load', checkLoaded)
+      existingScript.addEventListener('error', () => {
+        console.error('Failed to load Google Maps API')
+        setPlaceholder(getMobilePlaceholder('Enter location...'))
+      })
+      
+      return () => {
+        existingScript.removeEventListener('load', checkLoaded)
+      }
+    }
+
+    // Load Google Maps JavaScript API
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`
+    script.async = true
+    script.defer = true
+    script.onload = () => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        setGoogleMapsLoaded(true)
+      } else {
+        console.error('Google Maps API loaded but services not available')
+        setPlaceholder(getMobilePlaceholder('Enter location...'))
+      }
+    }
+    script.onerror = () => {
+      console.error('Failed to load Google Maps API')
+      setPlaceholder(getMobilePlaceholder('Enter location...'))
+    }
+    
+    document.head.appendChild(script)
+
+    return () => {
+      // Cleanup script if component unmounts (though this rarely happens for Header)
+      if (script.parentNode) {
+        script.parentNode.removeChild(script)
+      }
+    }
+  }, [GOOGLE_MAPS_API_KEY])
 
   // Get mobile-friendly placeholder text
   const getMobilePlaceholder = (text) => {
@@ -31,44 +97,57 @@ const LocationSearch = () => {
         return
       }
 
+      if (!googleMapsLoaded || !window.google) {
+        reject(new Error('Google Maps API not loaded'))
+        return
+      }
+
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           try {
             const { latitude, longitude } = position.coords
             console.log('GPS coordinates:', { latitude, longitude })
             
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
-              {
-                headers: {
-                  'User-Agent': 'GroopsApp/1.0'
+            // Use Google Maps Geocoding API instead of OpenStreetMap
+            const geocoder = new window.google.maps.Geocoder()
+            const latlng = { lat: latitude, lng: longitude }
+            
+            geocoder.geocode({ location: latlng }, (results, status) => {
+              if (status === 'OK' && results && results[0]) {
+                console.log('Google geocoding results:', results[0])
+                
+                // Extract city and state from address components
+                const addressComponents = results[0].address_components
+                let city = ''
+                let state = ''
+                
+                for (const component of addressComponents) {
+                  const types = component.types
+                  
+                  if (types.includes('locality')) {
+                    city = component.long_name
+                  } else if (types.includes('administrative_area_level_1')) {
+                    state = component.short_name
+                  }
                 }
-              }
-            )
-            
-            if (!response.ok) {
-              throw new Error(`Geocoding failed: HTTP ${response.status}`)
-            }
-            
-            const data = await response.json()
-            console.log('Geocoding data:', data)
-            
-            if (data.address) {
-              const city = data.address.city || data.address.town || data.address.village
-              const state = data.address.state || data.address.region
-              
-              if (city && state) {
-                const gpsLocation = `${city}, ${state}`
-                console.log('GPS location:', gpsLocation)
-                resolve(gpsLocation)
-              } else if (city) {
-                resolve(city)
+                
+                if (city && state) {
+                  const gpsLocation = `${city}, ${state}`
+                  console.log('GPS location:', gpsLocation)
+                  resolve(gpsLocation)
+                } else if (city) {
+                  resolve(city)
+                } else {
+                  // Fallback to formatted address
+                  const formattedAddress = results[0].formatted_address
+                  const shortAddress = formattedAddress.split(',').slice(0, 2).join(',').trim()
+                  resolve(shortAddress)
+                }
               } else {
-                throw new Error('Could not determine location')
+                console.error('Google geocoding failed:', status)
+                reject(new Error(`Geocoding failed: ${status}`))
               }
-            } else {
-              throw new Error('Invalid geocoding response')
-            }
+            })
           } catch (error) {
             console.error('GPS geocoding failed:', error)
             reject(error)
@@ -118,16 +197,18 @@ const LocationSearch = () => {
         setLocation(ipLocation)
         setPlaceholder(getMobilePlaceholder(ipLocation))
         
-        // Try GPS for better precision in the background
-        try {
-          setPlaceholder(getMobilePlaceholder('Getting precise location...'))
-          const gpsLocation = await getGPSLocation()
-          console.log('GPS improved location:', gpsLocation)
-          setLocation(gpsLocation)
-          setPlaceholder(getMobilePlaceholder(gpsLocation))
-        } catch (gpsError) {
-          console.log('GPS failed, keeping IP location:', gpsError.message)
-          // Keep the IP location if GPS fails
+        // Try GPS for better precision in the background (only if Google Maps is loaded)
+        if (googleMapsLoaded) {
+          try {
+            setPlaceholder(getMobilePlaceholder('Getting precise location...'))
+            const gpsLocation = await getGPSLocation()
+            console.log('GPS improved location:', gpsLocation)
+            setLocation(gpsLocation)
+            setPlaceholder(getMobilePlaceholder(gpsLocation))
+          } catch (gpsError) {
+            console.log('GPS failed, keeping IP location:', gpsError.message)
+            // Keep the IP location if GPS fails
+          }
         }
       } else {
         throw new Error('IP detection returned incomplete data')
@@ -135,26 +216,43 @@ const LocationSearch = () => {
     } catch (ipError) {
       console.error('IP location detection failed:', ipError)
       
-      // If IP fails, try GPS as fallback
-      try {
-        console.log('Trying GPS as fallback...')
-        setPlaceholder(getMobilePlaceholder('Getting GPS location...'))
-        const gpsLocation = await getGPSLocation()
-        console.log('GPS fallback location:', gpsLocation)
-        setLocation(gpsLocation)
-        setPlaceholder(getMobilePlaceholder(gpsLocation))
-      } catch (gpsError) {
-        console.error('All location detection failed:', gpsError)
+      // If IP fails, try GPS as fallback (only if Google Maps is loaded)
+      if (googleMapsLoaded) {
+        try {
+          console.log('Trying GPS as fallback...')
+          setPlaceholder(getMobilePlaceholder('Getting GPS location...'))
+          const gpsLocation = await getGPSLocation()
+          console.log('GPS fallback location:', gpsLocation)
+          setLocation(gpsLocation)
+          setPlaceholder(getMobilePlaceholder(gpsLocation))
+        } catch (gpsError) {
+          console.error('All location detection failed:', gpsError)
+          setPlaceholder(getMobilePlaceholder('Enter location...'))
+        }
+      } else {
+        console.log('Google Maps not loaded, skipping GPS fallback')
         setPlaceholder(getMobilePlaceholder('Enter location...'))
       }
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [googleMapsLoaded])
 
   useEffect(() => {
-    detectLocation()
-  }, [detectLocation])
+    // Only start location detection when Google Maps is loaded or after a timeout
+    if (googleMapsLoaded) {
+      detectLocation()
+    } else {
+      // Try without GPS after 2 seconds if Google Maps hasn't loaded
+      const timeout = setTimeout(() => {
+        if (!googleMapsLoaded) {
+          detectLocation()
+        }
+      }, 2000)
+      
+      return () => clearTimeout(timeout)
+    }
+  }, [detectLocation, googleMapsLoaded])
 
   return (
     <div className="flex items-center space-x-2">

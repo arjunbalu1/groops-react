@@ -18,6 +18,12 @@ const GroupDetails = () => {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const [mapLoading, setMapLoading] = useState(true)
+  
+  // Member profile modal state
+  const [selectedMember, setSelectedMember] = useState(null)
+  const [memberProfileModalOpen, setMemberProfileModalOpen] = useState(false)
+  const [memberProfileLoading, setMemberProfileLoading] = useState(false)
+  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 })
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
 
@@ -153,6 +159,36 @@ const GroupDetails = () => {
       }
     } catch (err) {
       console.error('Error fetching member profile:', err)
+    }
+  }
+
+  // Handle member profile viewing
+  const handleMemberClick = async (username, event) => {
+    setMemberProfileLoading(true)
+    setMemberProfileModalOpen(true)
+    
+    // Calculate position for modal to appear on top of the clicked avatar
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = rect.left + rect.width / 2 // Center horizontally on avatar
+    const y = rect.top - 10 // Position above the avatar
+    
+    setModalPosition({ x, y })
+    
+    try {
+      // Fetch fresh profile data for the modal
+      const response = await fetch(`${API_BASE_URL}/profiles/${username}`)
+      if (response.ok) {
+        const profile = await response.json()
+        setSelectedMember(profile)
+      } else {
+        console.error('Failed to fetch member profile')
+        setMemberProfileModalOpen(false)
+      }
+    } catch (err) {
+      console.error('Error fetching member profile:', err)
+      setMemberProfileModalOpen(false)
+    } finally {
+      setMemberProfileLoading(false)
     }
   }
 
@@ -645,37 +681,64 @@ const GroupDetails = () => {
   useEffect(() => {
     if (!group?.location?.latitude || !group?.location?.longitude) return
 
-    if (typeof window.google !== 'undefined') {
+    // Check if Google Maps is already loaded (it should be loaded by LocationSearch in Header)
+    if (window.google && window.google.maps && window.google.maps.places) {
       initializeMap()
       return
     }
 
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`
-    script.async = true
-    script.defer = true
-    script.onload = () => {
-      initializeMap()
-    }
-    
-    if (!document.querySelector('script[src*="maps.googleapis.com"]')) {
-      document.head.appendChild(script)
+    // If not loaded, wait for it to be loaded by LocationSearch
+    const checkGoogleMaps = () => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        initializeMap()
+        return true
+      }
+      return false
     }
 
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script)
+    // Check every 100ms for up to 10 seconds
+    const interval = setInterval(() => {
+      if (checkGoogleMaps()) {
+        clearInterval(interval)
       }
+    }, 100)
+    
+    const timeout = setTimeout(() => {
+      clearInterval(interval)
+      if (!window.google || !window.google.maps || !window.google.maps.places) {
+        console.error('Google Maps API not available after waiting')
+      }
+    }, 10000)
+
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timeout)
     }
   }, [group])
 
   // Reinitialize map when group data changes
   useEffect(() => {
-    if (group && typeof window.google !== 'undefined') {
+    if (group && window.google && window.google.maps && window.google.maps.places) {
       mapInstanceRef.current = null
       setTimeout(initializeMap, 100) // Small delay to ensure DOM is ready
     }
   }, [group?.location?.latitude, group?.location?.longitude])
+
+  // Close modal on scroll to prevent disconnection from avatar
+  useEffect(() => {
+    const handleScroll = () => {
+      if (memberProfileModalOpen) {
+        setMemberProfileModalOpen(false)
+      }
+    }
+
+    if (memberProfileModalOpen) {
+      window.addEventListener('scroll', handleScroll, true) // Use capture phase to catch all scroll events
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true)
+      }
+    }
+  }, [memberProfileModalOpen])
 
   if (loading) {
     return (
@@ -722,8 +785,133 @@ const GroupDetails = () => {
   const nonOrganizerMembers = approvedMembers.filter(m => m.username !== group.organizer_username)
   const skillStyle = getSkillLevelStyle(group.skill_level)
 
+  // Member Profile Modal Component
+  const MemberProfileModal = () => {
+    if (!memberProfileModalOpen) return null
+
+    // Calculate modal position with bounds checking
+    const modalWidth = 320 // max-w-md is approximately 320px
+    const modalHeight = 400 // estimated modal height
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    
+    // Adjust position to keep modal within viewport
+    let adjustedX = modalPosition.x - modalWidth / 2 // Center horizontally on click point
+    let adjustedY = modalPosition.y - 350// Use the position that's already calculated to be above the avatar
+    
+    // Keep modal within horizontal bounds
+    if (adjustedX < 10) adjustedX = 10
+    if (adjustedX + modalWidth > viewportWidth - 10) adjustedX = viewportWidth - modalWidth - 10
+    
+    // Keep modal within vertical bounds
+    if (adjustedY < 10) {
+      adjustedY = modalPosition.y + 80 // Position below avatar if no space above
+    }
+    if (adjustedY + modalHeight > viewportHeight - 10) {
+      adjustedY = viewportHeight - modalHeight - 10
+    }
+
+    return (
+      <>
+        {/* Invisible overlay for click-outside-to-close */}
+        <div 
+          className="fixed inset-0 z-40"
+          onClick={() => setMemberProfileModalOpen(false)}
+        />
+        
+        {/* Modal box */}
+        <div 
+          className="rounded-lg border p-6 w-80 shadow-2xl"
+          style={{
+            backgroundColor: 'rgba(25, 30, 35, 0.98)',
+            borderColor: 'rgba(75, 85, 99, 0.5)',
+            position: 'fixed',
+            left: `${adjustedX}px`,
+            top: `${adjustedY}px`,
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            zIndex: 1000,
+            backdropFilter: 'blur(8px)'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {memberProfileLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div 
+                className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+                style={{ borderColor: 'rgb(0, 173, 181)', borderTopColor: 'transparent' }}
+              />
+            </div>
+          ) : selectedMember ? (
+            <div className="text-center">
+              {/* Profile Image */}
+              <div className="mb-4">
+                <div className="w-24 h-24 rounded-full border-2 mx-auto overflow-hidden" style={{ borderColor: 'rgb(0, 173, 181)' }}>
+                  {selectedMember.avatar_url ? (
+                    <img
+                      src={`${API_BASE_URL}/profiles/${selectedMember.username}/image`}
+                      alt={selectedMember.username}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold" style={{ backgroundColor: 'rgba(0, 173, 181, 0.2)', color: 'rgb(0, 173, 181)' }}>
+                      {selectedMember.username?.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Name and Username */}
+              <h3 className="text-xl font-bold mb-1" style={{ color: 'rgb(238, 238, 238)' }}>
+                {selectedMember.full_name || selectedMember.username}
+              </h3>
+              <p className="text-sm mb-3" style={{ color: 'rgb(156, 163, 175)' }}>
+                @{selectedMember.username}
+              </p>
+
+              {/* Rating */}
+              <div className="flex items-center justify-center gap-1 mb-4">
+                <span className="text-yellow-400">★</span>
+                <span className="font-medium" style={{ color: 'rgb(238, 238, 238)' }}>
+                  {selectedMember.rating || '5.0'}
+                </span>
+              </div>
+
+              {/* Bio */}
+              {selectedMember.bio && (
+                <div className="mb-4">
+                  <h4 className="font-semibold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
+                    About
+                  </h4>
+                  <p className="text-sm" style={{ color: 'rgb(201, 209, 217)', lineHeight: '1.5' }}>
+                    {selectedMember.bio}
+                  </p>
+                </div>
+              )}
+
+              {/* Date Joined */}
+              <div className="text-xs" style={{ color: 'rgb(156, 163, 175)' }}>
+                Member since {new Date(selectedMember.date_joined).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long'
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p style={{ color: 'rgb(156, 163, 175)' }}>
+                Failed to load profile
+              </p>
+            </div>
+          )}
+        </div>
+      </>
+    )
+  }
+
   return (
     <div style={{ backgroundColor: 'rgb(15, 20, 25)', minHeight: '100vh' }}>
+      <MemberProfileModal />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
@@ -766,7 +954,11 @@ const GroupDetails = () => {
 
               {/* Organizer Info */}
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-full border-2 flex-shrink-0" style={{ borderColor: 'rgb(0, 173, 181)' }}>
+                <div 
+                  className="w-16 h-16 rounded-full border-2 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
+                  style={{ borderColor: 'rgb(0, 173, 181)' }}
+                  onClick={(event) => handleMemberClick(group.organizer_username, event)}
+                >
                   <div className="w-full h-full rounded-full" style={{ backgroundColor: memberProfiles[group.organizer_username]?.avatar_url ? 'transparent' : 'rgba(0, 173, 181, 0.2)' }}>
                     {memberProfiles[group.organizer_username]?.avatar_url ? (
                       <img
@@ -883,7 +1075,19 @@ const GroupDetails = () => {
                 {/* Left Column: Event Details + About */}
                 <div className="flex flex-col justify-center h-full min-h-[240px]">
                   <div className="space-y-6">
-                    {/* Event Details Section */}
+                    {/* About/Description Section - Now first */}
+                    {group.description && (
+                      <div>
+                        <h3 className="font-semibold mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
+                          Description:
+                        </h3>
+                        <p style={{ color: 'rgb(201, 209, 217)', lineHeight: '1.6' }}>
+                          {group.description}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Event Details Section - Now after description */}
                     <div>
                       <div className="grid gap-4">
                         <div className="flex items-center gap-3">
@@ -915,15 +1119,6 @@ const GroupDetails = () => {
                         </div>
                       </div>
                     </div>
-
-                    {/* About Section - Immediately under Event Details */}
-                    {group.description && (
-                      <div>
-                        <p style={{ color: 'rgb(201, 209, 217)', lineHeight: '1.6' }}>
-                          {group.description}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -985,7 +1180,11 @@ const GroupDetails = () => {
                   {/* Organizer */}
                   <div className="flex flex-col items-center text-center">
                     <div className="relative mb-2">
-                      <div className="w-16 h-16 rounded-full border-2 overflow-hidden" style={{ borderColor: 'rgb(0, 173, 181)' }}>
+                      <div 
+                        className="w-16 h-16 rounded-full border-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity" 
+                        style={{ borderColor: 'rgb(0, 173, 181)' }}
+                        onClick={(event) => handleMemberClick(group.organizer_username, event)}
+                      >
                         {memberProfiles[group.organizer_username]?.avatar_url ? (
                           <img
                             src={`${API_BASE_URL}/profiles/${group.organizer_username}/image`}
@@ -1017,7 +1216,11 @@ const GroupDetails = () => {
                   {nonOrganizerMembers.map((member) => (
                     <div key={member.username} className="flex flex-col items-center text-center group">
                       <div className="relative mb-2">
-                        <div className="w-16 h-16 rounded-full border-2 overflow-hidden" style={{ borderColor: 'rgba(75, 85, 99, 0.5)' }}>
+                        <div 
+                          className="w-16 h-16 rounded-full border-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity" 
+                          style={{ borderColor: 'rgba(75, 85, 99, 0.5)' }}
+                          onClick={(event) => handleMemberClick(member.username, event)}
+                        >
                           {memberProfiles[member.username]?.avatar_url ? (
                             <img
                               src={`${API_BASE_URL}/profiles/${member.username}/image`}
@@ -1082,7 +1285,11 @@ const GroupDetails = () => {
               {pendingMembers.map((member) => (
                 <div key={member.username} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: 'rgba(75, 85, 99, 0.2)' }}>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full border-2 overflow-hidden" style={{ borderColor: 'rgb(0, 173, 181)' }}>
+                    <div 
+                      className="w-10 h-10 rounded-full border-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity" 
+                      style={{ borderColor: 'rgb(0, 173, 181)' }}
+                      onClick={(event) => handleMemberClick(member.username, event)}
+                    >
                       {memberProfiles[member.username]?.avatar_url ? (
                         <img
                           src={`${API_BASE_URL}/profiles/${member.username}/image`}
