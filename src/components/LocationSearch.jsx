@@ -255,18 +255,18 @@ const LocationSearch = () => {
   }, [detectLocation, googleMapsLoaded])
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-1 sm:space-x-2">
       <div className="relative">
         <MapPin 
-          size={16} 
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
+          size={14} 
+          className="absolute left-2.5 top-1/2 transform -translate-y-1/2 pointer-events-none"
           style={{ color: 'rgb(0, 173, 181)' }}
         />
         <Input 
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           placeholder={getMobilePlaceholder(placeholder)}
-          className="h-8 pl-10 pr-3 w-28 sm:w-36 md:w-48 lg:w-56 xl:w-64 text-xs sm:text-sm"
+          className="h-8 pl-9 pr-2 w-20 xs:w-24 sm:w-36 md:w-48 lg:w-56 xl:w-64 text-xs sm:text-sm"
           style={{ 
             backgroundColor: 'rgb(15, 20, 25)',
             color: 'rgb(238, 238, 238)',
