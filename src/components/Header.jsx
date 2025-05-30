@@ -147,11 +147,11 @@ const Header = () => {
         borderColor: 'rgb(15, 20, 25)' 
       }}
     >
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           
           {/* Left side: Logo and Location */}
-          <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 lg:space-x-6">
             {/* Logo */}
             <div className="flex-shrink-0">
               <button 
@@ -162,7 +162,7 @@ const Header = () => {
                 <img 
                   src={logoTransparent} 
                   alt="Groops" 
-                  className="h-12 sm:h-16 md:h-18"
+                  className="h-10 sm:h-12 md:h-16 lg:h-18"
                   style={{
                     filter: 'drop-shadow(0 2px 4px rgba(238, 238, 238, 0.3))'
                   }}
@@ -184,7 +184,7 @@ const Header = () => {
                 />
               </div>
             ) : user?.authenticated ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
                 {/* Dashboard Button */}
                 <button
                   onClick={() => navigate('/dashboard')}
@@ -578,14 +578,14 @@ const Header = () => {
             ) : (
               <Button 
                 size="sm"
-                className="font-medium px-6 transition-colors flex items-center gap-2"
+                className="font-medium px-3 sm:px-6 transition-colors flex items-center gap-2"
                 style={buttonBaseStyle}
                 onMouseEnter={(e) => handleSignInHover(e, true)}
                 onMouseLeave={(e) => handleSignInHover(e, false)}
                 onClick={signIn}
               >
                 <LogIn size={16} />
-                Sign in
+                <span className="hidden sm:inline">Sign in</span>
               </Button>
             )}
           </div>
