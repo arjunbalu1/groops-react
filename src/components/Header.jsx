@@ -301,7 +301,9 @@ const Header = () => {
                                     setNotificationsOpen(false)
                                     // Refresh unread count when clicking a notification
                                     refreshUnreadCount()
-                                    navigate(`/groups/${notification.group_id}`)
+                                    navigate(`/groups/${notification.group_id}`, {
+                                      state: { fromNotification: true, timestamp: Date.now() }
+                                    })
                                   }
                                 }}
                               >

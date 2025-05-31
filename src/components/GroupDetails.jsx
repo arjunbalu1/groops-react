@@ -1,12 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Calendar, MapPin, Users, IndianRupee, MessageCircle, Settings, UserPlus, UserX, Edit, Trash2, Check, X, Clock } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 const GroupDetails = () => {
   const { groupId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
   
   const [group, setGroup] = useState(null)
@@ -31,7 +32,39 @@ const GroupDetails = () => {
   const [memberProfileLoading, setMemberProfileLoading] = useState(false)
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 })
 
+  // Delete confirmation modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  // Leave group confirmation modal state
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false)
+  const [leaveLoading, setLeaveLoading] = useState(false)
+
+  // Remove member confirmation modal state
+  const [removeModalOpen, setRemoveModalOpen] = useState(false)
+  const [removeLoading, setRemoveLoading] = useState(false)
+  const [memberToRemove, setMemberToRemove] = useState(null)
+
+  // Toast notification state
+  const [toasts, setToasts] = useState([])
+
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
+
+  // Toast notification functions
+  const showToast = (message, type = 'error') => {
+    const id = Date.now()
+    const newToast = { id, message, type }
+    setToasts(prev => [...prev, newToast])
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(toast => toast.id !== id))
+    }, 5000)
+  }
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id))
+  }
 
   // Scroll to top when entering group details
   useEffect(() => {
@@ -40,7 +73,12 @@ const GroupDetails = () => {
       history.scrollRestoration = 'manual'
     }
     window.scrollTo({ top: 0, behavior: 'instant' })
-  }, [])
+    
+    // Show toast if coming from notification
+    if (location.state?.fromNotification) {
+      showToast('Refreshing group details...', 'success')
+    }
+  }, [location.state?.fromNotification])
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
@@ -59,7 +97,7 @@ const GroupDetails = () => {
           // Fetch member profiles for any new members
           const allMembers = [data.organizer_username, ...(data.members?.map(m => m.username) || [])]
           const uniqueMembers = [...new Set(allMembers)]
-          uniqueMembers.forEach(username => fetchMemberProfile(username))
+          uniqueMembers.forEach(username => fetchMemberProfile(username, false))
         }
       } catch (err) {
         console.error('Error auto-refreshing group data:', err)
@@ -167,8 +205,13 @@ const GroupDetails = () => {
   useEffect(() => {
     const fetchGroupDetails = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
-          credentials: 'include'
+        // Check if we're coming from a notification - if so, force refresh with cache-busting
+        const isFromNotification = location.state?.fromNotification
+        const cacheParam = isFromNotification ? `?_t=${Date.now()}` : ''
+        
+        const response = await fetch(`${API_BASE_URL}/groups/${groupId}${cacheParam}`, {
+          credentials: 'include',
+          cache: isFromNotification ? 'no-cache' : 'default'
         })
         
         if (!response.ok) {
@@ -186,7 +229,13 @@ const GroupDetails = () => {
         // Fetch member profiles
         const allMembers = [data.organizer_username, ...(data.members?.map(m => m.username) || [])]
         const uniqueMembers = [...new Set(allMembers)]
-        uniqueMembers.forEach(username => fetchMemberProfile(username))
+        uniqueMembers.forEach(username => fetchMemberProfile(username, isFromNotification))
+        
+        // Clear navigation state after successful fetch to prevent future refreshes
+        if (isFromNotification && location.state) {
+          // Replace current state without the fromNotification flag
+          navigate(location.pathname, { replace: true, state: {} })
+        }
         
       } catch (err) {
         console.error('Error fetching group details:', err)
@@ -199,8 +248,8 @@ const GroupDetails = () => {
     if (groupId) {
       fetchGroupDetails()
     }
-  // -disable-next-line react-hooks/exhaustive-deps
-  }, [groupId])
+  // Include location.state in dependencies to trigger refresh when coming from notifications
+  }, [groupId, location.state?.fromNotification, location.state?.timestamp])
 
   // Fetch pending members for organizers
   useEffect(() => {
@@ -208,14 +257,19 @@ const GroupDetails = () => {
       if (!group || getUserMembershipStatus() !== 'organizer') return
       
       try {
-        const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}/pending-members`, {
-          credentials: 'include'
+        // Force refresh pending members if coming from notification
+        const isFromNotification = location.state?.fromNotification
+        const cacheParam = isFromNotification ? `?_t=${Date.now()}` : ''
+        
+        const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}/pending-members${cacheParam}`, {
+          credentials: 'include',
+          cache: isFromNotification ? 'no-cache' : 'default'
         })
         
         if (response.ok) {
           const data = await response.json()
           setPendingMembers(data || [])
-          data.forEach(member => fetchMemberProfile(member.username))
+          data.forEach(member => fetchMemberProfile(member.username, isFromNotification))
         }
       } catch (err) {
         console.error('Error fetching pending members:', err)
@@ -234,14 +288,17 @@ const GroupDetails = () => {
 
       return () => clearInterval(interval)
     }
-  }, [group, groupId, user])
+  }, [group, groupId, user, location.state?.fromNotification])
 
   // Fetch member profile
-  const fetchMemberProfile = async (username) => {
-    if (memberProfiles[username]) return
+  const fetchMemberProfile = async (username, forceRefresh = false) => {
+    if (memberProfiles[username] && !forceRefresh) return
     
     try {
-      const response = await fetch(`${API_BASE_URL}/profiles/${username}`)
+      const cacheParam = forceRefresh ? `?_t=${Date.now()}` : ''
+      const response = await fetch(`${API_BASE_URL}/profiles/${username}${cacheParam}`, {
+        cache: forceRefresh ? 'no-cache' : 'default'
+      })
       if (response.ok) {
         const profile = await response.json()
         setMemberProfiles(prev => ({
@@ -330,14 +387,15 @@ const GroupDetails = () => {
         }))
         
         // Fetch user's profile if not already cached
-        fetchMemberProfile(user.username)
+        fetchMemberProfile(user.username, false)
+        showToast('Join request sent successfully!', 'success')
       } else {
         const data = await response.json()
-        alert(data.error || 'Failed to join group')
+        showToast(data.error || 'Failed to join group')
       }
     } catch (err) {
       console.error('Error joining group:', err)
-      alert('Failed to join group')
+      showToast('Failed to join group')
     } finally {
       setJoinLoading(false)
     }
@@ -345,7 +403,7 @@ const GroupDetails = () => {
 
   // Leave group
   const handleLeaveGroup = async () => {
-    if (!confirm('Are you sure you want to leave this group?')) return
+    setLeaveLoading(true)
     
     try {
       const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}/leave`, {
@@ -357,12 +415,20 @@ const GroupDetails = () => {
         navigate('/')
       } else {
         const data = await response.json()
-        alert(data.error || 'Failed to leave group')
+        showToast(data.error || 'Failed to leave group')
       }
     } catch (err) {
       console.error('Error leaving group:', err)
-      alert('Failed to leave group')
+      showToast('Failed to leave group')
+    } finally {
+      setLeaveLoading(false)
+      setLeaveModalOpen(false)
     }
+  }
+
+  // Show leave confirmation modal
+  const showLeaveModal = () => {
+    setLeaveModalOpen(true)
   }
 
   // Approve/Reject join request
@@ -384,29 +450,31 @@ const GroupDetails = () => {
                 : member
             ) || []
           }))
+          showToast(`${username} has been approved to join the group`, 'success')
         } else if (action === 'reject') {
           // Remove member from group entirely
           setGroup(prev => ({
             ...prev,
             members: prev.members?.filter(member => member.username !== username) || []
           }))
+          showToast(`${username}'s join request has been rejected`, 'success')
         }
         
         // Remove from pending members list
         setPendingMembers(prev => prev.filter(member => member.username !== username))
       } else {
         const data = await response.json()
-        alert(data.error || `Failed to ${action} member`)
+        showToast(data.error || `Failed to ${action} member`)
       }
     } catch (err) {
       console.error(`Error ${action}ing member:`, err)
-      alert(`Failed to ${action} member`)
+      showToast(`Failed to ${action} member`)
     }
   }
 
   // Remove member
   const handleRemoveMember = async (username) => {
-    if (!confirm(`Are you sure you want to remove ${username} from this group?`)) return
+    setRemoveLoading(true)
     
     try {
       const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}/members/${username}/remove`, {
@@ -423,14 +491,25 @@ const GroupDetails = () => {
         
         // Remove from pending members if they were there
         setPendingMembers(prev => prev.filter(member => member.username !== username))
+        showToast(`${username} has been removed from the group`, 'success')
       } else {
         const data = await response.json()
-        alert(data.error || 'Failed to remove member')
+        showToast(data.error || 'Failed to remove member')
       }
     } catch (err) {
       console.error('Error removing member:', err)
-      alert('Failed to remove member')
+      showToast('Failed to remove member')
+    } finally {
+      setRemoveLoading(false)
+      setRemoveModalOpen(false)
+      setMemberToRemove(null)
     }
+  }
+
+  // Show remove member confirmation modal
+  const showRemoveModal = (username) => {
+    setMemberToRemove(username)
+    setRemoveModalOpen(true)
   }
 
   // Activity type colors
@@ -841,6 +920,281 @@ const GroupDetails = () => {
     }
   }, [memberProfileModalOpen])
 
+  // Delete group
+  const handleDeleteGroup = async () => {
+    setDeleteLoading(true)
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        // Navigate to home page after successful deletion
+        navigate('/')
+      } else {
+        const data = await response.json()
+        showToast(data.error || 'Failed to delete group')
+      }
+    } catch (err) {
+      console.error('Error deleting group:', err)
+      showToast('Failed to delete group')
+    } finally {
+      setDeleteLoading(false)
+      setDeleteModalOpen(false)
+    }
+  }
+
+  // Show delete confirmation modal
+  const showDeleteModal = () => {
+    setDeleteModalOpen(true)
+  }
+
+  // Toast Container Component
+  const ToastContainer = () => {
+    if (toasts.length === 0) return null
+
+    return (
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg max-w-sm"
+            style={{
+              backgroundColor: 'rgba(25, 30, 35, 0.95)',
+              borderColor: toast.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+              backdropFilter: 'blur(8px)'
+            }}
+          >
+            <div 
+              className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{
+                backgroundColor: toast.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'
+              }}
+            >
+              {toast.type === 'success' ? (
+                <Check size={14} style={{ color: 'rgb(34, 197, 94)' }} />
+              ) : (
+                <X size={14} style={{ color: 'rgb(239, 68, 68)' }} />
+              )}
+            </div>
+            <p 
+              className="text-sm flex-1"
+              style={{ color: 'rgb(238, 238, 238)' }}
+            >
+              {toast.message}
+            </p>
+            <button
+              onClick={() => removeToast(toast.id)}
+              className="flex-shrink-0 hover:opacity-70 transition-opacity"
+              style={{ color: 'rgb(156, 163, 175)' }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // Leave Group Confirmation Modal Component
+  const LeaveConfirmationModal = () => {
+    if (!leaveModalOpen) return null
+
+    return (
+      <>
+        {/* Overlay */}
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{
+            backgroundColor: 'rgba(15, 20, 25, 0.8)',
+            backdropFilter: 'blur(4px)'
+          }}
+          onClick={() => setLeaveModalOpen(false)}
+        >
+          {/* Modal */}
+          <div 
+            className="rounded-lg border p-6 w-full max-w-md mx-4 shadow-2xl"
+            style={{
+              backgroundColor: 'rgba(25, 30, 35, 0.98)',
+              borderColor: 'rgba(249, 115, 22, 0.3)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(249, 115, 22, 0.2)' }}
+              >
+                <UserX size={24} style={{ color: 'rgb(249, 115, 22)' }} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
+                  Leave Group
+                </h3>
+                <p className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
+                  You can rejoin later if the group is still active
+                </p>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="mb-6">
+              <p className="mb-3" style={{ color: 'rgb(201, 209, 217)', lineHeight: '1.5' }}>
+                Are you sure you want to leave <strong style={{ color: 'rgb(238, 238, 238)' }}>"{group?.name}"</strong>?
+              </p>
+              <p className="text-sm" style={{ color: 'rgb(156, 163, 175)', lineHeight: '1.5' }}>
+                You will no longer receive updates about this group and won't be able to participate in the event.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setLeaveModalOpen(false)}
+                disabled={leaveLoading}
+                className="px-4 py-2 rounded-lg border transition-colors"
+                style={{
+                  borderColor: 'rgb(107, 114, 128)',
+                  color: 'rgb(156, 163, 175)',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLeaveGroup}
+                disabled={leaveLoading}
+                className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                style={{
+                  backgroundColor: leaveLoading ? 'rgba(249, 115, 22, 0.5)' : 'rgb(249, 115, 22)',
+                  color: 'white'
+                }}
+              >
+                {leaveLoading ? (
+                  <>
+                    <div 
+                      className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
+                      style={{ borderColor: 'white', borderTopColor: 'transparent' }}
+                    />
+                    Leaving...
+                  </>
+                ) : (
+                  <>
+                    <UserX size={16} />
+                    Leave Group
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Remove Member Confirmation Modal Component
+  const RemoveMemberConfirmationModal = () => {
+    if (!removeModalOpen || !memberToRemove) return null
+
+    return (
+      <>
+        {/* Overlay */}
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{
+            backgroundColor: 'rgba(15, 20, 25, 0.8)',
+            backdropFilter: 'blur(4px)'
+          }}
+          onClick={() => setRemoveModalOpen(false)}
+        >
+          {/* Modal */}
+          <div 
+            className="rounded-lg border p-6 w-full max-w-md mx-4 shadow-2xl"
+            style={{
+              backgroundColor: 'rgba(25, 30, 35, 0.98)',
+              borderColor: 'rgba(239, 68, 68, 0.3)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)' }}
+              >
+                <UserX size={24} style={{ color: 'rgb(239, 68, 68)' }} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
+                  Remove Member
+                </h3>
+                <p className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
+                  This action will remove them from the group
+                </p>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="mb-6">
+              <p className="mb-3" style={{ color: 'rgb(201, 209, 217)', lineHeight: '1.5' }}>
+                Are you sure you want to remove <strong style={{ color: 'rgb(238, 238, 238)' }}>{memberToRemove}</strong> from this group?
+              </p>
+              <p className="text-sm" style={{ color: 'rgb(156, 163, 175)', lineHeight: '1.5' }}>
+                They will no longer be able to participate in the event and will lose access to the group chat.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  setRemoveModalOpen(false)
+                  setMemberToRemove(null)
+                }}
+                disabled={removeLoading}
+                className="px-4 py-2 rounded-lg border transition-colors"
+                style={{
+                  borderColor: 'rgb(107, 114, 128)',
+                  color: 'rgb(156, 163, 175)',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleRemoveMember(memberToRemove)}
+                disabled={removeLoading}
+                className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                style={{
+                  backgroundColor: removeLoading ? 'rgba(239, 68, 68, 0.5)' : 'rgb(239, 68, 68)',
+                  color: 'white'
+                }}
+              >
+                {removeLoading ? (
+                  <>
+                    <div 
+                      className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
+                      style={{ borderColor: 'white', borderTopColor: 'transparent' }}
+                    />
+                    Removing...
+                  </>
+                ) : (
+                  <>
+                    <UserX size={16} />
+                    Remove Member
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
@@ -1010,9 +1364,116 @@ const GroupDetails = () => {
     )
   }
 
+  // Delete Confirmation Modal Component
+  const DeleteConfirmationModal = () => {
+    if (!deleteModalOpen) return null
+
+    return (
+      <>
+        {/* Overlay */}
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{
+            backgroundColor: 'rgba(15, 20, 25, 0.8)',
+            backdropFilter: 'blur(4px)'
+          }}
+          onClick={() => setDeleteModalOpen(false)}
+        >
+          {/* Modal */}
+          <div 
+            className="rounded-lg border p-6 w-full max-w-md mx-4 shadow-2xl"
+            style={{
+              backgroundColor: 'rgba(25, 30, 35, 0.98)',
+              borderColor: 'rgba(239, 68, 68, 0.3)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)' }}
+              >
+                <Trash2 size={24} style={{ color: 'rgb(239, 68, 68)' }} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
+                  Delete Group
+                </h3>
+                <p className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="mb-6">
+              <p className="mb-3" style={{ color: 'rgb(201, 209, 217)', lineHeight: '1.5' }}>
+                Are you sure you want to delete <strong style={{ color: 'rgb(238, 238, 238)' }}>"{group?.name}"</strong>?
+              </p>
+              <p className="text-sm" style={{ color: 'rgb(156, 163, 175)', lineHeight: '1.5' }}>
+                This will permanently remove:
+              </p>
+              <ul className="text-sm mt-2 space-y-1" style={{ color: 'rgb(156, 163, 175)' }}>
+                <li>• All group data and settings</li>
+                <li>• All member information</li>
+                <li>• All notifications and activity logs</li>
+                <li>• The event and location details</li>
+              </ul>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={deleteLoading}
+                className="px-4 py-2 rounded-lg border transition-colors"
+                style={{
+                  borderColor: 'rgb(107, 114, 128)',
+                  color: 'rgb(156, 163, 175)',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteGroup}
+                disabled={deleteLoading}
+                className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                style={{
+                  backgroundColor: deleteLoading ? 'rgba(239, 68, 68, 0.5)' : 'rgb(239, 68, 68)',
+                  color: 'white'
+                }}
+              >
+                {deleteLoading ? (
+                  <>
+                    <div 
+                      className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
+                      style={{ borderColor: 'white', borderTopColor: 'transparent' }}
+                    />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    Delete Group
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   return (
     <div style={{ backgroundColor: 'rgb(15, 20, 25)', minHeight: '100vh' }}>
       <MemberProfileModal />
+      <ToastContainer />
+      <DeleteConfirmationModal />
+      <LeaveConfirmationModal />
+      <RemoveMemberConfirmationModal />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
@@ -1128,44 +1589,85 @@ const GroupDetails = () => {
             {/* Action Button */}
             <div className="flex items-center gap-3">
               {isOrganizer && (
-                <button
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200"
-                  style={{
-                    borderColor: isEventTooSoon() ? 'rgb(75, 85, 99)' : 'rgb(107, 114, 128)',
-                    color: isEventTooSoon() ? 'rgb(75, 85, 99)' : 'rgb(156, 163, 175)',
-                    backgroundColor: 'transparent',
-                    cursor: isEventTooSoon() ? 'not-allowed' : 'pointer',
-                    opacity: isEventTooSoon() ? 0.5 : 1
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isEventTooSoon()) {
-                      e.target.style.borderColor = 'rgb(0, 173, 181)'
-                      e.target.style.color = 'rgb(0, 173, 181)'
-                      e.target.style.backgroundColor = 'rgba(0, 173, 181, 0.1)'
-                      e.target.style.transform = 'scale(1.05)'
-                      e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isEventTooSoon()) {
-                      e.target.style.borderColor = 'rgb(107, 114, 128)'
-                      e.target.style.color = 'rgb(156, 163, 175)'
-                      e.target.style.backgroundColor = 'transparent'
-                      e.target.style.transform = 'scale(1)'
-                      e.target.style.boxShadow = 'none'
-                    }
-                  }}
-                  onClick={() => {
-                    if (!isEventTooSoon()) {
-                      navigate(`/groups/${groupId}/edit`)
-                    }
-                  }}
-                  disabled={isEventTooSoon()}
-                  title={isEventTooSoon() ? "Cannot edit group within 1 hour of the event" : "Edit group details"}
-                >
-                  <Edit size={16} />
-                  Edit
-                </button>
+                <>
+                  <button
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200"
+                    style={{
+                      borderColor: isEventTooSoon() ? 'rgb(75, 85, 99)' : 'rgb(107, 114, 128)',
+                      color: isEventTooSoon() ? 'rgb(75, 85, 99)' : 'rgb(156, 163, 175)',
+                      backgroundColor: 'transparent',
+                      cursor: isEventTooSoon() ? 'not-allowed' : 'pointer',
+                      opacity: isEventTooSoon() ? 0.5 : 1
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isEventTooSoon()) {
+                        e.target.style.borderColor = 'rgb(0, 173, 181)'
+                        e.target.style.color = 'rgb(0, 173, 181)'
+                        e.target.style.backgroundColor = 'rgba(0, 173, 181, 0.1)'
+                        e.target.style.transform = 'scale(1.05)'
+                        e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isEventTooSoon()) {
+                        e.target.style.borderColor = 'rgb(107, 114, 128)'
+                        e.target.style.color = 'rgb(156, 163, 175)'
+                        e.target.style.backgroundColor = 'transparent'
+                        e.target.style.transform = 'scale(1)'
+                        e.target.style.boxShadow = 'none'
+                      }
+                    }}
+                    onClick={() => {
+                      if (!isEventTooSoon()) {
+                        navigate(`/groups/${groupId}/edit`)
+                      }
+                    }}
+                    disabled={isEventTooSoon()}
+                    title={isEventTooSoon() ? "Cannot edit group within 1 hour of the event" : "Edit group details"}
+                  >
+                    <Edit size={16} />
+                    Edit
+                  </button>
+
+                  <button
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200"
+                    style={{
+                      borderColor: isEventTooSoon() ? 'rgb(75, 85, 99)' : 'rgb(185, 28, 28)',
+                      color: isEventTooSoon() ? 'rgb(75, 85, 99)' : 'rgb(185, 28, 28)',
+                      backgroundColor: 'transparent',
+                      cursor: isEventTooSoon() ? 'not-allowed' : 'pointer',
+                      opacity: isEventTooSoon() ? 0.5 : 1
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isEventTooSoon()) {
+                        e.target.style.borderColor = 'rgb(220, 38, 38)'
+                        e.target.style.color = 'rgb(220, 38, 38)'
+                        e.target.style.backgroundColor = 'rgba(220, 38, 38, 0.1)'
+                        e.target.style.transform = 'scale(1.05)'
+                        e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isEventTooSoon()) {
+                        e.target.style.borderColor = 'rgb(185, 28, 28)'
+                        e.target.style.color = 'rgb(185, 28, 28)'
+                        e.target.style.backgroundColor = 'transparent'
+                        e.target.style.transform = 'scale(1)'
+                        e.target.style.boxShadow = 'none'
+                      }
+                    }}
+                    onClick={() => {
+                      if (!isEventTooSoon()) {
+                        showDeleteModal()
+                      }
+                    }}
+                    disabled={isEventTooSoon()}
+                    title={isEventTooSoon() ? "Cannot delete group within 1 hour of the event" : "Delete group permanently"}
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
+                </>
               )}
               
               {isNonMember && (
@@ -1203,7 +1705,7 @@ const GroupDetails = () => {
                     borderColor: 'rgb(239, 68, 68)',
                     color: 'rgb(239, 68, 68)'
                   }}
-                  onClick={handleLeaveGroup}
+                  onClick={showLeaveModal}
                 >
                   <UserX size={16} />
                   Leave
@@ -1415,7 +1917,7 @@ const GroupDetails = () => {
                         {/* Remove button for organizers */}
                         {isOrganizer && (
                           <button
-                            onClick={() => handleRemoveMember(member.username)}
+                            onClick={() => showRemoveModal(member.username)}
                             className="absolute -top-2 -right-2 rounded-full flex items-center justify-center z-10"
                             style={{ 
                               width: '24px',

@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import Header from '@/components/Header'
 import HomePage from '@/components/HomePage'
 import CreateProfile from '@/components/CreateProfile'
@@ -9,6 +9,18 @@ import GroupDetails from '@/components/GroupDetails'
 import Dashboard from '@/components/Dashboard'
 import Groops from '@/components/Groops'
 import { AuthProvider } from '@/context/AuthContext'
+
+const GroupDetailsWrapper = () => {
+  const location = useLocation()
+  const key = `${location.pathname}-${location.state?.timestamp || 'default'}`
+  
+  return (
+    <>
+      <Header />
+      <GroupDetails key={key} />
+    </>
+  )
+}
 
 const AppContent = () => {
   return (
@@ -65,12 +77,7 @@ const AppContent = () => {
         />
         <Route 
           path="/groups/:groupId" 
-          element={
-            <>
-              <Header />
-              <GroupDetails key={`${window.location.pathname}-${Date.now()}`} />
-            </>
-          } 
+          element={<GroupDetailsWrapper />}
         />
       </Routes>
     </div>
