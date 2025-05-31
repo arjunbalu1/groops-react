@@ -245,10 +245,11 @@ const CreateGroup = () => {
     if (!formData.location.place_id) return 'Location is required'
     if (!formData.agreesToGuidelines) return 'You must agree to the community guidelines'
     
-    // Check if date is in the future
+    // Check if date is at least 1 hour in the future
     const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
     const now = new Date()
-    if (selectedDateTime <= now) return 'Event date and time must be in the future'
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000) // Add 1 hour in milliseconds
+    if (selectedDateTime <= oneHourFromNow) return 'Event must be scheduled at least 1 hour in advance'
     
     return null
   }
@@ -347,10 +348,11 @@ const CreateGroup = () => {
         if (!formData.date || !formData.time || !formData.location.place_id) {
           return false
         }
-        // Check if date and time is in the future
+        // Check if date and time is at least 1 hour in the future
         const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
         const now = new Date()
-        return selectedDateTime > now
+        const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
+        return selectedDateTime > oneHourFromNow
       }
       case 4: return formData.max_members && formData.max_members >= 2
       case 5: return validateForm() === null
@@ -541,10 +543,11 @@ const CreateGroup = () => {
               if (formData.time) {
                 const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
                 const now = new Date()
-                if (selectedDateTime <= now) {
+                const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
+                if (selectedDateTime <= oneHourFromNow) {
                   return (
                     <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-red-400">
-                      Date and time is in the past
+                      Event must be scheduled at least 1 hour in advance
                     </div>
                   )
                 }
@@ -592,10 +595,11 @@ const CreateGroup = () => {
               if (formData.date) {
                 const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
                 const now = new Date()
-                if (selectedDateTime <= now) {
+                const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
+                if (selectedDateTime <= oneHourFromNow) {
                   return (
                     <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-red-400">
-                      Date and time is in the past
+                      Event must be scheduled at least 1 hour in advance
                     </div>
                   )
                 }
@@ -638,38 +642,31 @@ const CreateGroup = () => {
 
       <div>
         <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Max Members *</label>
-        <div className="flex items-center space-x-3 sm:space-x-4">
-          <button
-            type="button"
-            onClick={() => {
-              const currentValue = formData.max_members || 1;
-              if (currentValue > 2) {
-                handleInputChange('max_members', currentValue - 1);
+        <div className="relative">
+          <Users className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+          <input
+            type="text"
+            placeholder="2-50"
+            value={formData.max_members || ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              
+              // Only allow numbers and empty string
+              if (value === '' || /^\d+$/.test(value)) {
+                const numValue = parseInt(value) || null;
+                handleInputChange('max_members', numValue);
               }
             }}
-            className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors disabled:opacity-50"
-            disabled={!formData.max_members || formData.max_members <= 2}
-          >
-            <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
-          </button>
-          <span className="text-lg sm:text-xl font-semibold w-10 sm:w-12 text-center text-white">
-            {formData.max_members || 'None'}
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              const currentValue = formData.max_members || 1;
-              if (currentValue < 50) {
-                handleInputChange('max_members', currentValue + 1);
-              }
-            }}
-            className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors disabled:opacity-50"
-            disabled={formData.max_members && formData.max_members >= 50}
-          >
-            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-          </button>
+            className="w-full pl-10 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm sm:text-base"
+          />
         </div>
-        <p className="text-xs mt-0.5 sm:mt-1 text-gray-400">Total groop size including you (minimum 2 people)</p>
+        {formData.max_members && (formData.max_members < 2 || formData.max_members > 50) ? (
+          <p className="text-xs mt-0.5 sm:mt-1 text-red-400">
+            {formData.max_members < 2 ? 'Minimum 2 members required' : 'Maximum 50 members allowed'}
+          </p>
+        ) : (
+          <p className="text-xs mt-0.5 sm:mt-1 text-gray-400">Total groop size including you (min 2, max 50)</p>
+        )}
       </div>
 
       <div>
@@ -677,23 +674,24 @@ const CreateGroup = () => {
         <div className="relative">
           <IndianRupee className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
           <input
-            type="number"
+            type="text"
             placeholder="Free"
             value={formData.cost || ''}
             onChange={(e) => {
               const value = e.target.value;
-              const numValue = parseFloat(value) || 0;
               
-              // Prevent entering values above the limit
-              if (value !== '' && numValue > 100000) {
-                return; // Don't update state if above limit
+              // Only allow numbers, decimal point, and empty string
+              if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                const numValue = parseFloat(value) || 0;
+                
+                // Prevent entering values above the limit
+                if (value !== '' && numValue > 100000) {
+                  return; // Don't update state if above limit
+                }
+                
+                handleInputChange('cost', value === '' ? null : numValue);
               }
-              
-              handleInputChange('cost', value === '' ? null : numValue);
             }}
-            min="0"
-            max="100000"
-            step="0.01"
             className={`w-full pl-10 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm sm:text-base ${
               formData.cost && formData.cost > 100000
                 ? 'border-red-500 focus:ring-red-500'

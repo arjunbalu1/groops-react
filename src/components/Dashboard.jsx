@@ -10,23 +10,14 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   
-  // Infinite scroll state for ratings
+  // Ratings state (simplified - no pagination needed for dropdown)
   const [ratings, _setRatings] = useState([])
-  const [_ratingsPage, _setRatingsPage] = useState(1)
-  const [ratingsLoading, setRatingsLoading] = useState(false)
-  const [ratingsHasMore, setRatingsHasMore] = useState(true)
   
-  // Infinite scroll state for friends
+  // Friends state (simplified - no pagination needed for dropdown)
   const [friends, _setFriends] = useState([])
-  const [_friendsPage, _setFriendsPage] = useState(1)
-  const [friendsLoading, setFriendsLoading] = useState(false)
-  const [friendsHasMore, setFriendsHasMore] = useState(true)
   
-  // Infinite scroll state for past groups
+  // Past groups state (simplified - no pagination)
   const [pastGroups, setPastGroups] = useState([])
-  const [pastGroupsPage, setPastGroupsPage] = useState(1)
-  const [pastGroupsLoading, setPastGroupsLoading] = useState(false)
-  const [pastGroupsHasMore, setPastGroupsHasMore] = useState(true)
   
   // Upcoming groups state
   const [upcomingGroups, setUpcomingGroups] = useState([])
@@ -81,13 +72,7 @@ const Dashboard = () => {
         })
         
         if (filteredPastGroups.length > 0) {
-          setPastGroups(filteredPastGroups.slice(0, 10))
-          setPastGroupsPage(2)
-          if (filteredPastGroups.length <= 10) {
-            setPastGroupsHasMore(false)
-          }
-        } else {
-          setPastGroupsHasMore(false)
+          setPastGroups(filteredPastGroups)
         }
       } catch (err) {
         setError(err.message)
@@ -191,67 +176,6 @@ const Dashboard = () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
-
-  // Load more functions
-  const loadMoreRatings = useCallback(async () => {
-    if (ratingsLoading || !ratingsHasMore) return
-    setRatingsLoading(true)
-    try {
-      // TODO: Replace with actual API call when ratings endpoint is available
-      // For now, just mark as no more data available
-      setRatingsHasMore(false)
-    } catch (err) {
-      console.error('Error loading more ratings:', err)
-    } finally {
-      setRatingsLoading(false)
-    }
-  }, [ratingsLoading, ratingsHasMore])
-
-  const loadMoreFriends = useCallback(async () => {
-    if (friendsLoading || !friendsHasMore) return
-    setFriendsLoading(true)
-    try {
-      // TODO: Replace with actual API call when friends endpoint is available
-      // For now, just mark as no more data available
-      setFriendsHasMore(false)
-    } catch (err) {
-      console.error('Error loading more friends:', err)
-    } finally {
-      setFriendsLoading(false)
-    }
-  }, [friendsLoading, friendsHasMore])
-
-  const loadMorePastGroups = useCallback(async () => {
-    if (pastGroupsLoading || !pastGroupsHasMore || !dashboardData) return
-    setPastGroupsLoading(true)
-    try {
-      // Get all groups and filter past ones
-      const allGroups = [...(dashboardData.owned_groups || []), ...(dashboardData.joined_groups || [])]
-      const now = new Date()
-      const filteredPastGroups = allGroups.filter(group => {
-        const groupDate = new Date(group.date_time)
-        return groupDate < now
-      })
-      
-      const startIndex = (pastGroupsPage - 1) * 10
-      const newPastGroups = filteredPastGroups.slice(startIndex, startIndex + 10)
-      
-      if (newPastGroups.length === 0 || newPastGroups.length < 10) {
-        setPastGroupsHasMore(false)
-      }
-      
-      if (newPastGroups.length > 0) {
-        setPastGroups(prev => [...prev, ...newPastGroups])
-        setPastGroupsPage(prev => prev + 1)
-      }
-    } catch (err) {
-      console.error('Error loading more past groups:', err)
-    } finally {
-      setPastGroupsLoading(false)
-    }
-  }, [pastGroupsPage, pastGroupsLoading, pastGroupsHasMore, dashboardData])
-
-  // Intersection observer effects (removed - no longer needed with dropdown design)
 
   // Loading state
   if (loading) {

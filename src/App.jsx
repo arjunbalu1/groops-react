@@ -4,6 +4,7 @@ import Header from '@/components/Header'
 import HomePage from '@/components/HomePage'
 import CreateProfile from '@/components/CreateProfile'
 import CreateGroup from '@/components/CreateGroup'
+import EditGroup from '@/components/EditGroup'
 import GroupDetails from '@/components/GroupDetails'
 import Dashboard from '@/components/Dashboard'
 import Groops from '@/components/Groops'
@@ -50,6 +51,15 @@ const AppContent = () => {
             <>
               <Header />
               <Dashboard />
+            </>
+          } 
+        />
+        <Route 
+          path="/groups/:groupId/edit" 
+          element={
+            <>
+              <Header />
+              <EditGroup />
             </>
           } 
         />

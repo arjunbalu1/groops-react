@@ -284,6 +284,15 @@ const GroupDetails = () => {
     }
   }
 
+  // Helper function to check if event is within 1 hour
+  const isEventTooSoon = () => {
+    if (!group?.date_time) return false
+    const eventTime = new Date(group.date_time)
+    const now = new Date()
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
+    return eventTime <= oneHourFromNow
+  }
+
   // Get user's membership status
   const getUserMembershipStatus = () => {
     if (!user?.username || !group) return 'non-member'
@@ -1120,12 +1129,39 @@ const GroupDetails = () => {
             <div className="flex items-center gap-3">
               {isOrganizer && (
                 <button
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200"
                   style={{
-                    borderColor: 'rgb(107, 114, 128)',
-                    color: 'rgb(156, 163, 175)'
+                    borderColor: isEventTooSoon() ? 'rgb(75, 85, 99)' : 'rgb(107, 114, 128)',
+                    color: isEventTooSoon() ? 'rgb(75, 85, 99)' : 'rgb(156, 163, 175)',
+                    backgroundColor: 'transparent',
+                    cursor: isEventTooSoon() ? 'not-allowed' : 'pointer',
+                    opacity: isEventTooSoon() ? 0.5 : 1
                   }}
-                  onClick={() => {/* TODO: Edit group */}}
+                  onMouseEnter={(e) => {
+                    if (!isEventTooSoon()) {
+                      e.target.style.borderColor = 'rgb(0, 173, 181)'
+                      e.target.style.color = 'rgb(0, 173, 181)'
+                      e.target.style.backgroundColor = 'rgba(0, 173, 181, 0.1)'
+                      e.target.style.transform = 'scale(1.05)'
+                      e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isEventTooSoon()) {
+                      e.target.style.borderColor = 'rgb(107, 114, 128)'
+                      e.target.style.color = 'rgb(156, 163, 175)'
+                      e.target.style.backgroundColor = 'transparent'
+                      e.target.style.transform = 'scale(1)'
+                      e.target.style.boxShadow = 'none'
+                    }
+                  }}
+                  onClick={() => {
+                    if (!isEventTooSoon()) {
+                      navigate(`/groups/${groupId}/edit`)
+                    }
+                  }}
+                  disabled={isEventTooSoon()}
+                  title={isEventTooSoon() ? "Cannot edit group within 1 hour of the event" : "Edit group details"}
                 >
                   <Edit size={16} />
                   Edit
