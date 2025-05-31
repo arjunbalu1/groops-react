@@ -244,10 +244,14 @@ const Header = () => {
                   {/* Notifications Dropdown */}
                   {notificationsOpen && (
                     <div 
-                      className="absolute right-0 mt-2 w-80 max-h-96 rounded-lg border shadow-lg z-50 overflow-hidden"
+                      className="absolute right-0 mt-2 w-64 sm:w-72 md:w-80 max-h-96 rounded-lg border shadow-lg z-50 overflow-hidden"
                       style={{
                         backgroundColor: 'rgb(25, 30, 35)',
                         borderColor: 'rgba(0, 173, 181, 0.2)',
+                        maxWidth: 'calc(100vw - 1rem)',
+                        minWidth: '16rem',
+                        left: 'auto',
+                        right: '0'
                       }}
                     >
                       {/* Header */}
