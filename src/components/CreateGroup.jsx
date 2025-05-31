@@ -493,7 +493,7 @@ const CreateGroup = () => {
                 }))
               }
             }}
-            className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm sm:text-base"
+            className="w-full pl-10 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm sm:text-base"
           />
           {showLocationResults && locationResults.length > 0 && (
             <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-lg max-h-60 overflow-y-auto">
@@ -529,7 +529,7 @@ const CreateGroup = () => {
               value={formData.date}
               onChange={(e) => handleInputChange('date', e.target.value)}
               min={new Date().toISOString().split('T')[0]}
-              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer text-sm sm:text-base"
+              className="w-full pl-10 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer text-sm sm:text-base"
               style={{
                 colorScheme: 'dark'
               }}
@@ -580,7 +580,7 @@ const CreateGroup = () => {
               type="time"
               value={formData.time}
               onChange={(e) => handleInputChange('time', e.target.value)}
-              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer text-sm sm:text-base"
+              className="w-full pl-10 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer text-sm sm:text-base"
               style={{
                 colorScheme: 'dark'
               }}
@@ -694,7 +694,7 @@ const CreateGroup = () => {
             min="0"
             max="100000"
             step="0.01"
-            className={`w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm sm:text-base ${
+            className={`w-full pl-10 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm sm:text-base ${
               formData.cost && formData.cost > 100000
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-600 focus:ring-teal-500'
