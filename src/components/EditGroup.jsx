@@ -411,11 +411,11 @@ const EditGroup = () => {
 
   return (
     <div style={{ backgroundColor: 'rgb(15, 20, 25)', minHeight: '100vh' }}>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-          <button
+        <div className="mb-6">
+          <div className="flex items-center gap-4 mb-4">
+            <button
               onClick={() => navigate(`/groups/${groupId}`)}
               className="p-2 rounded-lg border hover:opacity-80 transition-opacity"
               style={{ 
@@ -425,81 +425,31 @@ const EditGroup = () => {
               }}
             >
               <ArrowLeft className="w-5 h-5" />
-          </button>
+            </button>
             <div>
-              <h1 className="text-3xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
+              <h1 className="text-2xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
                 Edit Groop
               </h1>
-              <p className="text-lg" style={{ color: 'rgb(156, 163, 175)' }}>
+              <p className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
                 Update your groop details
               </p>
-      </div>
-    </div>
+            </div>
+          </div>
         </div>
 
         {/* Edit Form */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Basic Information Section */}
-      <div>
-              <h3 className="text-xl font-semibold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
-                Basic Information
-              </h3>
-              <div className="space-y-4">
-                {/* Group Name */}
-                <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
-                    Groop Name *
-                  </label>
-        <input
-          type="text"
-          placeholder="e.g., Morning Runners Club, Beach Volleyball Squad..."
-          value={formData.name}
-          onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-          maxLength={100}
-        />
-                  <div className="mt-1 text-sm text-gray-400">
-          {formData.name.length}/100 characters 
-          <span className={`ml-2 ${formData.name.trim().length >= 5 ? 'text-green-400' : 'text-orange-400'}`}>
-            (min 5)
-          </span>
-        </div>
-      </div>
-
-                {/* Description */}
-      <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
-                    Description *
-                  </label>
-        <textarea
-          placeholder="Tell people what this groop is about..."
-          value={formData.description}
-          onChange={(e) => handleInputChange('description', e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
-          maxLength={1000}
-        />
-                  <div className="mt-1 text-sm text-gray-400">
-          {formData.description.length}/1000 characters 
-          <span className={`ml-2 ${formData.description.trim().length >= 10 ? 'text-green-400' : 'text-orange-400'}`}>
-            (min 10)
-          </span>
-        </div>
-      </div>
-    </div>
-            </div>
-
-            {/* Activity Type Section */}
-      <div>
-              <h3 className="text-xl font-semibold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-4 sm:p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Row 1: Activity Type */}
+            <div>
+              <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(201, 209, 217)' }}>
                 Activity Type *
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-3">
                 {activityTypes.map((type) => (
-                <button
+                  <button
                     key={type}
-                  type="button"
+                    type="button"
                     onClick={() => handleInputChange('activity_type', type)}
                     className={`p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
                       formData.activity_type === type
@@ -511,252 +461,289 @@ const EditGroup = () => {
                       {type === 'games' ? '🎮' : type === 'social' ? '🍽️' : type === 'educational' ? '📚' : '🏃‍♂️'}
                     </div>
                     <div className="text-sm font-medium">{type.charAt(0).toUpperCase() + type.slice(1)}</div>
-                </button>
-              ))}
-            </div>
-      </div>
-
-            {/* Date, Time & Location Section */}
-        <div>
-              <h3 className="text-xl font-semibold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
-                When & Where
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                {/* Date */}
-                <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
-                    Date *
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => handleInputChange('date', e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full pl-11 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    />
-                  </div>
-                  {formData.date && (
-                    (() => {
-                      // Check if we also have time to do full validation
-                      if (formData.time) {
-                        const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
-                        const now = new Date()
-                        const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
-                        if (selectedDateTime <= oneHourFromNow) {
-                          return (
-                            <div className="mt-1 text-sm text-red-400">
-                              Event must be scheduled at least 1 hour in advance
-                            </div>
-                          )
-                        }
-                      }
-                      // Show normal date preview if valid or time not set yet
-                      return (
-                        <div className="mt-1 text-sm text-green-400">
-                          {new Date(formData.date).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </div>
-                      )
-                    })()
-                  )}
-                </div>
-
-                {/* Time */}
-                <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
-                    Time *
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => handleInputChange('time', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                  {formData.time && (
-                    (() => {
-                      // Check if we also have date to do full validation
-                      if (formData.date) {
-                        const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
-                        const now = new Date()
-                        const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
-                        if (selectedDateTime <= oneHourFromNow) {
-                          return (
-                            <div className="mt-1 text-sm text-red-400">
-                              Event must be scheduled at least 1 hour in advance
-                            </div>
-                          )
-                        }
-                      }
-                      // Show normal time preview if valid or date not set yet
-                      return (
-                        <div className="mt-1 text-sm text-green-400">
-                          {new Date(`2000-01-01T${formData.time}`).toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true
-                          })}
-                        </div>
-                      )
-                    })()
-                  )}
-                </div>
-                    </div>
-
-              {/* Location */}
-              <div className="relative">
-                <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
-                  Location *
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search for a location..."
-                    value={locationSearch}
-                    onChange={(e) => setLocationSearch(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Location Results Dropdown */}
-                {showLocationResults && locationResults.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-                    {locationResults.map((location, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => selectLocation(location)}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-700 transition-colors border-b border-gray-700 last:border-b-0"
-                      >
-                        <div className="font-medium text-white">{location.name}</div>
-                        <div className="text-sm text-gray-400">{location.formatted_address}</div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Selected Location Display */}
-                {formData.location.place_id && (
-                  <div className="mt-2 p-3 bg-teal-500/10 border border-teal-500/30 rounded-xl">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-teal-300">{formData.location.name}</div>
-                        <div className="text-sm text-teal-400">{formData.location.formatted_address}</div>
-        </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData(prev => ({
-                            ...prev,
-                            location: { name: '', formatted_address: '', place_id: '', latitude: null, longitude: null }
-                          }))
-                          setLocationSearch('')
-                        }}
-                        className="text-teal-400 hover:text-teal-300"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-      </div>
-    </div>
-                )}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Group Settings Section */}
-      <div>
-              <h3 className="text-xl font-semibold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
-                Group Settings
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Max Members */}
+            {/* Row 2: Two Columns - Name/Description on Left, Skill Level/Location on Right */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column: Name and Description */}
+              <div className="space-y-6">
+                {/* Group Name */}
                 <div>
                   <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
-                    Max Members *
+                    Groop Name *
                   </label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="2-50"
-                      value={formData.max_members || ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        
-                        // Only allow numbers and empty string
-                        if (value === '' || /^\d+$/.test(value)) {
-                          const numValue = parseInt(value) || null;
-                          handleInputChange('max_members', numValue);
-                        }
-                      }}
-                      className="w-full pl-11 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    />
+                  <input
+                    type="text"
+                    placeholder="e.g., Morning Runners Club, Beach Volleyball Squad..."
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    maxLength={100}
+                  />
+                  <div className="mt-1 text-sm text-gray-400">
+                    {formData.name.length}/100 characters 
+                    <span className={`ml-2 ${formData.name.trim().length >= 5 ? 'text-green-400' : 'text-orange-400'}`}>
+                      (min 5)
+                    </span>
                   </div>
-                  {formData.max_members && (formData.max_members < 2 || formData.max_members > 50) ? (
-                    <p className="text-sm mt-1 text-red-400">
-                      {formData.max_members < 2 ? 'Minimum 2 members required' : 'Maximum 50 members allowed'}
-                    </p>
-                  ) : (
-                    <p className="text-sm mt-1 text-gray-400">Total groop size including you (min 2, max 50)</p>
-                  )}
                 </div>
 
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
+                    Description *
+                  </label>
+                  <textarea
+                    placeholder="Tell people what this groop is about..."
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                    maxLength={1000}
+                  />
+                  <div className="mt-1 text-sm text-gray-400">
+                    {formData.description.length}/1000 characters 
+                    <span className={`ml-2 ${formData.description.trim().length >= 10 ? 'text-green-400' : 'text-orange-400'}`}>
+                      (min 10)
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Skill Level and Location */}
+              <div className="space-y-6">
                 {/* Skill Level */}
                 <div>
                   <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
                     Skill Level
                   </label>
-        <select
-          value={formData.skill_level}
-          onChange={(e) => handleInputChange('skill_level', e.target.value)}
+                  <select
+                    value={formData.skill_level}
+                    onChange={(e) => handleInputChange('skill_level', e.target.value)}
                     className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-        >
+                  >
                     <option value="">Select level</option>
-          {skillLevels.map((level) => (
-            <option key={level} value={level}>
-              {level.charAt(0).toUpperCase() + level.slice(1)}
-            </option>
-          ))}
-        </select>
-      </div>
+                    {skillLevels.map((level) => (
+                      <option key={level} value={level}>
+                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                {/* Cost */}
-      <div>
+                {/* Location */}
+                <div className="relative">
                   <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
-                    Cost (₹)
+                    Location *
                   </label>
-        <div className="relative">
-                    <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
                       type="text"
-                      placeholder="0"
-            value={formData.cost || ''}
-            onChange={(e) => {
-              const value = e.target.value;
-                        
-                        // Only allow numbers, decimal point, and empty string
-                        if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                          const numValue = parseFloat(value) || null;
-              
-              // Prevent entering values above the limit
-              if (value !== '' && numValue > 100000) {
-                return; // Don't update state if above limit
-              }
-              
-                          handleInputChange('cost', numValue);
-                        }
-                      }}
+                      placeholder="Search for a location..."
+                      value={locationSearch}
+                      onChange={(e) => setLocationSearch(e.target.value)}
                       className="w-full pl-11 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-          />
-        </div>
+                    />
+                  </div>
+
+                  {/* Location Results Dropdown */}
+                  {showLocationResults && locationResults.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                      {locationResults.map((location, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => selectLocation(location)}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-700 transition-colors border-b border-gray-700 last:border-b-0"
+                        >
+                          <div className="font-medium text-white">{location.name}</div>
+                          <div className="text-sm text-gray-400">{location.formatted_address}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Selected Location Display */}
+                  {formData.location.place_id && (
+                    <div className="mt-2 p-3 bg-teal-500/10 border border-teal-500/30 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-teal-300 truncate">{formData.location.name}</div>
+                          <div className="text-sm text-teal-400 truncate">{formData.location.formatted_address}</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              location: { name: '', formatted_address: '', place_id: '', latitude: null, longitude: null }
+                            }))
+                            setLocationSearch('')
+                          }}
+                          className="text-teal-400 hover:text-teal-300 ml-2 flex-shrink-0"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+
+            {/* Row 3: Date, Time, Max Members, Cost */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Date */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
+                  Date *
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => handleInputChange('date', e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full pl-11 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+                {formData.date && (
+                  (() => {
+                    // Check if we also have time to do full validation
+                    if (formData.time) {
+                      const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
+                      const now = new Date()
+                      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
+                      if (selectedDateTime <= oneHourFromNow) {
+                        return (
+                          <div className="mt-1 text-sm text-red-400">
+                            Event must be scheduled at least 1 hour in advance
+                          </div>
+                        )
+                      }
+                    }
+                    // Show normal date preview if valid or time not set yet
+                    return (
+                      <div className="mt-1 text-sm text-green-400">
+                        {new Date(formData.date).toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </div>
+                    )
+                  })()
+                )}
+              </div>
+
+              {/* Time */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
+                  Time *
+                </label>
+                <input
+                  type="time"
+                  value={formData.time}
+                  onChange={(e) => handleInputChange('time', e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+                {formData.time && (
+                  (() => {
+                    // Check if we also have date to do full validation
+                    if (formData.date) {
+                      const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
+                      const now = new Date()
+                      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
+                      if (selectedDateTime <= oneHourFromNow) {
+                        return (
+                          <div className="mt-1 text-sm text-red-400">
+                            Event must be scheduled at least 1 hour in advance
+                          </div>
+                        )
+                      }
+                    }
+                    // Show normal time preview if valid or date not set yet
+                    return (
+                      <div className="mt-1 text-sm text-green-400">
+                        {new Date(`2000-01-01T${formData.time}`).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
+                        })}
+                      </div>
+                    )
+                  })()
+                )}
+              </div>
+
+              {/* Max Members */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
+                  Max Members *
+                </label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="2-50"
+                    value={formData.max_members || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      
+                      // Only allow numbers and empty string
+                      if (value === '' || /^\d+$/.test(value)) {
+                        const numValue = parseInt(value) || null;
+                        handleInputChange('max_members', numValue);
+                      }
+                    }}
+                    className="w-full pl-11 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+                {formData.max_members && (formData.max_members < 2 || formData.max_members > 50) ? (
+                  <p className="text-sm mt-1 text-red-400">
+                    {formData.max_members < 2 ? 'Min 2 members' : 'Max 50 members'}
+                  </p>
+                ) : (
+                  <p className="text-sm mt-1 text-gray-400">Total groop size (2-50)</p>
+                )}
+              </div>
+
+              {/* Cost */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(201, 209, 217)' }}>
+                  Cost (₹)
+                </label>
+                <div className="relative">
+                  <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="0"
+                    value={formData.cost || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      
+                      // Only allow numbers, decimal point, and empty string
+                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                        const numValue = parseFloat(value) || null;
+                        
+                        // Prevent entering values above the limit
+                        if (value !== '' && numValue > 100000) {
+                          return; // Don't update state if above limit
+                        }
+                        
+                        handleInputChange('cost', numValue);
+                      }
+                    }}
+                    className="w-full pl-11 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
         
             {/* Error Display */}
             {error && (
@@ -764,36 +751,36 @@ const EditGroup = () => {
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
                   <p className="text-red-300">{error}</p>
-          </div>
-        </div>
+                </div>
+              </div>
             )}
 
             {/* Submit Button */}
-            <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-700">
-        <button
-          type="button"
+            <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-700">
+              <button
+                type="button"
                 onClick={() => navigate(`/groups/${groupId}`)}
                 className="px-6 py-3 border border-gray-600 rounded-xl text-gray-300 hover:bg-gray-800/50 transition-colors"
               >
                 Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={loading || validateForm() !== null}
+              </button>
+              <button
+                type="submit"
+                disabled={loading || validateForm() !== null}
                 className="px-6 py-3 rounded-xl font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 style={{
                   backgroundColor: loading || validateForm() !== null ? 'rgba(0, 173, 181, 0.3)' : 'rgb(0, 173, 181)',
                   color: 'white'
                 }}
-        >
-          {loading ? (
+              >
+                {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
+                ) : (
                   <Save className="w-5 h-5" />
-          )}
+                )}
                 {loading ? 'Updating...' : 'Update Groop'}
-        </button>
-    </div>
+              </button>
+            </div>
           </form>
         </div>
         </div>
