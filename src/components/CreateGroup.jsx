@@ -389,23 +389,23 @@ const CreateGroup = () => {
 
   // Step 1: Activity Type Selection
   const renderStep1 = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3">
         {activityTypes.map((type) => (
           <button
             key={type}
             type="button"
             onClick={() => handleInputChange('activity_type', type)}
-            className={`p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+            className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
               formData.activity_type === type
                 ? 'border-teal-500 bg-teal-500/10 text-teal-300'
                 : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:border-teal-400'
             }`}
           >
-            <div className="text-lg">
+            <div className="text-sm sm:text-lg">
               {type === 'games' ? '🎮' : type === 'social' ? '🍽️' : type === 'educational' ? '📚' : '🏃‍♂️'}
             </div>
-            <div className="text-sm font-medium">{type.charAt(0).toUpperCase() + type.slice(1)}</div>
+            <div className="text-xs sm:text-sm font-medium">{type.charAt(0).toUpperCase() + type.slice(1)}</div>
           </button>
         ))}
       </div>
@@ -414,18 +414,18 @@ const CreateGroup = () => {
 
   // Step 2: Group Name and Description
   const renderStep2 = () => (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Groop Name *</label>
+        <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Groop Name *</label>
         <input
           type="text"
           placeholder="e.g., Morning Runners Club, Beach Volleyball Squad..."
           value={formData.name}
           onChange={(e) => handleInputChange('name', e.target.value)}
-          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-lg"
+          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-base sm:text-lg"
           maxLength={100}
         />
-        <div className="mt-2 text-sm text-gray-400">
+        <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-gray-400">
           {formData.name.length}/100 characters 
           <span className={`ml-2 ${formData.name.trim().length >= 5 ? 'text-green-400' : 'text-orange-400'}`}>
             (min 5)
@@ -434,16 +434,16 @@ const CreateGroup = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
+        <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Description *</label>
         <textarea
           placeholder="Tell people what this groop is about..."
           value={formData.description}
           onChange={(e) => handleInputChange('description', e.target.value)}
-          rows={4}
-          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+          rows={3}
+          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none text-sm sm:text-base"
           maxLength={1000}
         />
-        <div className="mt-2 text-sm text-gray-400">
+        <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-gray-400">
           {formData.description.length}/1000 characters 
           <span className={`ml-2 ${formData.description.trim().length >= 10 ? 'text-green-400' : 'text-orange-400'}`}>
             (min 10)
@@ -455,11 +455,11 @@ const CreateGroup = () => {
 
   // Step 3: Date, Time, and Location
   const renderStep3 = () => (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Location *</label>
+        <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Location *</label>
         <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <MapPin className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
           <input
             type="text"
             placeholder="Search for a location..."
@@ -484,7 +484,7 @@ const CreateGroup = () => {
                 }))
               }
             }}
-            className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm sm:text-base"
           />
           {showLocationResults && locationResults.length > 0 && (
             <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-xl shadow-lg max-h-60 overflow-y-auto">
@@ -493,41 +493,41 @@ const CreateGroup = () => {
                   key={suggestion.place_id}
                   type="button"
                   onClick={() => selectLocation(suggestion)}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-700 first:rounded-t-xl last:rounded-b-xl focus:outline-none focus:bg-gray-700"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-left hover:bg-gray-700 first:rounded-t-xl last:rounded-b-xl focus:outline-none focus:bg-gray-700"
                 >
-                  <div className="text-white">{suggestion.name}</div>
-                  <div className="text-gray-400 text-sm">{suggestion.formatted_address}</div>
+                  <div className="text-white text-sm sm:text-base">{suggestion.name}</div>
+                  <div className="text-gray-400 text-xs sm:text-sm">{suggestion.formatted_address}</div>
                 </button>
               ))}
             </div>
           )}
         </div>
         {formData.location.name && (
-          <div className="mt-2 flex items-center text-sm text-green-400">
-            <Check className="w-4 h-4 mr-1" />
+          <div className="mt-1 sm:mt-1.5 flex items-center text-xs sm:text-sm text-green-400">
+            <Check className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
             {formData.location.name}
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Date *</label>
+          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Date *</label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Calendar className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="date"
               value={formData.date}
               onChange={(e) => handleInputChange('date', e.target.value)}
               min={new Date().toISOString().split('T')[0]}
-              className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer text-sm sm:text-base"
               style={{
                 colorScheme: 'dark'
               }}
             />
           </div>
           {formData.date && (
-            <div className="mt-2 text-sm text-green-400">
+            <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-green-400">
               {new Date(formData.date).toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
@@ -539,10 +539,10 @@ const CreateGroup = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Time *</label>
+          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Time *</label>
           <div className="relative">
             <svg 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" 
+              className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -554,14 +554,14 @@ const CreateGroup = () => {
               type="time"
               value={formData.time}
               onChange={(e) => handleInputChange('time', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+              className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer text-sm sm:text-base"
               style={{
                 colorScheme: 'dark'
               }}
             />
           </div>
           {formData.time && (
-            <div className="mt-2 text-sm text-green-400">
+            <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-green-400">
               {new Date(`2000-01-01T${formData.time}`).toLocaleTimeString('en-US', {
                 hour: 'numeric',
                 minute: '2-digit',
@@ -576,13 +576,13 @@ const CreateGroup = () => {
 
   // Step 4: Optional Details
   const renderStep4 = () => (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Skill Level (Optional)</label>
+        <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Skill Level (Optional)</label>
         <select
           value={formData.skill_level}
           onChange={(e) => handleInputChange('skill_level', e.target.value)}
-          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-800/50 border border-gray-600 rounded-lg sm:rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm sm:text-base"
         >
           <option value="">Any level</option>
           {skillLevels.map((level) => (
@@ -594,8 +594,8 @@ const CreateGroup = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Max Members *</label>
-        <div className="flex items-center space-x-4">
+        <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Max Members *</label>
+        <div className="flex items-center space-x-3 sm:space-x-4">
           <button
             type="button"
             onClick={() => {
@@ -604,12 +604,12 @@ const CreateGroup = () => {
                 handleInputChange('max_members', currentValue - 1);
               }
             }}
-            className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors disabled:opacity-50"
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors disabled:opacity-50"
             disabled={!formData.max_members || formData.max_members <= 2}
           >
-            <Minus className="w-4 h-4" />
+            <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
           </button>
-          <span className="text-xl font-semibold w-12 text-center text-white">
+          <span className="text-lg sm:text-xl font-semibold w-10 sm:w-12 text-center text-white">
             {formData.max_members || 'None'}
           </span>
           <button
@@ -620,19 +620,19 @@ const CreateGroup = () => {
                 handleInputChange('max_members', currentValue + 1);
               }
             }}
-            className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors disabled:opacity-50"
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors disabled:opacity-50"
             disabled={formData.max_members && formData.max_members >= 50}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
           </button>
         </div>
-        <p className="text-xs mt-1 text-gray-400">Total groop size including you (minimum 2 people)</p>
+        <p className="text-xs mt-0.5 sm:mt-1 text-gray-400">Total groop size including you (minimum 2 people)</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Cost per Person (Optional)</label>
+        <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Cost per Person (Optional)</label>
         <div className="relative">
-          <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <IndianRupee className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
           <input
             type="number"
             placeholder="Free"
@@ -651,7 +651,7 @@ const CreateGroup = () => {
             min="0"
             max="100000"
             step="0.01"
-            className={`w-full pl-10 pr-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent ${
+            className={`w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-gray-800/50 border rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm sm:text-base ${
               formData.cost && formData.cost > 100000
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-600 focus:ring-teal-500'
@@ -659,9 +659,9 @@ const CreateGroup = () => {
           />
         </div>
         {formData.cost && formData.cost > 100000 ? (
-          <p className="text-xs mt-1 text-red-400">Cost cannot exceed ₹1,00,000</p>
+          <p className="text-xs mt-0.5 sm:mt-1 text-red-400">Cost cannot exceed ₹1,00,000</p>
         ) : (
-          <p className="text-xs mt-1 text-gray-400">Leave empty if the activity is free (max ₹1,00,000)</p>
+          <p className="text-xs mt-0.5 sm:mt-1 text-gray-400">Leave empty if the activity is free (max ₹1,00,000)</p>
         )}
       </div>
     </div>
@@ -669,49 +669,49 @@ const CreateGroup = () => {
 
   // Step 5: Review
   const renderStep5 = () => (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4">
       {/* Hidden input to prevent accidental form submission */}
       <input type="hidden" />
       
       {/* Confirmation Section */}
-      <div className="bg-gradient-to-r from-teal-500/10 to-cyan-500/10 rounded-xl p-6 border border-teal-500/20">
-        <div className="flex items-start gap-3">
-          <CheckCircle className="w-6 h-6 text-teal-400 mt-0.5 flex-shrink-0" />
+      <div className="bg-gradient-to-r from-teal-500/10 to-cyan-500/10 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-teal-500/20">
+        <div className="flex items-start gap-2 sm:gap-3">
+          <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-teal-400 mt-0.5 flex-shrink-0" />
           <div>
-            <h4 className="text-lg font-semibold text-white mb-2">Ready to Launch Your Groop?</h4>
-            <p className="text-gray-300 mb-4">
+            <h4 className="text-base sm:text-lg font-semibold text-white mb-1.5 sm:mb-2">Ready to Launch Your Groop?</h4>
+            <p className="text-sm sm:text-base text-gray-300 mb-2 sm:mb-3">
               By creating this groop, you confirm that all information is accurate and you agree to:
             </p>
-            <ul className="text-sm text-gray-300 space-y-1 mb-4">
+            <ul className="text-xs sm:text-sm text-gray-300 space-y-0.5 mb-2 sm:mb-3">
               <li>• Host the activity at the specified date, time, and location</li>
               <li>• Welcome and manage groop members respectfully</li>
               <li>• Provide clear communication about any changes</li>
               <li>• Follow GroopsApp community guidelines</li>
             </ul>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Sparkles className="w-4 h-4 text-teal-400" />
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-400">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-teal-400" />
               <span>Your groop will be visible to other users immediately after creation</span>
             </div>
           </div>
         </div>
         
         {/* Agreement Checkbox */}
-        <div className="mt-6 pt-4 border-t border-teal-500/20">
-          <div className="flex items-start gap-3">
+        <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-teal-500/20">
+          <div className="flex items-start gap-2 sm:gap-3">
             <input
               type="checkbox"
               checked={formData.agreesToGuidelines}
               onChange={(e) => handleInputChange('agreesToGuidelines', e.target.checked)}
-              className="mt-1 w-4 h-4 text-teal-600 bg-gray-800 border-gray-600 rounded focus:ring-teal-500 focus:ring-2"
+              className="mt-0.5 sm:mt-1 w-4 h-4 text-teal-600 bg-gray-800 border-gray-600 rounded focus:ring-teal-500 focus:ring-2"
             />
-            <span className="text-sm text-gray-300">
+            <span className="text-xs sm:text-sm text-gray-300">
               I have read and agree to follow the{' '}
               <span className="text-teal-400 font-medium">GroopsApp Community Guidelines</span>{' '}
               and understand my responsibilities as a groop organizer.
             </span>
           </div>
           {!formData.agreesToGuidelines && (
-            <p className="text-xs text-gray-400 mt-2 ml-7">
+            <p className="text-xs text-gray-400 mt-1.5 sm:mt-2 ml-6 sm:ml-7">
               You must agree to the guidelines before creating your groop
             </p>
           )}
@@ -720,11 +720,11 @@ const CreateGroup = () => {
 
       {/* Final Call to Action */}
       <div className="text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500/20 rounded-full text-teal-300 text-sm font-medium mb-4">
-          <CheckCircle className="w-4 h-4" />
+        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-teal-500/20 rounded-full text-teal-300 text-xs sm:text-sm font-medium mb-1.5 sm:mb-2">
+          <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
           <span>Everything looks great!</span>
         </div>
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-400 text-xs sm:text-sm">
           Click "Create Groop" below to make your groop live and start connecting with people
         </p>
       </div>
@@ -733,14 +733,14 @@ const CreateGroup = () => {
 
   // Navigation buttons
   const renderNavigationButtons = () => (
-    <div className="flex justify-between items-center pt-6">
+    <div className="flex justify-between items-center pt-3 sm:pt-4">
       {currentStep > 1 ? (
         <button
           type="button"
           onClick={prevStep}
-          className="flex items-center px-6 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-colors"
+          className="flex items-center px-3 sm:px-5 py-2 sm:py-2.5 bg-gray-700 text-white rounded-lg sm:rounded-xl hover:bg-gray-600 transition-colors text-sm sm:text-base"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
           Back
         </button>
       ) : (
@@ -752,20 +752,20 @@ const CreateGroup = () => {
           type="button"
           onClick={nextStep}
           disabled={!isCurrentStepValid()}
-          className={`flex items-center px-6 py-3 rounded-xl transition-colors ${
+          className={`flex items-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-colors text-sm sm:text-base ${
             isCurrentStepValid()
               ? 'bg-teal-600 text-white hover:bg-teal-700'
               : 'bg-gray-600 text-gray-400 cursor-not-allowed'
           }`}
         >
           Continue
-          <ArrowRight className="w-4 h-4 ml-2" />
+          <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
         </button>
       ) : (
         <button
           type="submit"
           disabled={loading || validateForm() !== null}
-          className={`flex items-center px-8 py-3 rounded-xl font-semibold transition-colors ${
+          className={`flex items-center px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold transition-colors text-sm sm:text-base ${
             loading || validateForm() !== null
               ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
               : 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700'
@@ -773,13 +773,13 @@ const CreateGroup = () => {
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 animate-spin" />
               Creating...
             </>
           ) : (
             <>
               Create Groop
-              <Sparkles className="w-4 h-4 ml-2" />
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
             </>
           )}
         </button>
@@ -860,26 +860,26 @@ const CreateGroup = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3">
-              <Plus size={32} style={{ color: 'rgb(0, 173, 181)' }} />
+        <div className="mb-4 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Plus size={24} className="sm:w-8 sm:h-8" style={{ color: 'rgb(0, 173, 181)' }} />
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
+                <h1 className="text-xl sm:text-3xl lg:text-4xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
                   Create New Groop
                 </h1>
-                <p className="text-base sm:text-lg mt-1" style={{ color: 'rgb(156, 163, 175)' }}>
+                <p className="text-sm sm:text-base lg:text-lg mt-0.5 sm:mt-1" style={{ color: 'rgb(156, 163, 175)' }}>
                   Organize an activity and bring people together
                 </p>
               </div>
             </div>
             
             {/* Progress Indicator */}
-            <div className="flex items-center gap-3 bg-gradient-to-r from-rgba(25, 30, 35, 0.8) to-rgba(31, 41, 55, 0.5) px-4 py-3 rounded-lg border" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
-              <div className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
+            <div className="flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-rgba(25, 30, 35, 0.8) to-rgba(31, 41, 55, 0.5) px-3 sm:px-4 py-2 sm:py-3 rounded-lg border" style={{ borderColor: 'rgba(0, 173, 181, 0.2)' }}>
+              <div className="text-xs sm:text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
                 Progress
               </div>
-              <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
+              <div className="w-16 sm:w-24 h-1.5 sm:h-2 bg-gray-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full transition-all duration-300"
                   style={{ 
@@ -888,7 +888,7 @@ const CreateGroup = () => {
                   }}
                 />
               </div>
-              <div className="text-sm font-medium" style={{ color: 'rgb(0, 173, 181)' }}>
+              <div className="text-xs sm:text-sm font-medium" style={{ color: 'rgb(0, 173, 181)' }}>
                 {getFormCompletionPercentage()}%
               </div>
             </div>
@@ -896,29 +896,29 @@ const CreateGroup = () => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-8">
           
           {/* Error Message */}
           {error && (
             <div 
-              className="p-4 rounded-lg border flex items-center gap-3"
+              className="p-3 sm:p-4 rounded-lg border flex items-center gap-2 sm:gap-3"
               style={{
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                 borderColor: 'rgba(239, 68, 68, 0.3)'
               }}
             >
-              <AlertCircle size={20} style={{ color: 'rgb(239, 68, 68)' }} />
-              <span style={{ color: 'rgb(239, 68, 68)' }}>{error}</span>
+              <AlertCircle size={16} className="sm:w-5 sm:h-5" style={{ color: 'rgb(239, 68, 68)' }} />
+              <span className="text-sm sm:text-base" style={{ color: 'rgb(239, 68, 68)' }}>{error}</span>
             </div>
           )}
 
           {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
             
             {/* Left Column - Form */}
             <div className="lg:col-span-2">
               <div 
-                className="p-8 rounded-2xl shadow-2xl"
+                className="p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-2xl"
                 style={{
                   background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.15) 0%, rgba(0, 200, 210, 0.15) 100%)',
                   backdropFilter: 'blur(20px)',
@@ -926,39 +926,39 @@ const CreateGroup = () => {
                 }}
               >
                 {/* Header with step info */}
-                <div className="text-center mb-8">
-                  <div className="inline-block px-4 py-2 bg-teal-500/20 rounded-full text-teal-300 text-sm font-medium mb-4">
+                <div className="text-center mb-4 sm:mb-6">
+                  <div className="inline-block px-2 sm:px-3 py-1 sm:py-1.5 bg-teal-500/20 rounded-full text-teal-300 text-xs sm:text-sm font-medium mb-2 sm:mb-3">
                     Step {currentStep} of {totalSteps}
                 </div>
-                  <h1 className="text-3xl font-bold text-white mb-2">
+                  <h1 className="text-lg sm:text-2xl font-bold text-white mb-1">
                     {getStepInfo().title}
                   </h1>
-                  <p className="text-gray-300 text-lg">
+                  <p className="text-sm sm:text-base text-gray-300">
                     {getStepInfo().subtitle}
                   </p>
                   {formData.activity_type && currentStep > 1 && (
-                    <div className="mt-4 text-teal-300 font-medium">
+                    <div className="mt-2 sm:mt-3 text-sm sm:text-base text-teal-300 font-medium">
                       {getStepInfo().encouragement}
                   </div>
                   )}
                 </div>
 
                 {/* Progress Bar */}
-                <div className="mb-8">
-                  <div className="flex justify-between text-sm text-gray-400 mb-2">
+                <div className="mb-4 sm:mb-6">
+                  <div className="flex justify-between text-xs sm:text-sm text-gray-400 mb-1 sm:mb-2">
                     <span>Progress</span>
                     <span>{getFormCompletionPercentage()}%</span>
                   </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div className="w-full bg-gray-700 rounded-full h-1.5 sm:h-2">
                     <div 
-                      className="bg-gradient-to-r from-teal-500 to-cyan-400 h-2 rounded-full transition-all duration-300 ease-out"
+                      className="bg-gradient-to-r from-teal-500 to-cyan-400 h-1.5 sm:h-2 rounded-full transition-all duration-300 ease-out"
                       style={{ width: `${getFormCompletionPercentage()}%` }}
                       />
                     </div>
                   </div>
 
                 {/* Step Content */}
-                <div className="min-h-[400px]">
+                <div className="min-h-[240px] sm:min-h-[320px]">
                   {currentStep === 1 && renderStep1()}
                   {currentStep === 2 && renderStep2()}
                   {currentStep === 3 && renderStep3()}
@@ -973,25 +973,25 @@ const CreateGroup = () => {
 
             {/* Right Column - Summary & Actions */}
             <div className="lg:col-span-1">
-              <div className="sticky top-8 space-y-6">
+              <div className="sticky top-8 space-y-3 sm:space-y-6">
                 
                 {/* Form Summary */}
                 <div 
-                  className="p-6 rounded-xl border backdrop-blur-sm"
+                  className="p-3 sm:p-4 rounded-lg sm:rounded-xl border backdrop-blur-sm"
                   style={{
                     backgroundColor: 'rgba(25, 30, 35, 0.8)',
                     borderColor: 'rgba(0, 173, 181, 0.2)',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
                   }}
                 >
-                  <h4 className="text-lg font-semibold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
+                  <h4 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
                     Groop Summary
                   </h4>
                   
-                  <div className="space-y-3 text-sm">
+                  <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                     <div className="flex items-center justify-between">
                       <span style={{ color: 'rgb(156, 163, 175)' }}>Name:</span>
-                      <span className="text-right break-words ml-2 max-w-[140px]"
+                      <span className="text-right break-words ml-2 max-w-[120px] sm:max-w-[140px]"
                             style={{ 
                               color: formData.name ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)',
                               wordWrap: 'break-word',
@@ -1012,7 +1012,7 @@ const CreateGroup = () => {
 
                     <div className="flex items-center justify-between">
                       <span style={{ color: 'rgb(156, 163, 175)' }}>Date:</span>
-                      <span className="text-right break-words ml-2 max-w-[140px]"
+                      <span className="text-right break-words ml-2 max-w-[120px] sm:max-w-[140px]"
                             style={{ 
                               color: formData.date ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)',
                               wordWrap: 'break-word',
@@ -1062,7 +1062,7 @@ const CreateGroup = () => {
                     
                     <div className="flex items-center justify-between">
                       <span style={{ color: 'rgb(156, 163, 175)' }}>Location:</span>
-                      <span className="text-right break-words ml-2 max-w-[140px]"
+                      <span className="text-right break-words ml-2 max-w-[120px] sm:max-w-[140px]"
                             style={{ 
                               color: formData.location.name ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)',
                               wordWrap: 'break-word',
@@ -1077,12 +1077,12 @@ const CreateGroup = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-3">
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={() => navigate(-1)}
-                    className="w-full py-3"
+                    className="w-full py-2 sm:py-2.5 text-sm sm:text-base"
                     style={{ color: 'rgb(156, 163, 175)' }}
                   >
                     Cancel
@@ -1091,16 +1091,16 @@ const CreateGroup = () => {
 
                 {/* Tips */}
                 <div 
-                  className="p-4 rounded-lg border"
+                  className="p-2.5 sm:p-3 rounded-lg border"
                   style={{
                     backgroundColor: 'rgba(59, 130, 246, 0.05)',
                     borderColor: 'rgba(59, 130, 246, 0.2)'
                   }}
                 >
-                  <h5 className="text-sm font-medium mb-2" style={{ color: 'rgb(59, 130, 246)' }}>
+                  <h5 className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2" style={{ color: 'rgb(59, 130, 246)' }}>
                     🚀 Pro Groop Tips
                   </h5>
-                  <ul className="text-xs space-y-1" style={{ color: 'rgb(156, 163, 175)' }}>
+                  <ul className="text-xs space-y-0.5" style={{ color: 'rgb(156, 163, 175)' }}>
                     <li>• Write descriptions that make people excited to join!</li>
                     <li>• Pick spots with parking or public transport nearby</li>
                     <li>• "Beginner-friendly" attracts more diverse crowds</li>
