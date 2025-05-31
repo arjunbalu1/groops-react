@@ -342,7 +342,16 @@ const CreateGroup = () => {
     switch (currentStep) {
       case 1: return formData.activity_type !== ''
       case 2: return formData.name.trim().length >= 5 && formData.description.trim().length >= 10
-      case 3: return formData.date !== '' && formData.time !== '' && formData.location.place_id !== ''
+      case 3: {
+        // Check if all required fields are filled
+        if (!formData.date || !formData.time || !formData.location.place_id) {
+          return false
+        }
+        // Check if date and time is in the future
+        const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
+        const now = new Date()
+        return selectedDateTime > now
+      }
       case 4: return formData.max_members && formData.max_members >= 2
       case 5: return validateForm() === null
       default: return false
@@ -527,14 +536,31 @@ const CreateGroup = () => {
             />
           </div>
           {formData.date && (
-            <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-green-400">
-              {new Date(formData.date).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </div>
+            (() => {
+              // Check if we also have time to do full validation
+              if (formData.time) {
+                const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
+                const now = new Date()
+                if (selectedDateTime <= now) {
+                  return (
+                    <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-red-400">
+                      Date and time is in the past
+                    </div>
+                  )
+                }
+              }
+              // Show normal date preview if valid or time not set yet
+              return (
+                <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-green-400">
+                  {new Date(formData.date).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </div>
+              )
+            })()
           )}
         </div>
 
@@ -561,13 +587,30 @@ const CreateGroup = () => {
             />
           </div>
           {formData.time && (
-            <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-green-400">
-              {new Date(`2000-01-01T${formData.time}`).toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              })}
-            </div>
+            (() => {
+              // Check if we also have date to do full validation
+              if (formData.date) {
+                const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
+                const now = new Date()
+                if (selectedDateTime <= now) {
+                  return (
+                    <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-red-400">
+                      Date and time is in the past
+                    </div>
+                  )
+                }
+              }
+              // Show normal time preview if valid or date not set yet
+              return (
+                <div className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-green-400">
+                  {new Date(`2000-01-01T${formData.time}`).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                  })}
+                </div>
+              )
+            })()
           )}
         </div>
       </div>
