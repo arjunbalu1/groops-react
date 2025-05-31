@@ -15,8 +15,14 @@ const GroupDetails = () => {
   const [memberProfiles, setMemberProfiles] = useState({})
   const [joinLoading, setJoinLoading] = useState(false)
   const [pendingMembers, setPendingMembers] = useState([])
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  const [isGroupNameExpanded, setIsGroupNameExpanded] = useState(false)
+  const [showGroupNameButton, setShowGroupNameButton] = useState(false)
+  const [showDescriptionButton, setShowDescriptionButton] = useState(false)
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
+  const groupNameRef = useRef(null)
+  const descriptionRef = useRef(null)
   const [mapLoading, setMapLoading] = useState(true)
   
   // Member profile modal state
@@ -70,6 +76,92 @@ const GroupDetails = () => {
 
     return () => clearInterval(interval)
   }, [groupId, API_BASE_URL])
+
+  // Check if group name actually overflows and needs show more button
+  useEffect(() => {
+    if (!group?.name || !groupNameRef.current) return
+
+    const checkOverflow = () => {
+      const element = groupNameRef.current
+      if (!element) return
+
+      // Temporarily remove line clamp to measure natural height
+      const originalDisplay = element.style.display
+      const originalWebkitLineClamp = element.style.webkitLineClamp
+      const originalOverflow = element.style.overflow
+      
+      element.style.display = 'block'
+      element.style.webkitLineClamp = 'none'
+      element.style.overflow = 'visible'
+      
+      const naturalHeight = element.scrollHeight
+      
+      // Apply 2-line clamp
+      element.style.display = '-webkit-box'
+      element.style.webkitLineClamp = '2'
+      element.style.overflow = 'hidden'
+      
+      const clampedHeight = element.clientHeight
+      
+      // Restore original styles
+      element.style.display = originalDisplay
+      element.style.webkitLineClamp = originalWebkitLineClamp
+      element.style.overflow = originalOverflow
+      
+      // Show button only if text actually overflows
+      setShowGroupNameButton(naturalHeight > clampedHeight && group.name.length > 25)
+    }
+
+    // Check on mount and when name changes
+    checkOverflow()
+    
+    // Also check when window resizes (font size might change)
+    window.addEventListener('resize', checkOverflow)
+    return () => window.removeEventListener('resize', checkOverflow)
+  }, [group?.name])
+
+  // Check if description actually overflows and needs show more button
+  useEffect(() => {
+    if (!group?.description || !descriptionRef.current) return
+
+    const checkDescriptionOverflow = () => {
+      const element = descriptionRef.current
+      if (!element) return
+
+      // Temporarily remove line clamp to measure natural height
+      const originalDisplay = element.style.display
+      const originalWebkitLineClamp = element.style.webkitLineClamp
+      const originalOverflow = element.style.overflow
+      
+      element.style.display = 'block'
+      element.style.webkitLineClamp = 'none'
+      element.style.overflow = 'visible'
+      
+      const naturalHeight = element.scrollHeight
+      
+      // Apply 3-line clamp (description uses 3 lines vs 2 for name)
+      element.style.display = '-webkit-box'
+      element.style.webkitLineClamp = '3'
+      element.style.overflow = 'hidden'
+      
+      const clampedHeight = element.clientHeight
+      
+      // Restore original styles
+      element.style.display = originalDisplay
+      element.style.webkitLineClamp = originalWebkitLineClamp
+      element.style.overflow = originalOverflow
+      
+      // Show button only if text actually overflows
+      setShowDescriptionButton(naturalHeight > clampedHeight && group.description.length > 200)
+    }
+
+    // Check on mount and when description changes
+    checkDescriptionOverflow()
+    
+    // Also check when window resizes (font size might change)
+    window.addEventListener('resize', checkDescriptionOverflow)
+    return () => window.removeEventListener('resize', checkDescriptionOverflow)
+  }, [group?.description])
 
   // Fetch group details
   useEffect(() => {
@@ -918,9 +1010,34 @@ const GroupDetails = () => {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-6">
             <div className="flex-1">
               {/* Group Name and Badges */}
-              <h1 className="text-3xl font-bold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
-                {group.name}
-              </h1>
+              <div className="mb-4">
+                <h1 
+                  ref={groupNameRef}
+                  className={`text-3xl font-bold break-words ${!isGroupNameExpanded && showGroupNameButton ? 'line-clamp-2' : ''}`}
+                  style={{ 
+                    color: 'rgb(238, 238, 238)',
+                    wordWrap: 'break-word',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                    maxWidth: '100%',
+                    overflow: !isGroupNameExpanded && showGroupNameButton ? 'hidden' : 'visible',
+                    display: !isGroupNameExpanded && showGroupNameButton ? '-webkit-box' : 'block',
+                    WebkitLineClamp: !isGroupNameExpanded && showGroupNameButton ? 2 : 'none',
+                    WebkitBoxOrient: 'vertical',
+                    hyphens: 'auto'
+                  }}>
+                  {group.name}
+                </h1>
+                {showGroupNameButton && (
+                  <button
+                    onClick={() => setIsGroupNameExpanded(!isGroupNameExpanded)}
+                    className="mt-2 text-sm font-medium hover:opacity-80 transition-opacity"
+                    style={{ color: 'rgb(0, 173, 181)' }}
+                  >
+                    {isGroupNameExpanded ? 'Show less' : 'Show more'}
+                  </button>
+                )}
+              </div>
               
               <div className="flex flex-wrap items-center gap-2 mb-6">
                 {group.skill_level && (
@@ -1081,9 +1198,34 @@ const GroupDetails = () => {
                         <h3 className="font-semibold mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
                           Description:
                         </h3>
-                        <p style={{ color: 'rgb(201, 209, 217)', lineHeight: '1.6' }}>
-                          {group.description}
-                        </p>
+                        <div className="relative">
+                          <p 
+                            ref={descriptionRef}
+                            className={`break-words ${!isDescriptionExpanded && showDescriptionButton ? 'line-clamp-3' : ''}`}
+                            style={{ 
+                              color: 'rgb(201, 209, 217)', 
+                              lineHeight: '1.6',
+                              wordWrap: 'break-word',
+                              wordBreak: 'break-word',
+                              overflowWrap: 'break-word',
+                              maxWidth: '100%',
+                              overflow: !isDescriptionExpanded && showDescriptionButton ? 'hidden' : 'visible',
+                              display: !isDescriptionExpanded && showDescriptionButton ? '-webkit-box' : 'block',
+                              WebkitLineClamp: !isDescriptionExpanded && showDescriptionButton ? 3 : 'none',
+                              WebkitBoxOrient: 'vertical'
+                            }}>
+                            {group.description}
+                          </p>
+                          {showDescriptionButton && (
+                            <button
+                              onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                              className="mt-2 text-sm font-medium hover:opacity-80 transition-opacity"
+                              style={{ color: 'rgb(0, 173, 181)' }}
+                            >
+                              {isDescriptionExpanded ? 'Show less' : 'Show more'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
 

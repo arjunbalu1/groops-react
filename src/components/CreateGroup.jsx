@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
-import { Calendar, MapPin, Users, IndianRupee, Plus, AlertCircle, CheckCircle, ChevronRight, ArrowLeft, ArrowRight, Loader2, Sparkles, Tag, Target, Minus, DollarSign, Check } from 'lucide-react'
+import { Calendar, MapPin, Users, IndianRupee, Plus, AlertCircle, CheckCircle, ChevronRight, ArrowLeft, ArrowRight, Loader2, Sparkles, Tag, Target, Minus, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -18,18 +18,20 @@ const CreateGroup = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    date_time: '',
+    date: '',
+    time: '',
     activity_type: '',
     skill_level: '',
-    max_members: 4,
-    cost: 0,
+    max_members: null,
+    cost: null,
     location: {
       name: '',
       formatted_address: '',
       place_id: '',
       latitude: null,
       longitude: null
-    }
+    },
+    agreesToGuidelines: false
   })
 
   // Multi-step questionnaire state
@@ -228,20 +230,25 @@ const CreateGroup = () => {
 
   // Form validation
   const validateForm = () => {
-    if (!formData.name.trim()) return 'Group name is required'
+    if (!formData.name.trim()) return 'Groop name is required'
+    if (formData.name.trim().length < 5) return 'Groop name must be at least 5 characters'
     if (!formData.description.trim()) return 'Description is required'
-    if (!formData.date_time) return 'Date and time are required'
+    if (formData.description.trim().length < 10) return 'Description must be at least 10 characters'
+    if (!formData.date) return 'Date is required'
+    if (!formData.time) return 'Time is required'
     if (!formData.activity_type) return 'Activity type is required'
-    if (formData.max_members < 2) return 'Group must allow at least 2 members'
-    if (formData.max_members > 50) return 'Group cannot exceed 50 members'
-    if (formData.cost < 0) return 'Cost cannot be negative'
-    if (formData.cost > 100000) return 'Cost cannot exceed ₹1,00,000'
+    if (!formData.max_members) return 'Maximum members is required'
+    if (formData.max_members && formData.max_members < 2) return 'Groop must allow at least 2 members'
+    if (formData.max_members && formData.max_members > 50) return 'Groop cannot exceed 50 members'
+    if (formData.cost && formData.cost < 0) return 'Cost cannot be negative'
+    if (formData.cost && formData.cost > 100000) return 'Cost cannot exceed ₹1,00,000'
     if (!formData.location.place_id) return 'Location is required'
+    if (!formData.agreesToGuidelines) return 'You must agree to the community guidelines'
     
     // Check if date is in the future
-    const selectedDate = new Date(formData.date_time)
+    const selectedDateTime = new Date(`${formData.date}T${formData.time}`)
     const now = new Date()
-    if (selectedDate <= now) return 'Event date must be in the future'
+    if (selectedDateTime <= now) return 'Event date and time must be in the future'
     
     return null
   }
@@ -249,6 +256,11 @@ const CreateGroup = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Prevent accidental submission on Step 5 - only allow if user explicitly clicked submit
+    if (currentStep === 5 && e.nativeEvent.submitter?.type !== 'submit') {
+      return
+    }
     
     const validationError = validateForm()
     if (validationError) {
@@ -263,8 +275,8 @@ const CreateGroup = () => {
       // First, validate the location with backend
       const validatedLocation = await validateLocation(formData.location.place_id)
       
-      // Convert local datetime to UTC
-      const localDateTime = new Date(formData.date_time)
+      // Convert date and time to UTC datetime
+      const localDateTime = new Date(`${formData.date}T${formData.time}`)
       const utcDateTime = localDateTime.toISOString()
 
       const payload = {
@@ -273,8 +285,8 @@ const CreateGroup = () => {
         date_time: utcDateTime,
         activity_type: formData.activity_type,
         skill_level: formData.skill_level || null,
-        max_members: parseInt(formData.max_members),
-        cost: parseFloat(formData.cost),
+        max_members: formData.max_members || 10,  // Backend requires this with min=2
+        cost: formData.cost || 0,                 // Backend expects number, has default 0.0
         location: validatedLocation
       }
 
@@ -289,7 +301,7 @@ const CreateGroup = () => {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to create group')
+        throw new Error(errorData.message || 'Failed to create groop')
       }
 
       const newGroup = await response.json()
@@ -309,7 +321,7 @@ const CreateGroup = () => {
 
   // Calculate form completion percentage
   const getFormCompletionPercentage = () => {
-    return Math.round((currentStep / totalSteps) * 100)
+    return Math.round(((currentStep - 1) / (totalSteps - 1)) * 100)
   }
 
   // Step navigation
@@ -329,9 +341,9 @@ const CreateGroup = () => {
   const isCurrentStepValid = () => {
     switch (currentStep) {
       case 1: return formData.activity_type !== ''
-      case 2: return formData.name.trim() !== ''
-      case 3: return formData.description.trim() !== '' && formData.date_time !== '' && formData.location.place_id !== ''
-      case 4: return true // Optional fields
+      case 2: return formData.name.trim().length >= 5 && formData.description.trim().length >= 10
+      case 3: return formData.date !== '' && formData.time !== '' && formData.location.place_id !== ''
+      case 4: return formData.max_members && formData.max_members >= 2
       case 5: return validateForm() === null
       default: return false
     }
@@ -348,20 +360,20 @@ const CreateGroup = () => {
         }
       case 2:
         return {
-          title: "What should we call your groop?",
-          subtitle: "Pick something fun and descriptive!",
-          encouragement: "Great choice! 🎯"
+          title: "Tell us about your groop",
+          subtitle: "Give it a name and describe what it's all about!",
+          encouragement: formData.name.trim().length >= 5 ? "Great choice! 🎯" : ""
         }
       case 3:
         return {
-          title: "Let's add the essential details",
-          subtitle: "When, where, and what's it all about?",
+          title: "When and where will it happen?",
+          subtitle: "Set the date, time, and location for your activity",
           encouragement: "Almost there! 📍"
         }
       case 4:
         return {
-          title: "Just a little bit more info!",
-          subtitle: "These optional details help make your groop even better",
+          title: "Groop size and additional details",
+          subtitle: "Set your groop size and any optional preferences",
           encouragement: "Looking good! ✨"
         }
       case 5:
@@ -400,10 +412,11 @@ const CreateGroup = () => {
     </div>
   )
 
-  // Step 2: Group Name
+  // Step 2: Group Name and Description
   const renderStep2 = () => (
     <div className="space-y-6">
       <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Groop Name *</label>
         <input
           type="text"
           placeholder="e.g., Morning Runners Club, Beach Volleyball Squad..."
@@ -413,15 +426,13 @@ const CreateGroup = () => {
           maxLength={100}
         />
         <div className="mt-2 text-sm text-gray-400">
-          {formData.name.length}/100 characters
+          {formData.name.length}/100 characters 
+          <span className={`ml-2 ${formData.name.trim().length >= 5 ? 'text-green-400' : 'text-orange-400'}`}>
+            (min 5)
+          </span>
         </div>
       </div>
-    </div>
-  )
 
-  // Step 3: Essential Details
-  const renderStep3 = () => (
-    <div className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
         <textarea
@@ -430,24 +441,21 @@ const CreateGroup = () => {
           onChange={(e) => handleInputChange('description', e.target.value)}
           rows={4}
           className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
-          maxLength={500}
+          maxLength={1000}
         />
         <div className="mt-2 text-sm text-gray-400">
-          {formData.description.length}/500 characters
+          {formData.description.length}/1000 characters 
+          <span className={`ml-2 ${formData.description.trim().length >= 10 ? 'text-green-400' : 'text-orange-400'}`}>
+            (min 10)
+          </span>
         </div>
       </div>
+    </div>
+  )
 
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Date & Time *</label>
-        <input
-          type="datetime-local"
-          value={formData.date_time}
-          onChange={(e) => handleInputChange('date_time', e.target.value)}
-          min={new Date().toISOString().slice(0, 16)}
-          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-        />
-      </div>
-
+  // Step 3: Date, Time, and Location
+  const renderStep3 = () => (
+    <div className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">Location *</label>
         <div className="relative">
@@ -501,6 +509,68 @@ const CreateGroup = () => {
           </div>
         )}
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Date *</label>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) => handleInputChange('date', e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+              className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+              style={{
+                colorScheme: 'dark'
+              }}
+            />
+          </div>
+          {formData.date && (
+            <div className="mt-2 text-sm text-green-400">
+              {new Date(formData.date).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Time *</label>
+          <div className="relative">
+            <svg 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12,6 12,12 16,14"></polyline>
+            </svg>
+            <input
+              type="time"
+              value={formData.time}
+              onChange={(e) => handleInputChange('time', e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+              style={{
+                colorScheme: 'dark'
+              }}
+            />
+          </div>
+          {formData.time && (
+            <div className="mt-2 text-sm text-green-400">
+              {new Date(`2000-01-01T${formData.time}`).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              })}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 
@@ -524,40 +594,75 @@ const CreateGroup = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Max Members (Optional)</label>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Max Members *</label>
         <div className="flex items-center space-x-4">
           <button
             type="button"
-            onClick={() => formData.max_members > 2 && handleInputChange('max_members', formData.max_members - 1)}
-            className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors"
+            onClick={() => {
+              const currentValue = formData.max_members || 1;
+              if (currentValue > 2) {
+                handleInputChange('max_members', currentValue - 1);
+              }
+            }}
+            className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors disabled:opacity-50"
+            disabled={!formData.max_members || formData.max_members <= 2}
           >
             <Minus className="w-4 h-4" />
           </button>
-          <span className="text-xl font-semibold w-8 text-center">{formData.max_members}</span>
+          <span className="text-xl font-semibold w-12 text-center text-white">
+            {formData.max_members || 'None'}
+          </span>
           <button
             type="button"
-            onClick={() => formData.max_members < 20 && handleInputChange('max_members', formData.max_members + 1)}
-            className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors"
+            onClick={() => {
+              const currentValue = formData.max_members || 1;
+              if (currentValue < 50) {
+                handleInputChange('max_members', currentValue + 1);
+              }
+            }}
+            className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition-colors disabled:opacity-50"
+            disabled={formData.max_members && formData.max_members >= 50}
           >
             <Plus className="w-4 h-4" />
           </button>
         </div>
+        <p className="text-xs mt-1 text-gray-400">Total groop size including you (minimum 2 people)</p>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">Cost per Person (Optional)</label>
         <div className="relative">
-          <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="number"
-            placeholder="0"
+            placeholder="Free"
             value={formData.cost || ''}
-            onChange={(e) => handleInputChange('cost', parseFloat(e.target.value) || 0)}
+            onChange={(e) => {
+              const value = e.target.value;
+              const numValue = parseFloat(value) || 0;
+              
+              // Prevent entering values above the limit
+              if (value !== '' && numValue > 100000) {
+                return; // Don't update state if above limit
+              }
+              
+              handleInputChange('cost', value === '' ? null : numValue);
+            }}
             min="0"
+            max="100000"
             step="0.01"
-            className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            className={`w-full pl-10 pr-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent ${
+              formData.cost && formData.cost > 100000
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-600 focus:ring-teal-500'
+            }`}
           />
         </div>
+        {formData.cost && formData.cost > 100000 ? (
+          <p className="text-xs mt-1 text-red-400">Cost cannot exceed ₹1,00,000</p>
+        ) : (
+          <p className="text-xs mt-1 text-gray-400">Leave empty if the activity is free (max ₹1,00,000)</p>
+        )}
       </div>
     </div>
   )
@@ -565,55 +670,63 @@ const CreateGroup = () => {
   // Step 5: Review
   const renderStep5 = () => (
     <div className="space-y-6">
-      <div className="bg-gray-800/30 rounded-xl p-6 space-y-4">
-        <div>
-          <h3 className="text-lg font-semibold text-white mb-2">{formData.name}</h3>
-          <p className="text-gray-300">{formData.description}</p>
+      {/* Hidden input to prevent accidental form submission */}
+      <input type="hidden" />
+      
+      {/* Confirmation Section */}
+      <div className="bg-gradient-to-r from-teal-500/10 to-cyan-500/10 rounded-xl p-6 border border-teal-500/20">
+        <div className="flex items-start gap-3">
+          <CheckCircle className="w-6 h-6 text-teal-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <h4 className="text-lg font-semibold text-white mb-2">Ready to Launch Your Groop?</h4>
+            <p className="text-gray-300 mb-4">
+              By creating this groop, you confirm that all information is accurate and you agree to:
+            </p>
+            <ul className="text-sm text-gray-300 space-y-1 mb-4">
+              <li>• Host the activity at the specified date, time, and location</li>
+              <li>• Welcome and manage groop members respectfully</li>
+              <li>• Provide clear communication about any changes</li>
+              <li>• Follow GroopsApp community guidelines</li>
+            </ul>
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <Sparkles className="w-4 h-4 text-teal-400" />
+              <span>Your groop will be visible to other users immediately after creation</span>
+            </div>
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center text-gray-300">
-            <Calendar className="w-4 h-4 mr-2 text-teal-400" />
-            {new Date(formData.date_time).toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })} at {new Date(formData.date_time).toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit'
-            })}
+        {/* Agreement Checkbox */}
+        <div className="mt-6 pt-4 border-t border-teal-500/20">
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={formData.agreesToGuidelines}
+              onChange={(e) => handleInputChange('agreesToGuidelines', e.target.checked)}
+              className="mt-1 w-4 h-4 text-teal-600 bg-gray-800 border-gray-600 rounded focus:ring-teal-500 focus:ring-2"
+            />
+            <span className="text-sm text-gray-300">
+              I have read and agree to follow the{' '}
+              <span className="text-teal-400 font-medium">GroopsApp Community Guidelines</span>{' '}
+              and understand my responsibilities as a groop organizer.
+            </span>
           </div>
-          
-          <div className="flex items-center text-gray-300">
-            <MapPin className="w-4 h-4 mr-2 text-teal-400" />
-            {formData.location.name}
-          </div>
-          
-          <div className="flex items-center text-gray-300">
-            <Tag className="w-4 h-4 mr-2 text-teal-400" />
-            {formData.activity_type}
-          </div>
-          
-          <div className="flex items-center text-gray-300">
-            <Users className="w-4 h-4 mr-2 text-teal-400" />
-            Up to {formData.max_members} members
-          </div>
-          
-          {formData.skill_level && (
-            <div className="flex items-center text-gray-300">
-              <Target className="w-4 h-4 mr-2 text-teal-400" />
-              {formData.skill_level} level
-            </div>
-          )}
-          
-          {formData.cost > 0 && (
-            <div className="flex items-center text-gray-300">
-              <DollarSign className="w-4 h-4 mr-2 text-teal-400" />
-              ${formData.cost} per person
-            </div>
+          {!formData.agreesToGuidelines && (
+            <p className="text-xs text-gray-400 mt-2 ml-7">
+              You must agree to the guidelines before creating your groop
+            </p>
           )}
         </div>
+      </div>
+
+      {/* Final Call to Action */}
+      <div className="text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500/20 rounded-full text-teal-300 text-sm font-medium mb-4">
+          <CheckCircle className="w-4 h-4" />
+          <span>Everything looks great!</span>
+        </div>
+        <p className="text-gray-400 text-sm">
+          Click "Create Groop" below to make your groop live and start connecting with people
+        </p>
       </div>
     </div>
   )
@@ -697,7 +810,7 @@ const CreateGroup = () => {
             Login Required
           </h2>
           <p className="mb-4" style={{ color: 'rgb(156, 163, 175)' }}>
-            You need to be logged in to create a group.
+            You need to be logged in to create groop.
           </p>
           <Button onClick={() => navigate('/login')}>
             Sign In
@@ -716,7 +829,7 @@ const CreateGroup = () => {
             Profile Required
           </h2>
           <p className="mb-4" style={{ color: 'rgb(156, 163, 175)' }}>
-            You need to complete your profile before creating a group.
+            You need to complete your profile before creating a groop.
           </p>
           <Button onClick={() => navigate('/create-profile')}>
             Complete Profile
@@ -732,10 +845,10 @@ const CreateGroup = () => {
         <div className="text-center">
           <CheckCircle size={64} className="mx-auto mb-4" style={{ color: 'rgb(34, 197, 94)' }} />
           <h2 className="text-2xl font-bold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
-            Group Created Successfully!
+            Groop Created Successfully!
           </h2>
           <p style={{ color: 'rgb(156, 163, 175)' }}>
-            Redirecting to your new group...
+            Redirecting to your new groop...
           </p>
         </div>
       </div>
@@ -872,13 +985,20 @@ const CreateGroup = () => {
                   }}
                 >
                   <h4 className="text-lg font-semibold mb-4" style={{ color: 'rgb(238, 238, 238)' }}>
-                    Group Summary
+                    Groop Summary
                   </h4>
                   
                   <div className="space-y-3 text-sm">
                     <div className="flex items-center justify-between">
                       <span style={{ color: 'rgb(156, 163, 175)' }}>Name:</span>
-                      <span style={{ color: formData.name ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)' }}>
+                      <span className="text-right break-words ml-2 max-w-[140px]"
+                            style={{ 
+                              color: formData.name ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)',
+                              wordWrap: 'break-word',
+                              wordBreak: 'break-word',
+                              overflowWrap: 'break-word',
+                              lineHeight: '1.3'
+                            }}>
                         {formData.name || 'Not set'}
                       </span>
                     </div>
@@ -887,6 +1007,35 @@ const CreateGroup = () => {
                       <span style={{ color: 'rgb(156, 163, 175)' }}>Activity:</span>
                       <span style={{ color: formData.activity_type ? getActivityTypeColor(formData.activity_type) : 'rgb(75, 85, 99)' }}>
                         {formData.activity_type ? formData.activity_type.charAt(0).toUpperCase() + formData.activity_type.slice(1) : 'Not set'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span style={{ color: 'rgb(156, 163, 175)' }}>Date:</span>
+                      <span className="text-right break-words ml-2 max-w-[140px]"
+                            style={{ 
+                              color: formData.date ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)',
+                              wordWrap: 'break-word',
+                              wordBreak: 'break-word',
+                              overflowWrap: 'break-word',
+                              lineHeight: '1.3'
+                            }}>
+                        {formData.date ? new Date(formData.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        }) : 'Not set'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span style={{ color: 'rgb(156, 163, 175)' }}>Time:</span>
+                      <span style={{ color: formData.time ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)' }}>
+                        {formData.time ? new Date(`2000-01-01T${formData.time}`).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
+                        }) : 'Not set'}
                       </span>
                     </div>
                     
@@ -899,21 +1048,28 @@ const CreateGroup = () => {
                     
                     <div className="flex items-center justify-between">
                       <span style={{ color: 'rgb(156, 163, 175)' }}>Max Members:</span>
-                      <span style={{ color: 'rgb(238, 238, 238)' }}>
-                        {formData.max_members} people
+                      <span style={{ color: formData.max_members ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)' }}>
+                        {formData.max_members ? `${formData.max_members} people` : 'Not set'}
                       </span>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <span style={{ color: 'rgb(156, 163, 175)' }}>Cost:</span>
-                      <span style={{ color: 'rgb(238, 238, 238)' }}>
-                        {formData.cost > 0 ? `₹${formData.cost}` : 'Free'}
+                      <span style={{ color: formData.cost ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)' }}>
+                        {formData.cost ? `₹${formData.cost} per person` : 'Not set'}
                       </span>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <span style={{ color: 'rgb(156, 163, 175)' }}>Location:</span>
-                      <span style={{ color: formData.location.name ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)' }}>
+                      <span className="text-right break-words ml-2 max-w-[140px]"
+                            style={{ 
+                              color: formData.location.name ? 'rgb(238, 238, 238)' : 'rgb(75, 85, 99)',
+                              wordWrap: 'break-word',
+                              wordBreak: 'break-word',
+                              overflowWrap: 'break-word',
+                              lineHeight: '1.3'
+                            }}>
                         {formData.location.name || 'Not set'}
                       </span>
                     </div>
@@ -922,8 +1078,6 @@ const CreateGroup = () => {
 
                 {/* Action Buttons */}
                 <div className="space-y-4">
-                  {renderNavigationButtons()}
-                  
                   <Button
                     type="button"
                     variant="ghost"
@@ -944,13 +1098,14 @@ const CreateGroup = () => {
                   }}
                 >
                   <h5 className="text-sm font-medium mb-2" style={{ color: 'rgb(59, 130, 246)' }}>
-                    💡 Tips for Success
+                    🚀 Pro Groop Tips
                   </h5>
                   <ul className="text-xs space-y-1" style={{ color: 'rgb(156, 163, 175)' }}>
-                    <li>• Be specific about what to expect</li>
-                    <li>• Choose an accessible location</li>
-                    <li>• Set realistic skill levels</li>
-                    <li>• Consider group size carefully</li>
+                    <li>• Write descriptions that make people excited to join!</li>
+                    <li>• Pick spots with parking or public transport nearby</li>
+                    <li>• "Beginner-friendly" attracts more diverse crowds</li>
+                    <li>• Smaller groops (4-8 people) bond better</li>
+                    <li>• Free activities get 3x more signups</li>
                   </ul>
                 </div>
               </div>
