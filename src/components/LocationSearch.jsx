@@ -266,7 +266,7 @@ const LocationSearch = () => {
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           placeholder={getMobilePlaceholder(placeholder)}
-          className="h-8 pl-9 pr-2 w-20 xs:w-24 sm:w-36 md:w-48 lg:w-56 xl:w-64 text-xs sm:text-sm"
+          className="h-8 pl-9 pr-2 w-24 xs:w-32 sm:w-40 md:w-48 lg:w-56 xl:w-64 text-xs sm:text-sm"
           style={{ 
             backgroundColor: 'rgb(15, 20, 25)',
             color: 'rgb(238, 238, 238)',
