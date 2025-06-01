@@ -223,6 +223,9 @@ const LocationSearch = () => {
     localStorage.setItem(STORAGE_KEYS.isManual, 'true')
     setIsManualMode(true)
     
+    // Clear GPS coordinates since this is manual selection
+    localStorage.removeItem('groops_user_coordinates')
+    
     // Dispatch custom event to notify other components (like Groops)
     window.dispatchEvent(new CustomEvent('locationChanged', { 
       detail: { location: locationText, manual: true } 
@@ -239,6 +242,9 @@ const LocationSearch = () => {
       setIsManualMode(true)
       localStorage.setItem(STORAGE_KEYS.isManual, 'true')
     }
+    
+    // Clear GPS coordinates when manually typing
+    localStorage.removeItem('groops_user_coordinates')
     
     // Save to localStorage as user types (debounced)
     if (value.trim()) {
@@ -301,17 +307,26 @@ const LocationSearch = () => {
                   }
                 }
                 
+                let gpsLocation
                 if (city && state) {
-                  const gpsLocation = `${city}, ${state}`
-                  resolve(gpsLocation)
+                  gpsLocation = `${city}, ${state}`
                 } else if (city) {
-                  resolve(city)
+                  gpsLocation = city
                 } else {
                   // Fallback to formatted address
                   const formattedAddress = results[0].formatted_address
-                  const shortAddress = formattedAddress.split(',').slice(0, 2).join(',').trim()
-                  resolve(shortAddress)
+                  gpsLocation = formattedAddress.split(',').slice(0, 2).join(',').trim()
                 }
+                
+                // Save precise coordinates for GPS detection
+                localStorage.setItem('groops_user_coordinates', JSON.stringify({
+                  lat: latitude,
+                  lng: longitude,
+                  timestamp: Date.now(),
+                  source: 'gps' // Mark as GPS source for precise coordinates
+                }))
+                
+                resolve(gpsLocation)
               } else {
                 reject(new Error(`Geocoding failed: ${status}`))
               }

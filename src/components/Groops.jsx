@@ -59,10 +59,30 @@ const Groops = () => {
       return
     }
 
-    // Clear any existing cached coordinates when manually changing location
-    localStorage.removeItem('groops_user_coordinates')
+    // Check if we have precise GPS coordinates saved
+    const cachedCoords = localStorage.getItem('groops_user_coordinates')
+    if (cachedCoords) {
+      try {
+        const coords = JSON.parse(cachedCoords)
+        // Use GPS coordinates if they're from GPS source and less than 24 hours old
+        const coordsAge = Date.now() - (coords.timestamp || 0)
+        const twentyFourHours = 24 * 60 * 60 * 1000
+        
+        if (coords.source === 'gps' && coordsAge < twentyFourHours) {
+          setUserLocation({
+            lat: coords.lat,
+            lng: coords.lng,
+            address: savedLocation
+          })
+          setLocationLoading(false)
+          return
+        }
+      } catch (err) {
+        console.error('Error parsing cached coordinates:', err)
+      }
+    }
 
-    // Geocode the location to get coordinates
+    // Fall back to geocoding the address for manual locations or expired GPS
     if (window.google && window.google.maps) {
       try {
         const geocoder = new window.google.maps.Geocoder()
@@ -77,11 +97,12 @@ const Groops = () => {
             
             setUserLocation(coords)
             
-            // Cache coordinates with timestamp
+            // Cache geocoded coordinates (marked as geocoded, not GPS)
             localStorage.setItem('groops_user_coordinates', JSON.stringify({
               lat: coords.lat,
               lng: coords.lng,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              source: 'geocoded'
             }))
           } else {
             console.error('Geocoding failed:', status)
@@ -115,7 +136,7 @@ const Groops = () => {
         setLocationLoading(false)
       }, 5000)
     }
-  }, []) // Keep empty dependency array but clear cache manually
+  }, [])
 
   // Load user location on component mount
   useEffect(() => {
