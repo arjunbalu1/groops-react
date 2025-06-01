@@ -1,9 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Upload, User } from 'lucide-react'
 
 const CreateProfile = () => {
   const navigate = useNavigate()
@@ -18,6 +19,10 @@ const CreateProfile = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [usernameChecking, setUsernameChecking] = useState(false)
   const [usernameAvailable, setUsernameAvailable] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef(null)
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
 
@@ -38,6 +43,7 @@ const CreateProfile = () => {
         fullName: user.name || '',
         avatarURL: user.picture || ''
       }))
+      setPreviewUrl(user.picture || '')
     }
   }, [user])
 
@@ -124,6 +130,18 @@ const CreateProfile = () => {
 
     setIsSubmitting(true)
     try {
+      let avatarURL = formData.avatarURL
+
+      // Upload new file if selected
+      if (selectedFile) {
+        const uploadedUrl = await uploadFile()
+        if (!uploadedUrl) {
+          setIsSubmitting(false)
+          return
+        }
+        avatarURL = uploadedUrl
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/profile/register`, {
         method: 'POST',
         headers: {
@@ -134,7 +152,7 @@ const CreateProfile = () => {
           username: formData.username,
           full_name: formData.fullName,
           bio: formData.bio,
-          avatar_url: formData.avatarURL
+          avatar_url: avatarURL
         })
       })
 
@@ -184,6 +202,68 @@ const CreateProfile = () => {
         </div>
       </div>
     )
+  }
+
+  // Handle file selection
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setErrors(prev => ({ ...prev, avatar: 'Please select a valid image file (JPG, PNG, GIF, or WebP)' }))
+      return
+    }
+
+    // Validate file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      setErrors(prev => ({ ...prev, avatar: 'File size must be less than 5MB' }))
+      return
+    }
+
+    // Clear avatar errors
+    setErrors(prev => ({ ...prev, avatar: '' }))
+    setSelectedFile(file)
+    
+    // Create preview URL
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setPreviewUrl(e.target.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Upload file to server
+  const uploadFile = async () => {
+    if (!selectedFile) return null
+
+    setIsUploading(true)
+    const uploadFormData = new FormData()
+    uploadFormData.append('avatar', selectedFile)
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/upload-avatar`, {
+        method: 'POST',
+        credentials: 'include',
+        body: uploadFormData
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Upload failed')
+      }
+
+      const data = await response.json()
+      return data.avatar_url
+    } catch (error) {
+      console.error('Upload error:', error)
+      setErrors(prev => ({ ...prev, avatar: error.message || 'Failed to upload image' }))
+      return null
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   return (
@@ -320,73 +400,80 @@ const CreateProfile = () => {
               </p>
             </div>
 
-            {/* Avatar URL */}
+            {/* Avatar */}
             <div>
               <label 
-                htmlFor="avatarURL" 
+                htmlFor="avatar" 
                 className="block text-sm font-medium mb-2"
                 style={{ color: 'rgb(238, 238, 238)' }}
               >
                 Avatar
               </label>
               
-              {/* Avatar Preview */}
+              {/* Avatar Preview and Upload */}
               <div className="flex items-start gap-4 mb-3">
                 <div className="flex-shrink-0">
-                  {user && user.username && formData.avatarURL ? (
-                    <img
-                      src={`${API_BASE_URL}/profiles/${user.username}/image`}
-                      alt="Avatar preview"
-                      className="w-16 h-16 rounded-full object-cover border-2"
-                      style={{ 
-                        borderColor: 'rgba(0, 173, 181, 0.3)',
-                        backgroundColor: 'rgba(31, 41, 55, 0.5)'
-                      }}
-                      onError={(e) => {
-                        e.target.style.display = 'none'
-                        e.target.nextElementSibling.style.display = 'flex'
-                      }}
-                      onLoad={(e) => {
-                        e.target.style.display = 'block'
-                        e.target.nextElementSibling.style.display = 'none'
-                      }}
-                    />
-                  ) : null}
-                  
-                  {/* Fallback avatar placeholder */}
-                  <div
-                    className="w-16 h-16 rounded-full border-2 flex items-center justify-center text-xl font-bold"
-                    style={{ 
-                      borderColor: 'rgba(0, 173, 181, 0.3)',
-                      backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                      color: 'rgb(156, 163, 175)',
-                      display: formData.avatarURL ? 'none' : 'flex'
-                    }}
-                  >
-                    {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : '?'}
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 flex items-center justify-center"
+                       style={{ 
+                         borderColor: 'rgba(0, 173, 181, 0.3)',
+                         backgroundColor: 'rgba(31, 41, 55, 0.5)'
+                       }}>
+                    {previewUrl ? (
+                      <img
+                        src={previewUrl}
+                        alt="Avatar preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-8 w-8" style={{ color: 'rgb(156, 163, 175)' }} />
+                    )}
                   </div>
                 </div>
                 
                 <div className="flex-1">
-                  <Input
-                    id="avatarURL"
-                    name="avatarURL"
-                    type="url"
-                    value={formData.avatarURL}
-                    onChange={handleInputChange}
-                    className="w-full"
-                    placeholder="https://example.com/avatar.jpg"
-                    style={{
-                      backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                      borderColor: 'rgba(75, 85, 99, 0.3)',
-                      color: 'rgb(238, 238, 238)'
-                    }}
-                  />
-                  <p className="text-xs mt-1" style={{ color: 'rgb(156, 163, 175)' }}>
-                    We'll use your Google profile picture if you don't provide one
-                  </p>
+                  {/* File Upload */}
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      id="avatar-upload"
+                    />
+                    <label
+                      htmlFor="avatar-upload"
+                      className="inline-flex items-center px-3 py-2 rounded-md border cursor-pointer transition-colors"
+                      style={{
+                        backgroundColor: 'rgba(0, 173, 181, 0.1)',
+                        borderColor: 'rgba(0, 173, 181, 0.3)',
+                        color: 'rgb(0, 173, 181)'
+                      }}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Choose Photo
+                    </label>
+                    <p className="text-xs mt-1" style={{ color: 'rgb(156, 163, 175)' }}>
+                      JPG, PNG, GIF or WebP. Max 5MB.
+                    </p>
+                    {selectedFile && (
+                      <p className="text-xs mt-1" style={{ color: 'rgb(34, 197, 94)' }}>
+                        Selected: {selectedFile.name}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {errors.avatar && (
+                <p className="text-sm mt-1" style={{ color: 'rgb(239, 68, 68)' }}>
+                  {errors.avatar}
+                </p>
+              )}
+              
+              <p className="text-xs mt-1" style={{ color: 'rgb(156, 163, 175)' }}>
+                We'll use your Google profile picture if you don't provide one
+              </p>
             </div>
 
             {/* Submit Error */}
@@ -407,14 +494,17 @@ const CreateProfile = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={isSubmitting || usernameChecking || usernameAvailable === false}
+              disabled={isSubmitting || isUploading || usernameChecking || usernameAvailable === false}
               style={{
                 backgroundColor: 'rgb(0, 173, 181)',
                 color: 'white',
-                opacity: (isSubmitting || usernameChecking || usernameAvailable === false) ? 0.6 : 1
+                opacity: (isSubmitting || isUploading || usernameChecking || usernameAvailable === false) ? 0.6 : 1
               }}
             >
-              {isSubmitting ? 'Creating Profile...' : 'Create Profile'}
+              {isSubmitting ? 
+                (isUploading ? 'Uploading...' : 'Creating Profile...') : 
+                'Create Profile'
+              }
             </Button>
           </form>
         </div>

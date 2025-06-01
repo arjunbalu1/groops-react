@@ -8,6 +8,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fu
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [avatarVersion, setAvatarVersion] = useState(Date.now())
 
   // Check authentication status by making API call to backend
   const checkAuthStatus = async () => {
@@ -25,7 +26,13 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         // If we get a successful response, user is authenticated with full profile
         const profileData = await response.json()
+        const prevAvatarURL = user?.avatarURL
         setUser(profileData)
+        
+        // If avatar URL changed, update the version to force cache refresh
+        if (prevAvatarURL && prevAvatarURL !== profileData.avatarURL) {
+          setAvatarVersion(Date.now())
+        }
       } else if (response.status === 401) {
         // 401 = Unauthorized - could be not authenticated or incomplete profile
         try {
@@ -61,6 +68,11 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Force avatar refresh (useful after uploads)
+  const refreshAvatar = () => {
+    setAvatarVersion(Date.now())
   }
 
   useEffect(() => {
@@ -99,7 +111,9 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     signIn,
     signOut,
-    checkAuthStatus
+    checkAuthStatus,
+    refreshAvatar,
+    avatarVersion
   }
 
   return (

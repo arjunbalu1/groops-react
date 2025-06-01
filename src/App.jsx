@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import Header from '@/components/Header'
 import HomePage from '@/components/HomePage'
 import CreateProfile from '@/components/CreateProfile'
+import AccountSettings from '@/components/AccountSettings'
 import CreateGroup from '@/components/CreateGroup'
 import EditGroup from '@/components/EditGroup'
 import GroupDetails from '@/components/GroupDetails'
@@ -47,6 +48,15 @@ const AppContent = () => {
         <Route 
           path="/create-profile" 
           element={<CreateProfile />} 
+        />
+        <Route 
+          path="/account-settings" 
+          element={
+            <>
+              <Header />
+              <AccountSettings />
+            </>
+          } 
         />
         <Route 
           path="/create-group" 

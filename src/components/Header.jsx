@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useNotificationCount } from '@/hooks/useNotificationCount'
 
 const Header = () => {
-  const { user, isLoading, signIn, signOut } = useAuth()
+  const { user, isLoading, signIn, signOut, avatarVersion } = useAuth()
   const { unreadCount, refreshUnreadCount } = useNotificationCount()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -454,7 +454,7 @@ const Header = () => {
                   >
                     {user.avatarURL && user.username ? (
                       <img
-                        src={`${API_BASE_URL}/profiles/${user.username}/image`}
+                        src={`${API_BASE_URL}/profiles/${user.username}/image?v=${avatarVersion}`}
                         alt={user.username || 'User'}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -555,8 +555,7 @@ const Header = () => {
                         onMouseLeave={(e) => handleDropdownItemHover(e, false)}
                         onClick={() => {
                           setDropdownOpen(false)
-                          // TODO: Navigate to account settings
-                          console.log('Navigate to account settings')
+                          navigate('/account-settings')
                         }}
                       >
                         <Settings size={16} />
