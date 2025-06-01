@@ -48,7 +48,7 @@ const Dashboard = () => {
   // Fetch dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!user?.username) return
+      if (!user?.username || user?.needsProfile) return
 
       try {
         setLoading(true)
@@ -83,7 +83,7 @@ const Dashboard = () => {
     }
 
     fetchDashboardData()
-  }, [user?.username, API_BASE_URL])
+  }, [user?.username, user?.needsProfile, API_BASE_URL])
 
   // Fetch upcoming groups
   const fetchUpcomingGroups = useCallback(async () => {
@@ -176,6 +176,39 @@ const Dashboard = () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+
+  // Check for incomplete profile first
+  if (user?.needsProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
+        <div className="text-center">
+          <LayoutDashboard size={48} className="mx-auto mb-4" style={{ color: 'rgb(0, 173, 181)' }} />
+          <h2 className="text-xl font-bold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
+            Complete Your Profile
+          </h2>
+          <p className="mb-4" style={{ color: 'rgb(156, 163, 175)' }}>
+            You need to complete your profile to access your dashboard.
+          </p>
+          <button
+            onClick={() => navigate('/create-profile')}
+            className="px-6 py-2 rounded-lg font-medium transition-colors"
+            style={{
+              backgroundColor: 'rgb(0, 173, 181)',
+              color: 'white'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = 'rgb(6, 182, 212)'
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'rgb(0, 173, 181)'
+            }}
+          >
+            Complete Profile
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // Loading state
   if (loading) {
