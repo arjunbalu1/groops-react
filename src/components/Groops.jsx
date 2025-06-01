@@ -22,8 +22,9 @@ const Groops = () => {
   const [showFilters, setShowFilters] = useState(false)
   
   // Location state for distance sorting
-  const [userLocation, setUserLocation] = useState(null) // { lat, lng, address }
-  const [locationLoading, setLocationLoading] = useState(true) // Track if location is still loading
+  const [userLocation, setUserLocation] = useState(null)
+  const [locationLoading, setLocationLoading] = useState(true)
+  const [isUsingPreciseLocation, setIsUsingPreciseLocation] = useState(false)
   
   // Pagination
   const [page, setPage] = useState(1)
@@ -55,6 +56,7 @@ const Groops = () => {
     
     if (!savedLocation) {
       setUserLocation(null)
+      setIsUsingPreciseLocation(false)
       setLocationLoading(false)
       return
     }
@@ -74,6 +76,7 @@ const Groops = () => {
             lng: coords.lng,
             address: savedLocation
           })
+          setIsUsingPreciseLocation(true)
           setLocationLoading(false)
           return
         }
@@ -96,6 +99,7 @@ const Groops = () => {
             }
             
             setUserLocation(coords)
+            setIsUsingPreciseLocation(false)
             
             // Cache geocoded coordinates (marked as geocoded, not GPS)
             localStorage.setItem('groops_user_coordinates', JSON.stringify({
@@ -107,12 +111,14 @@ const Groops = () => {
           } else {
             console.error('Geocoding failed:', status)
             setUserLocation(null)
+            setIsUsingPreciseLocation(false)
           }
           setLocationLoading(false)
         })
       } catch (err) {
         console.error('Error geocoding location:', err)
         setUserLocation(null)
+        setIsUsingPreciseLocation(false)
         setLocationLoading(false)
       }
     } else {
@@ -358,7 +364,7 @@ const Groops = () => {
             </h1>
             <p style={{ color: 'rgb(156, 163, 175)' }}>
               {userLocation ? 
-                `Discover and join groups within 50km of ${userLocation.address}` :
+                `Discover and join groups within 50km of ${isUsingPreciseLocation ? 'your current location' : userLocation.address}` :
                 'Discover and join groups that match your interests'
               }
             </p>
@@ -867,7 +873,7 @@ const Groops = () => {
                 {searchQuery || selectedActivityType || selectedSkillLevel 
                   ? 'Try adjusting your search or filters'
                   : userLocation 
-                    ? `No groups found within 50km of ${userLocation.address}` 
+                    ? `No groups found within 50km of ${isUsingPreciseLocation ? 'your current location' : userLocation.address}` 
                     : 'No groups available at the moment'
                 }
               </p>
