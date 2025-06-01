@@ -1,4 +1,4 @@
-# Groops Frontend 🌍
+# Groops Frontend (This whole repo is AI slop, not a single line was written by hand)
 
 **React frontend for activity-based group creation and participation**
 
