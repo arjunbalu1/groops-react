@@ -254,10 +254,14 @@ const LocationSearch = () => {
 
   // Handle input focus
   const handleInputFocus = () => {
-    if (isManualMode && location.trim().length >= 3) {
-      setIsUserTyping(true)
-      setShowLocationResults(true)
-    }
+    // Clear the location text when user clicks on the input
+    setLocation('')
+    setIsUserTyping(true)
+    setIsManualMode(true)
+    localStorage.setItem(STORAGE_KEYS.isManual, 'true')
+    
+    // Clear GPS coordinates when manually selecting
+    localStorage.removeItem('groops_user_coordinates')
   }
 
   // Handle input blur
