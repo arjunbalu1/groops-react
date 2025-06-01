@@ -148,7 +148,7 @@ const Header = () => {
       }}
     >
       <div className="max-w-screen-2xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-12 xs:h-14 sm:h-16">
           
           {/* Left side: Logo and Location */}
           <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 lg:space-x-6">
@@ -162,7 +162,7 @@ const Header = () => {
                 <img 
                   src={logoTransparent} 
                   alt="Groops" 
-                  className="h-10 sm:h-12 md:h-16 lg:h-18"
+                  className="h-8 xs:h-10 sm:h-12 md:h-16 lg:h-18"
                   style={{
                     filter: 'drop-shadow(0 2px 4px rgba(238, 238, 238, 0.3))'
                   }}

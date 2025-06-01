@@ -472,7 +472,7 @@ const LocationSearch = () => {
       <div className="relative" ref={dropdownRef}>
         <MapPin 
           size={14} 
-          className="absolute left-2.5 top-1/2 transform -translate-y-1/2 pointer-events-none z-10"
+          className="absolute left-2 xs:left-2.5 top-1/2 transform -translate-y-1/2 pointer-events-none z-10"
           style={{ color: 'rgb(0, 173, 181)' }}
         />
         <Input 
@@ -481,7 +481,7 @@ const LocationSearch = () => {
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
           placeholder={getMobilePlaceholder(placeholder)}
-          className="h-8 pl-9 pr-12 w-24 xs:w-32 sm:w-40 md:w-48 lg:w-56 xl:w-64 text-xs sm:text-sm"
+          className="h-8 pl-7 pr-8 xs:pl-9 xs:pr-12 w-28 xs:w-48 sm:w-40 md:w-48 lg:w-56 xl:w-64 text-xs sm:text-sm"
           style={{ 
             backgroundColor: 'rgb(15, 20, 25)',
             color: 'rgb(238, 238, 238)',
@@ -494,7 +494,7 @@ const LocationSearch = () => {
         <button
           onClick={detectLocation}
           disabled={isLoading}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors hover:bg-opacity-20"
+          className="absolute right-1 xs:right-2 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors hover:bg-opacity-20"
           style={{
             color: isLoading ? 'rgba(0, 173, 181, 0.5)' : 'rgb(0, 173, 181)',
             backgroundColor: 'transparent'

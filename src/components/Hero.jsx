@@ -33,12 +33,12 @@ const Hero = () => {
 
   return (
     <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="relative pt-4 pb-2 sm:pt-6 sm:pb-3 lg:pt-8 lg:pb-4">
+      <div className="relative pt-2 xs:pt-4 sm:pt-6 lg:pt-8 pb-2 sm:pb-3 lg:pb-4">
         {/* Hero Content */}
         <div className="relative text-center">
             
             {/* Main Heading */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-3">
+            <h1 className="text-4xl xs:text-5xl sm:text-6xl lg:text-7xl font-bold mb-2 xs:mb-3">
               <span style={{ color: 'rgb(238, 238, 238)' }}>Find Your </span>
               <span 
                 className="bg-gradient-to-r from-cyan-300 to-white bg-clip-text text-transparent"
@@ -52,7 +52,7 @@ const Hero = () => {
 
             {/* Subheading */}
             <p 
-              className="text-xl sm:text-2xl lg:text-3xl mb-6 max-w-4xl mx-auto leading-relaxed"
+              className="text-lg xs:text-xl sm:text-2xl lg:text-3xl mb-4 xs:mb-6 max-w-4xl mx-auto leading-relaxed"
               style={{ color: 'rgb(156, 163, 175)' }}
             >
               Turn your interests into real connections. Find local groups, join exciting activities, 
@@ -61,10 +61,10 @@ const Hero = () => {
 
             {/* Social Proof */}
             <div className="flex flex-col items-center">
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-4 xs:space-x-6">
                 <div className="text-center">
                   <div 
-                    className="text-4xl sm:text-5xl lg:text-6xl font-bold"
+                    className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold"
                     style={{ 
                       color: 'rgb(34, 211, 238)',
                       textShadow: '0 0 20px rgba(34, 211, 238, 0.6), 0 0 40px rgba(34, 211, 238, 0.4), 0 0 60px rgba(34, 211, 238, 0.3)'
@@ -73,7 +73,7 @@ const Hero = () => {
                     {stats.activeUsers}
                   </div>
                   <div 
-                    className="text-sm"
+                    className="text-xs xs:text-sm"
                     style={{ 
                       color: 'rgb(255, 255, 255)',
                       textShadow: '0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3), 0 0 45px rgba(255, 255, 255, 0.2)'
@@ -84,7 +84,7 @@ const Hero = () => {
                 </div>
                 <div className="text-center">
                   <div 
-                    className="text-4xl sm:text-5xl lg:text-6xl font-bold"
+                    className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold"
                     style={{ 
                       color: 'rgb(34, 211, 238)',
                       textShadow: '0 0 20px rgba(34, 211, 238, 0.6), 0 0 40px rgba(34, 211, 238, 0.4), 0 0 60px rgba(34, 211, 238, 0.3)'
@@ -93,7 +93,7 @@ const Hero = () => {
                     {stats.groups}
                   </div>
                   <div 
-                    className="text-sm"
+                    className="text-xs xs:text-sm"
                     style={{ 
                       color: 'rgb(255, 255, 255)',
                       textShadow: '0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3), 0 0 45px rgba(255, 255, 255, 0.2)'
