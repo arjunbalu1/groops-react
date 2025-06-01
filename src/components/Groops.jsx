@@ -21,6 +21,10 @@ const Groops = () => {
   const [selectedSkillLevel, setSelectedSkillLevel] = useState(searchParams.get('skill') || '')
   const [showFilters, setShowFilters] = useState(false)
   
+  // Location state for distance sorting
+  const [userLocation, setUserLocation] = useState(null) // { lat, lng, address }
+  const [locationLoading, setLocationLoading] = useState(true) // Track if location is still loading
+  
   // Pagination
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
@@ -44,6 +48,94 @@ const Groops = () => {
     }
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [])
+
+  // Load user location from localStorage and geocode it
+  const loadUserLocation = useCallback(async () => {
+    const savedLocation = localStorage.getItem('groops_user_location')
+    
+    if (!savedLocation) {
+      setUserLocation(null)
+      setLocationLoading(false)
+      return
+    }
+
+    // Clear any existing cached coordinates when manually changing location
+    localStorage.removeItem('groops_user_coordinates')
+
+    // Geocode the location to get coordinates
+    if (window.google && window.google.maps) {
+      try {
+        const geocoder = new window.google.maps.Geocoder()
+        geocoder.geocode({ address: savedLocation }, (results, status) => {
+          if (status === 'OK' && results && results[0]) {
+            const location = results[0].geometry.location
+            const coords = {
+              lat: location.lat(),
+              lng: location.lng(),
+              address: savedLocation
+            }
+            
+            setUserLocation(coords)
+            
+            // Cache coordinates with timestamp
+            localStorage.setItem('groops_user_coordinates', JSON.stringify({
+              lat: coords.lat,
+              lng: coords.lng,
+              timestamp: Date.now()
+            }))
+          } else {
+            console.error('Geocoding failed:', status)
+            setUserLocation(null)
+          }
+          setLocationLoading(false)
+        })
+      } catch (err) {
+        console.error('Error geocoding location:', err)
+        setUserLocation(null)
+        setLocationLoading(false)
+      }
+    } else {
+      // Wait for Google Maps to load
+      const checkGoogleMaps = () => {
+        if (window.google && window.google.maps) {
+          loadUserLocation()
+          return true
+        }
+        return false
+      }
+
+      const interval = setInterval(() => {
+        if (checkGoogleMaps()) {
+          clearInterval(interval)
+        }
+      }, 100)
+      
+      setTimeout(() => {
+        clearInterval(interval)
+        setLocationLoading(false)
+      }, 5000)
+    }
+  }, []) // Keep empty dependency array but clear cache manually
+
+  // Load user location on component mount
+  useEffect(() => {
+    loadUserLocation()
+  }, [loadUserLocation])
+
+  // Listen for location changes from LocationSearch component
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setLocationLoading(true)
+      loadUserLocation()
+    }
+
+    // Listen for custom event from LocationSearch component
+    window.addEventListener('locationChanged', handleLocationChange)
+
+    return () => {
+      window.removeEventListener('locationChanged', handleLocationChange)
+    }
+  }, [loadUserLocation])
 
   // Debounce search query
   useEffect(() => {
@@ -82,15 +174,25 @@ const Groops = () => {
     if (selectedActivityType) params.append('activity_type', selectedActivityType)
     if (selectedSkillLevel) params.append('skill_level', selectedSkillLevel)
     
+    // Add location parameters for distance sorting
+    if (userLocation) {
+      params.append('user_lat', userLocation.lat.toString())
+      params.append('user_lng', userLocation.lng.toString())
+      params.append('sort_by', 'distance')
+      params.append('sort_order', 'asc')
+    } else {
+      params.append('sort_by', 'date_time')
+      params.append('sort_order', 'asc')
+    }
+    
     // Backend expects offset and limit, not page
     const limit = 9
     const offset = (pageNum - 1) * limit
     params.append('offset', offset.toString())
     params.append('limit', limit.toString())
-    params.append('sort', 'created_desc')
     
     return params.toString()
-  }, [debouncedSearchQuery, selectedActivityType, selectedSkillLevel])
+  }, [debouncedSearchQuery, selectedActivityType, selectedSkillLevel, userLocation])
 
   // Fetch groups
   const fetchGroups = useCallback(async (pageNum = 1, append = false) => {
@@ -152,9 +254,12 @@ const Groops = () => {
 
   // Fetch groups when filters change
   useEffect(() => {
-    setPage(1)
-    fetchGroups(1, false)
-  }, [fetchGroups])
+    // Only fetch groups after location loading is complete
+    if (!locationLoading) {
+      setPage(1)
+      fetchGroups(1, false)
+    }
+  }, [fetchGroups, locationLoading, userLocation])
 
   // Load more groups manually
   const loadMore = useCallback(() => {
@@ -220,10 +325,21 @@ const Groops = () => {
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-4xl font-bold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
-              All Groops
+              <span 
+                className="bg-gradient-to-r from-cyan-300 to-white bg-clip-text text-transparent"
+                style={{ 
+                  textShadow: '0 0 30px rgba(34, 211, 238, 0.6), 0 0 60px rgba(34, 211, 238, 0.4), 0 0 90px rgba(34, 211, 238, 0.3)'
+                }}
+              >
+                Groops
+              </span>
+              <span style={{ color: 'rgb(238, 238, 238)' }}> near you</span>
             </h1>
             <p style={{ color: 'rgb(156, 163, 175)' }}>
-              Discover and join groups that match your interests
+              {userLocation ? 
+                `Discover and join groups within 50km of ${userLocation.address}` :
+                'Discover and join groups that match your interests'
+              }
             </p>
           </div>
           
@@ -488,6 +604,14 @@ const Groops = () => {
                             <div className="flex items-center">
                               <MapPin size={14} className="mr-2 flex-shrink-0" />
                               <span className="truncate">{group.location?.formatted_address || group.location?.name || 'Location TBD'}</span>
+                              {userLocation && group.distance_km && (
+                                <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0" style={{
+                                  backgroundColor: 'rgba(0, 173, 181, 0.1)',
+                                  color: 'rgb(0, 173, 181)'
+                                }}>
+                                  {group.distance_km}km
+                                </span>
+                              )}
                             </div>
                             <div className="flex items-center">
                               <Users size={14} className="mr-2 flex-shrink-0" />
@@ -721,7 +845,9 @@ const Groops = () => {
               <p style={{ color: 'rgb(156, 163, 175)' }}>
                 {searchQuery || selectedActivityType || selectedSkillLevel 
                   ? 'Try adjusting your search or filters'
-                  : 'No groups available at the moment'
+                  : userLocation 
+                    ? `No groups found within 50km of ${userLocation.address}` 
+                    : 'No groups available at the moment'
                 }
               </p>
             </div>
