@@ -85,8 +85,8 @@ const Hero = () => {
               <div className="flex items-center gap-3 mb-3">
                 <div className="relative">
                   <img
-                    src={`${API_BASE_URL}/profiles/Arjun/image`}
-                    alt="Arjun"
+                    src={`${API_BASE_URL}/profiles/arjun/image`}
+                    alt="arjun"
                     className="w-10 h-10 rounded-full border-2 object-cover"
                     style={{ borderColor: 'rgb(0, 173, 181)' }}
                     onError={(e) => {
@@ -118,7 +118,7 @@ const Hero = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-1">
                     <span className="font-semibold text-sm" style={{ color: 'rgb(238, 238, 238)' }}>
-                      Arjun
+                      arjun
                     </span>
                     <div 
                       className="px-1.5 py-0.5 rounded-full text-xs font-medium"
