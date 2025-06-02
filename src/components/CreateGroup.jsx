@@ -54,7 +54,7 @@ const CreateGroup = () => {
     ],
     social: [
       'Drinking', '420', 'Chai Sutta', 'Music', 'Movies', 'Food', 'Coffee',
-      'Chill Hangout', 'Sunset Vibes', 'Rooftop Party', 'Club Night', 'Late Night Food Run', 'Karaoke', 'Dancing'
+      'Chill Hangout', 'Party', 'Street Food Adventure', 'Karaoke', 'Dancing'
     ],
     games: [
       'Board Games', 'Video Games', 'Card Games', 'Chess', 'Poker', 'Dungeons & Dragons',
