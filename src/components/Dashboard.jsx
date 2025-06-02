@@ -180,7 +180,7 @@ const Dashboard = () => {
   // Check for incomplete profile first
   if (user?.needsProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
+      <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <LayoutDashboard size={48} className="mx-auto mb-4" style={{ color: 'rgb(0, 173, 181)' }} />
           <h2 className="text-xl font-bold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
@@ -213,7 +213,7 @@ const Dashboard = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
+      <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div 
             className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-4" 
@@ -228,7 +228,7 @@ const Dashboard = () => {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
+      <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p style={{ color: 'rgb(239, 68, 68)' }}>Error: {error}</p>
         </div>
@@ -238,7 +238,7 @@ const Dashboard = () => {
 
   // Main dashboard content
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
+    <div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Dashboard Header */}

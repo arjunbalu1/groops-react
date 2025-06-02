@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import HomePage from '@/components/HomePage'
 import CreateProfile from '@/components/CreateProfile'
 import AccountSettings from '@/components/AccountSettings'
@@ -16,23 +17,28 @@ const GroupDetailsWrapper = () => {
   const key = `${location.pathname}-${location.state?.timestamp || 'default'}`
   
   return (
-    <>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
       <Header />
-      <GroupDetails key={key} />
-    </>
+      <div className="flex-grow">
+        <GroupDetails key={key} />
+      </div>
+      <Footer />
+    </div>
   )
 }
 
 const AppContent = () => {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
       <Routes>
         <Route 
           path="/" 
           element={
             <>
               <Header />
-              <HomePage />
+              <div className="flex-grow">
+                <HomePage />
+              </div>
             </>
           } 
         />
@@ -41,20 +47,33 @@ const AppContent = () => {
           element={
             <>
               <Header />
-              <Groops />
+              <div className="flex-grow">
+                <Groops />
+              </div>
+              <Footer />
             </>
           } 
         />
         <Route 
           path="/create-profile" 
-          element={<CreateProfile />} 
+          element={
+            <>
+              <div className="flex-grow">
+                <CreateProfile />
+              </div>
+              <Footer />
+            </>
+          } 
         />
         <Route 
           path="/account-settings" 
           element={
             <>
               <Header />
-              <AccountSettings />
+              <div className="flex-grow">
+                <AccountSettings />
+              </div>
+              <Footer />
             </>
           } 
         />
@@ -63,7 +82,10 @@ const AppContent = () => {
           element={
             <>
               <Header />
-              <CreateGroup />
+              <div className="flex-grow">
+                <CreateGroup />
+              </div>
+              <Footer />
             </>
           } 
         />
@@ -72,7 +94,10 @@ const AppContent = () => {
           element={
             <>
               <Header />
-              <Dashboard />
+              <div className="flex-grow">
+                <Dashboard />
+              </div>
+              <Footer />
             </>
           } 
         />
@@ -81,7 +106,10 @@ const AppContent = () => {
           element={
             <>
               <Header />
-              <EditGroup />
+              <div className="flex-grow">
+                <EditGroup />
+              </div>
+              <Footer />
             </>
           } 
         />

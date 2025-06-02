@@ -135,13 +135,13 @@ const GroupCards = () => {
               className="text-3xl sm:text-4xl font-bold mb-2"
               style={{ color: 'rgb(238, 238, 238)' }}
             >
-              Discover Local Groops
+              Trending Groops
             </h2>
             <p 
               className="text-lg"
               style={{ color: 'rgb(156, 163, 175)' }}
             >
-              Join exciting activities and meet like-minded people in your area
+              Browse popular activities happening near you
             </p>
           </div>
           <div className="text-center sm:text-right">
@@ -170,7 +170,7 @@ const GroupCards = () => {
       {/* Horizontal Scrolling Group Cards - Full Width */}
       <div className="relative">
         <div 
-          className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide pl-4 sm:pl-6 lg:pl-8 pr-4 sm:pr-6 lg:pr-8"
+          className="flex gap-3 sm:gap-6 overflow-x-auto pb-4 scrollbar-hide pl-4 sm:pl-6 lg:pl-8 pr-4 sm:pr-6 lg:pr-8"
           style={{
             scrollSnapType: 'x mandatory',
             scrollbarWidth: 'none',
@@ -184,36 +184,33 @@ const GroupCards = () => {
           return (
             <div
               key={group.id}
-              className="group rounded-lg border backdrop-blur cursor-pointer flex-shrink-0"
+              className="group rounded-lg border backdrop-blur cursor-pointer flex-shrink-0 w-72 sm:w-80 lg:w-96"
               style={{
                 backgroundColor: 'rgba(25, 30, 35, 0.8)',
                 borderColor: 'rgba(0, 173, 181, 0.2)',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                width: '380px',
-                maxWidth: '380px',
-                minWidth: '380px',
                 scrollSnapAlign: 'center'
               }}
               onClick={() => navigate(`/groups/${group.id}`)}
             >
-              <div className="p-4">
+              <div className="p-3 sm:p-4">
                 {/* Header */}
-                <div className="flex flex-col gap-2 mb-2">
+                <div className="flex flex-col gap-1.5 sm:gap-2 mb-2">
                   <div className="flex-1 min-w-0">
-                    <div className="mb-2">
+                    <div className="mb-1.5 sm:mb-2">
                       {/* Title */}
                       <h3 
-                        className="text-lg font-semibold group-hover:text-cyan-400 transition-colors mb-1 line-clamp-2"
+                        className="text-base sm:text-lg font-semibold group-hover:text-cyan-400 transition-colors mb-1 line-clamp-2"
                         style={{ color: 'rgb(238, 238, 238)' }}
                       >
                         {group.name}
                       </h3>
                       
                       {/* Badges */}
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         {group.skill_level && (
                           <div
-                            className="px-2 py-1 rounded-full text-xs font-medium"
+                            className="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium"
                             style={{
                               backgroundColor: skillStyle.bg,
                               color: skillStyle.text
@@ -223,7 +220,7 @@ const GroupCards = () => {
                           </div>
                         )}
                         <div 
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                          className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium"
                           style={{
                             backgroundColor: getActivityTypeColor(group.activity_type) + '20',
                             color: getActivityTypeColor(group.activity_type)
@@ -236,31 +233,31 @@ const GroupCards = () => {
                     
                     {/* Description */}
                     <p 
-                      className="text-sm mb-2 line-clamp-2"
+                      className="text-xs sm:text-sm mb-1.5 sm:mb-2 line-clamp-2"
                       style={{ color: 'rgb(156, 163, 175)' }}
                     >
                       {group.description}
                     </p>
 
                     {/* Details */}
-                    <div className="space-y-2 text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
+                    <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
                       <div className="flex items-center">
-                        <Calendar size={14} className="mr-2 flex-shrink-0" />
+                        <Calendar size={12} className="mr-1.5 sm:mr-2 flex-shrink-0 sm:w-3.5 sm:h-3.5" />
                         <span className="truncate">{formatDate(group.date_time)}</span>
                       </div>
                       <div className="flex items-center">
-                        <MapPin size={14} className="mr-2 flex-shrink-0" />
+                        <MapPin size={12} className="mr-1.5 sm:mr-2 flex-shrink-0 sm:w-3.5 sm:h-3.5" />
                         <span className="truncate">{group.location?.formatted_address || group.location?.name || 'Location TBD'}</span>
                       </div>
                       <div className="flex items-center">
-                        <Users size={14} className="mr-2 flex-shrink-0" />
+                        <Users size={12} className="mr-1.5 sm:mr-2 flex-shrink-0 sm:w-3.5 sm:h-3.5" />
                         <span>{approvedMembers}/{group.max_members} members</span>
                         {group.cost > 0 && (
-                          <span className="mx-2">•</span>
+                          <span className="mx-1.5 sm:mx-2">•</span>
                         )}
                         {group.cost > 0 && (
                           <div className="flex items-center">
-                            <IndianRupee size={14} className="mr-1" />
+                            <IndianRupee size={12} className="mr-0.5 sm:mr-1 sm:w-3.5 sm:h-3.5" />
                             <span>{group.cost}</span>
                           </div>
                         )}
@@ -269,12 +266,12 @@ const GroupCards = () => {
                   </div>
 
                   {/* Member Avatars */}
-                  <div className="pt-3 border-t" style={{ borderColor: 'rgba(75, 85, 99, 0.3)' }}>
-                    <div className="flex items-center -space-x-2 overflow-hidden">
-                      {/* Show approved members (up to 6 for horizontal layout) */}
+                  <div className="pt-2 sm:pt-3 border-t" style={{ borderColor: 'rgba(75, 85, 99, 0.3)' }}>
+                    <div className="flex items-center -space-x-1.5 sm:-space-x-2 overflow-hidden">
+                      {/* Show approved members (up to 5 on mobile, 6 on larger screens) */}
                       {(() => {
                         const approvedMembersList = group.members?.filter(m => m.status === 'approved') || []
-                        const maxSlotsToShow = Math.min(6, group.max_members)
+                        const maxSlotsToShow = Math.min(window.innerWidth < 640 ? 5 : 6, group.max_members)
                         const membersToShow = approvedMembersList.slice(0, maxSlotsToShow)
                         const emptySlots = Math.max(0, maxSlotsToShow - membersToShow.length)
                         
@@ -300,7 +297,7 @@ const GroupCards = () => {
                               return (
                                 <div
                                   key={member.username}
-                                  className="relative w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-medium flex-shrink-0"
+                                  className="relative w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center text-xs font-medium flex-shrink-0"
                                   style={{
                                     backgroundColor: bgColor + '20',
                                     borderColor: 'rgb(15, 20, 25)',
@@ -336,7 +333,7 @@ const GroupCards = () => {
                             {Array.from({ length: emptySlots }).map((_, index) => (
                               <div
                                 key={`empty-${index}`}
-                                className="relative w-7 h-7 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0"
+                                className="relative w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0"
                                 style={{
                                   borderColor: 'rgba(156, 163, 175, 0.4)',
                                   backgroundColor: 'rgba(156, 163, 175, 0.1)',
@@ -345,7 +342,7 @@ const GroupCards = () => {
                                 title="Available spot"
                               >
                                 <div
-                                  className="w-2 h-2 rounded-full"
+                                  className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full"
                                   style={{
                                     backgroundColor: 'rgba(156, 163, 175, 0.6)'
                                   }}
@@ -356,14 +353,14 @@ const GroupCards = () => {
                         )
                       })()}
 
-                      {/* Show +X remaining if there are more spots beyond the 6 displayed */}
-                      {group.max_members > 6 && (
-                        <div className="flex items-center ml-2 flex-shrink-0">
+                      {/* Show +X remaining if there are more spots beyond the displayed */}
+                      {group.max_members > (window.innerWidth < 640 ? 5 : 6) && (
+                        <div className="flex items-center ml-1.5 sm:ml-2 flex-shrink-0">
                           <span 
                             className="text-xs font-medium"
                             style={{ color: 'rgb(156, 163, 175)' }}
                           >
-                            +{group.max_members - 6}
+                            +{group.max_members - (window.innerWidth < 640 ? 5 : 6)}
                           </span>
                         </div>
                       )}

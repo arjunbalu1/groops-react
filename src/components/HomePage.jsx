@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import Hero from '@/components/Hero'
 import GroupCards from '@/components/GroupCards'
+import Footer from '@/components/Footer'
 
 const HomePage = () => {
   // Scroll to top when entering homepage
@@ -176,6 +177,7 @@ const HomePage = () => {
         <div className="relative" style={{ zIndex: 1 }}>
           <Hero />
           <GroupCards />
+          <Footer />
         </div>
       </div>
     </>
