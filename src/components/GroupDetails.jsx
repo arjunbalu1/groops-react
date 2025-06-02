@@ -8,7 +8,7 @@ const GroupDetails = () => {
   const { groupId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, signIn } = useAuth()
   
   const [group, setGroup] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -1823,7 +1823,7 @@ const GroupDetails = () => {
               
               {isNonMember && (
                 <button
-                  onClick={handleJoinGroup}
+                  onClick={user?.authenticated ? handleJoinGroup : signIn}
                   disabled={joinLoading}
                   className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors"
                   style={{
@@ -1832,7 +1832,12 @@ const GroupDetails = () => {
                   }}
                 >
                   <UserPlus size={16} />
-                  {joinLoading ? 'Joining...' : 'Join Groop'}
+                  {joinLoading 
+                    ? 'Joining...' 
+                    : user?.authenticated 
+                      ? 'Join Groop' 
+                      : 'Sign in and Join Now'
+                  }
                 </button>
               )}
               

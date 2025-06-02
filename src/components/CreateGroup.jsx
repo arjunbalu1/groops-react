@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 
 const CreateGroup = () => {
   const navigate = useNavigate()
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, signIn } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -50,15 +50,16 @@ const CreateGroup = () => {
   const activitySubTypes = {
     sport: [
       'Badminton', 'Football', 'Cricket', 'Tennis', 'Table Tennis', 'Basketball',
-      'Swimming', 'Volleyball', 'Hockey', 'Running', 'Cycling', 'Boxing'
+      'Swimming', 'Volleyball', 'Running', 'Cycling', 'Boxing', 'Something Else?'
     ],
     social: [
-      'Drinking', '420', 'Chai Sutta', 'Music', 'Movies', 'Food', 'Coffee',
-      'Chill Hangout', 'Party', 'Street Food Adventure', 'Karaoke', 'Dancing'
+      'Drinking', '420', 'Chill Hangout', 'Party', 'Chai Sutta', 'Music', 'Movies', 'Food', 'Coffee',
+      'Karaoke', 'Dancing', 'Something Else?'
     ],
     games: [
-      'Board Games', 'Video Games', 'Card Games', 'Chess', 'Poker', 'Dungeons & Dragons',
-      'Escape Room', 'Trivia', 'Arcade Games', 'Pool/Billiards', 'Darts', 'Mini Golf'
+      'Board Games', 'Chess', 'Poker', 'Pool/Billiards', 'Dota 2', 'League of Legends', 
+      'Counter-Strike 2', 'Fortnite', 'Valorant', 'Rainbow Six Siege', 'Rocket League', 
+      'Call of Duty', 'Apex Legends', 'PUBG', 'Something Else?'
     ]
   }
   
@@ -67,6 +68,7 @@ const CreateGroup = () => {
   // Activity selection state
   const [selectedMainActivity, setSelectedMainActivity] = useState('')
   const [selectedSubActivity, setSelectedSubActivity] = useState('')
+  const [customActivityInput, setCustomActivityInput] = useState('')
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
 
@@ -369,15 +371,6 @@ const CreateGroup = () => {
           agreesToGuidelines: false
         }))
       }
-      // If leaving step 3, reset activity selections
-      if (currentStep === 3) {
-        setSelectedMainActivity('')
-        setSelectedSubActivity('')
-        setFormData(prev => ({
-          ...prev,
-          activity_type: ''
-        }))
-      }
       setCurrentStep(currentStep - 1)
     }
   }
@@ -386,7 +379,12 @@ const CreateGroup = () => {
   const isCurrentStepValid = () => {
     switch (currentStep) {
       case 1: return formData.name.trim().length >= 5 && formData.description.trim().length >= 10
-      case 2: return selectedSubActivity !== '' && formData.activity_type !== ''
+      case 2: {
+        if (selectedMainActivity === 'custom') {
+          return customActivityInput.trim().length >= 3 && formData.activity_type !== ''
+        }
+        return selectedSubActivity !== '' && formData.activity_type !== ''
+      }
       case 3: {
         // Check if all required fields are filled
         if (!formData.date || !formData.time || !formData.location.place_id) {
@@ -517,30 +515,107 @@ const CreateGroup = () => {
         ))}
       </div>
 
+      {/* Custom Activity Option */}
+      {!selectedMainActivity && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedMainActivity('custom')
+              setSelectedSubActivity('')
+              setCustomActivityInput('')
+              setFormData(prev => ({ ...prev, activity_type: '' }))
+            }}
+            className={`px-4 sm:px-6 py-3 sm:py-4 rounded-lg sm:rounded-xl transition-all duration-200 hover:scale-105 text-sm sm:text-base relative overflow-hidden max-w-md w-full ${
+              selectedMainActivity === 'custom'
+                ? 'border-2 border-dashed border-amber-400 bg-gradient-to-r from-amber-500/25 via-orange-500/20 to-red-500/25 text-amber-300 shadow-lg shadow-amber-500/20'
+                : 'border-2 border-dashed border-amber-500/50 bg-gradient-to-r from-amber-900/30 via-orange-900/20 to-red-900/30 text-amber-200 hover:border-amber-400 hover:from-amber-500/20 hover:via-orange-500/15 hover:to-red-500/20 hover:shadow-md hover:shadow-amber-500/10'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+              <span className="font-medium">Something Else?</span>
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+            </div>
+            <div className="text-xs sm:text-sm opacity-80 mt-1">Create your own unique activity</div>
+          </button>
+        </div>
+      )}
+
+      {/* Custom Activity Input */}
+      {selectedMainActivity === 'custom' && (
+        <div className="mt-4 pt-4 border-t border-gray-700">
+          <div className="text-sm font-medium text-gray-300 mb-3">
+            Tell us about your custom activity:
+          </div>
+          <div className="max-w-md mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="e.g., Photography Walk, Book Club, Cooking Session..."
+                value={customActivityInput}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setCustomActivityInput(value)
+                  setFormData(prev => ({ ...prev, activity_type: value.trim() || 'Something Else?' }))
+                }}
+                className="w-full px-4 py-3 bg-gray-800/50 border-2 border-dashed border-amber-500/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-400 focus:bg-gradient-to-r focus:from-amber-900/20 focus:to-orange-900/20 transition-all text-sm sm:text-base"
+                maxLength={50}
+              />
+              <Sparkles className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-amber-400 opacity-60" />
+            </div>
+            <div className="mt-2 text-xs text-gray-400 text-center">
+              {customActivityInput.length}/50 characters
+              {customActivityInput.trim().length >= 3 && (
+                <span className="ml-2 text-green-400">✓ Looks good!</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sub-Activity Selection */}
-      {selectedMainActivity && (
+      {selectedMainActivity && selectedMainActivity !== 'custom' && (
         <div className="mt-4 pt-4 border-t border-gray-700">
           <div className="text-sm font-medium text-gray-300 mb-3">
             Choose specific {selectedMainActivity} activity:
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-            {activitySubTypes[selectedMainActivity].map((subType) => (
-              <button
-                key={subType}
-                type="button"
-                onClick={() => {
-                  setSelectedSubActivity(subType)
-                  setFormData(prev => ({ ...prev, activity_type: subType }))
-                }}
-                className={`p-2 sm:p-3 rounded-lg border transition-all duration-200 hover:scale-105 text-xs sm:text-sm ${
-                  selectedSubActivity === subType
-                    ? 'border-teal-500 bg-teal-500/10 text-teal-300'
-                    : 'border-gray-600 bg-gray-800/30 text-gray-300 hover:border-teal-400'
-                }`}
-              >
-                {subType}
-              </button>
-            ))}
+            {activitySubTypes[selectedMainActivity].map((subType) => {
+              const isCustomOption = subType === 'Something Else?'
+              return (
+                <button
+                  key={subType}
+                  type="button"
+                  onClick={() => {
+                    if (subType === 'Something Else?') {
+                      // Redirect to custom activity input
+                      setSelectedMainActivity('custom')
+                      setSelectedSubActivity('')
+                      setCustomActivityInput('')
+                      setFormData(prev => ({ ...prev, activity_type: '' }))
+                    } else {
+                      setSelectedSubActivity(subType)
+                      setFormData(prev => ({ ...prev, activity_type: subType }))
+                    }
+                  }}
+                  className={`p-2 sm:p-3 rounded-lg transition-all duration-200 hover:scale-105 text-xs sm:text-sm relative overflow-hidden ${
+                    selectedSubActivity === subType
+                      ? isCustomOption
+                        ? 'border-2 border-dashed border-amber-400 bg-gradient-to-br from-amber-500/25 via-orange-500/20 to-red-500/25 text-amber-300 shadow-lg shadow-amber-500/20'
+                        : 'border border-teal-500 bg-teal-500/10 text-teal-300'
+                      : isCustomOption
+                        ? 'border-2 border-dashed border-amber-500/50 bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-red-900/30 text-amber-200 hover:border-amber-400 hover:from-amber-500/20 hover:via-orange-500/15 hover:to-red-500/20 hover:shadow-md hover:shadow-amber-500/10'
+                        : 'border border-gray-600 bg-gray-800/30 text-gray-300 hover:border-teal-400'
+                  }`}
+                >
+                  {isCustomOption && (
+                    <Sparkles className="w-3 h-3 absolute top-1 right-1 text-amber-400 opacity-70" />
+                  )}
+                  {subType}
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
@@ -931,17 +1006,36 @@ const CreateGroup = () => {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(15, 20, 25)' }}>
-        <div className="text-center">
-          <AlertCircle size={48} className="mx-auto mb-4" style={{ color: 'rgb(239, 68, 68)' }} />
-          <h2 className="text-xl font-bold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
-            Login Required
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="relative mb-6">
+            <Sparkles size={48} className="mx-auto mb-2" style={{ color: 'rgb(0, 173, 181)' }} />
+            <div className="absolute -top-2 -right-2">
+              <Sparkles size={24} className="animate-pulse" style={{ color: 'rgb(34, 211, 238)' }} />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
+            Ready to bring people together?
           </h2>
-          <p className="mb-4" style={{ color: 'rgb(156, 163, 175)' }}>
-            You need to be logged in to create groop.
+          <p className="mb-6 text-lg leading-relaxed" style={{ color: 'rgb(156, 163, 175)' }}>
+            Join our amazing community to start creating groops and connecting with like-minded people in your area! 
+            It's quick, free, and opens up a world of new friendships.
           </p>
-          <Button onClick={() => navigate('/login')}>
-            Sign In
-          </Button>
+          <div className="space-y-3">
+            <Button 
+              onClick={() => signIn()}
+              className="w-full py-3 text-lg font-semibold"
+              style={{
+                background: 'linear-gradient(135deg, rgb(0, 173, 181) 0%, rgb(34, 211, 238) 100%)',
+                border: 'none'
+              }}
+            >
+              <Users className="w-5 h-5 mr-2" />
+              Join the Community
+            </Button>
+            <p className="text-sm opacity-75" style={{ color: 'rgb(156, 163, 175)' }}>
+              ✨ Takes less than 30 seconds • Completely free • No spam ever
+            </p>
+          </div>
         </div>
       </div>
     )
