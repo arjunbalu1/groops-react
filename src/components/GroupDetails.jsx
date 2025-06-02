@@ -54,6 +54,7 @@ const GroupDetails = () => {
   const [sendingMessage, setSendingMessage] = useState(false)
   const [loadingOlderMessages, setLoadingOlderMessages] = useState(false)
   const [hasMoreMessages, setHasMoreMessages] = useState(true)
+  const [isInitialChatLoad, setIsInitialChatLoad] = useState(true)
   const messagesEndRef = useRef(null)
   const messageInputRef = useRef(null) // Add ref for message input
 
@@ -1094,7 +1095,11 @@ const GroupDetails = () => {
   useEffect(() => {
     if (group && (isMember || isOrganizer)) {
       fetchMessages()
-      scrollToBottom() // Scroll to bottom on initial load to show latest messages
+      // Only scroll to bottom on initial load, not on 30s group data refreshes
+      if (isInitialChatLoad) {
+        scrollToBottom()
+        setIsInitialChatLoad(false)
+      }
     }
   }, [group, isMember, isOrganizer])
 
