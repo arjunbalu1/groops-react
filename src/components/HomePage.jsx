@@ -63,6 +63,21 @@ const HomePage = () => {
           100% { transform: translate(-40px, 25px) rotate(-360deg); opacity: 0; }
         }
         
+        @keyframes bounce-in {
+          0% { 
+            transform: translateY(100px) scale(0.8); 
+            opacity: 0; 
+          }
+          50% { 
+            transform: translateY(-10px) scale(1.02); 
+            opacity: 0.8; 
+          }
+          100% { 
+            transform: translateY(0) scale(1); 
+            opacity: 1; 
+          }
+        }
+        
         .flicker-light-1 {
           animation: flicker-1 2.3s ease-in-out infinite;
         }
@@ -85,6 +100,10 @@ const HomePage = () => {
         
         .drift-sparkle-reverse {
           animation: sparkle-drift-reverse 3.5s linear infinite;
+        }
+        
+        .animate-bounce-in {
+          animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
         }
         
         /* Sparkle shapes */

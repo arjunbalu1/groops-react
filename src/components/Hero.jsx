@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Sparkles, Users, Zap } from 'lucide-react'
+import { Plus, Sparkles, Users, Zap, X } from 'lucide-react'
 
 const Hero = () => {
   const navigate = useNavigate()
@@ -8,6 +8,8 @@ const Hero = () => {
     activeUsers: '...',
     groups: '...'
   })
+  const [adminMessage, setAdminMessage] = useState(null)
+  const [showAdminBubble, setShowAdminBubble] = useState(false)
 
   // Get API base URL from environment variables
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
@@ -34,9 +36,140 @@ const Hero = () => {
     fetchStats()
   }, [API_BASE_URL])
 
+  // Fetch admin message
+  useEffect(() => {
+    const fetchAdminMessage = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/adminmessage`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.status === 'active') {
+            setAdminMessage(data)
+            // Show bubble after a short delay for better UX
+            setTimeout(() => setShowAdminBubble(true), 2000)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch admin message:', error)
+      }
+    }
+
+    fetchAdminMessage()
+  }, [API_BASE_URL])
+
   return (
     <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="relative pt-1 xs:pt-2 sm:pt-3 lg:pt-4 pb-1 sm:pb-2 lg:pb-3">
+        
+        {/* Floating Admin Message Bubble */}
+        {adminMessage && showAdminBubble && (
+          <div className="fixed bottom-6 right-6 z-50 max-w-sm animate-bounce-in">
+            <div 
+              className="relative rounded-2xl border shadow-2xl p-4 backdrop-blur-md transition-all duration-300 hover:scale-105"
+              style={{
+                backgroundColor: 'rgba(25, 30, 35, 0.95)',
+                borderColor: 'rgba(0, 173, 181, 0.3)',
+                boxShadow: '0 20px 40px rgba(0, 173, 181, 0.2), 0 0 60px rgba(34, 211, 238, 0.1)'
+              }}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setShowAdminBubble(false)}
+                className="absolute top-2 right-2 p-1 rounded-full hover:bg-red-500/20 transition-colors"
+                style={{ color: 'rgb(156, 163, 175)' }}
+              >
+                <X size={16} />
+              </button>
+
+              {/* Header with Arjun's avatar */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="relative">
+                  <img
+                    src={`${API_BASE_URL}/profiles/Arjun/image`}
+                    alt="Arjun"
+                    className="w-10 h-10 rounded-full border-2 object-cover"
+                    style={{ borderColor: 'rgb(0, 173, 181)' }}
+                    onError={(e) => {
+                      // Fallback to initials if image fails to load
+                      e.target.style.display = 'none'
+                      e.target.nextSibling.style.display = 'flex'
+                    }}
+                  />
+                  <div
+                    className="w-10 h-10 rounded-full border-2 items-center justify-center text-sm font-bold"
+                    style={{ 
+                      borderColor: 'rgb(0, 173, 181)',
+                      backgroundColor: 'rgba(0, 173, 181, 0.2)',
+                      color: 'rgb(0, 173, 181)',
+                      display: 'none'
+                    }}
+                  >
+                    AR
+                  </div>
+                  {/* Online indicator */}
+                  <div 
+                    className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2"
+                    style={{ 
+                      backgroundColor: 'rgb(34, 197, 94)',
+                      borderColor: 'rgb(25, 30, 35)'
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold text-sm" style={{ color: 'rgb(238, 238, 238)' }}>
+                      Arjun
+                    </span>
+                    <div 
+                      className="px-1.5 py-0.5 rounded-full text-xs font-medium"
+                      style={{ 
+                        backgroundColor: 'rgba(0, 173, 181, 0.2)',
+                        color: 'rgb(0, 173, 181)'
+                      }}
+                    >
+                      Admin
+                    </div>
+                  </div>
+                  <p className="text-xs" style={{ color: 'rgb(156, 163, 175)' }}>
+                    Platform Message
+                  </p>
+                </div>
+              </div>
+
+              {/* Message content */}
+              <div className="space-y-2">
+                <p className="text-sm leading-relaxed" style={{ color: 'rgb(238, 238, 238)' }}>
+                  {adminMessage.message}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
+                    {new Date(adminMessage.timestamp).toLocaleDateString()}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <div 
+                      className="w-2 h-2 rounded-full animate-pulse"
+                      style={{ backgroundColor: 'rgb(34, 197, 94)' }}
+                    />
+                    <span className="text-xs" style={{ color: 'rgb(34, 197, 94)' }}>
+                      {adminMessage.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Speech bubble tail */}
+              <div 
+                className="absolute bottom-0 right-6 w-0 h-0 transform translate-y-full"
+                style={{
+                  borderLeft: '8px solid transparent',
+                  borderRight: '8px solid transparent',
+                  borderTop: '8px solid rgba(25, 30, 35, 0.95)'
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Hero Content */}
         <div className="relative text-center">
             
