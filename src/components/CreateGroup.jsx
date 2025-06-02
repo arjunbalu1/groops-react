@@ -263,6 +263,17 @@ const CreateGroup = () => {
       return
     }
     
+    // Extra protection: only allow submission on step 5 with valid form and guidelines checked
+    if (currentStep !== 5) {
+      console.warn('Form submission attempted from step', currentStep, '- blocking')
+      return
+    }
+    
+    if (!formData.agreesToGuidelines) {
+      setError('You must agree to the community guidelines')
+      return
+    }
+    
     const validationError = validateForm()
     if (validationError) {
       setError(validationError)
@@ -334,6 +345,13 @@ const CreateGroup = () => {
 
   const prevStep = () => {
     if (currentStep > 1) {
+      // If leaving step 5, reset the guidelines agreement
+      if (currentStep === 5) {
+        setFormData(prev => ({
+          ...prev,
+          agreesToGuidelines: false
+        }))
+      }
       setCurrentStep(currentStep - 1)
     }
   }
@@ -341,8 +359,8 @@ const CreateGroup = () => {
   // Check if current step is valid
   const isCurrentStepValid = () => {
     switch (currentStep) {
-      case 1: return formData.activity_type !== ''
-      case 2: return formData.name.trim().length >= 5 && formData.description.trim().length >= 10
+      case 1: return formData.name.trim().length >= 5 && formData.description.trim().length >= 10
+      case 2: return formData.activity_type !== ''
       case 3: {
         // Check if all required fields are filled
         if (!formData.date || !formData.time || !formData.location.place_id) {
@@ -365,15 +383,15 @@ const CreateGroup = () => {
     switch (currentStep) {
       case 1:
         return {
-          title: "What kind of activity are you organizing?",
-          subtitle: "This helps us connect you with the right people!",
-          encouragement: "Let's get started! 🚀"
-        }
-      case 2:
-        return {
           title: "Tell us about your groop",
           subtitle: "Give it a name and describe what it's all about!",
           encouragement: formData.name.trim().length >= 5 ? "Great choice! 🎯" : ""
+        }
+      case 2:
+        return {
+          title: "What kind of activity are you organizing?",
+          subtitle: "This helps us connect you with the right people!",
+          encouragement: "Let's get started! 🚀"
         }
       case 3:
         return {
@@ -398,33 +416,8 @@ const CreateGroup = () => {
     }
   }
 
-  // Step 1: Activity Type Selection
+  // Step 1: Group Name and Description (was step 2)
   const renderStep1 = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3">
-        {activityTypes.map((type) => (
-          <button
-            key={type}
-            type="button"
-            onClick={() => handleInputChange('activity_type', type)}
-            className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
-              formData.activity_type === type
-                ? 'border-teal-500 bg-teal-500/10 text-teal-300'
-                : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:border-teal-400'
-            }`}
-          >
-            <div className="text-sm sm:text-lg">
-              {type === 'games' ? '🎮' : type === 'social' ? '🍽️' : type === 'educational' ? '📚' : '🏃‍♂️'}
-            </div>
-            <div className="text-xs sm:text-sm font-medium">{type.charAt(0).toUpperCase() + type.slice(1)}</div>
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-
-  // Step 2: Group Name and Description
-  const renderStep2 = () => (
     <div className="space-y-3 sm:space-y-4">
       <div>
         <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5 sm:mb-2">Groop Name *</label>
@@ -460,6 +453,31 @@ const CreateGroup = () => {
             (min 10)
           </span>
         </div>
+      </div>
+    </div>
+  )
+
+  // Step 2: Activity Type Selection (was step 1)
+  const renderStep2 = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3">
+        {activityTypes.map((type) => (
+          <button
+            key={type}
+            type="button"
+            onClick={() => handleInputChange('activity_type', type)}
+            className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+              formData.activity_type === type
+                ? 'border-teal-500 bg-teal-500/10 text-teal-300'
+                : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:border-teal-400'
+            }`}
+          >
+            <div className="text-sm sm:text-lg">
+              {type === 'games' ? '🎮' : type === 'social' ? '🍽️' : type === 'educational' ? '📚' : '🏃‍♂️'}
+            </div>
+            <div className="text-xs sm:text-sm font-medium">{type.charAt(0).toUpperCase() + type.slice(1)}</div>
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -791,7 +809,10 @@ const CreateGroup = () => {
       {currentStep < totalSteps ? (
         <button
           type="button"
-          onClick={nextStep}
+          onClick={(e) => {
+            e.preventDefault()
+            nextStep()
+          }}
           disabled={!isCurrentStepValid()}
           className={`flex items-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-colors text-sm sm:text-base ${
             isCurrentStepValid()
