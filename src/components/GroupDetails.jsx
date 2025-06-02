@@ -103,7 +103,7 @@ const GroupDetails = () => {
     
     // Show toast if coming from notification
     if (location.state?.fromNotification) {
-      showToast('Refreshing group details...', 'success')
+      showToast('Refreshing groop details...', 'success')
     }
   }, [location.state?.fromNotification])
 
@@ -127,7 +127,7 @@ const GroupDetails = () => {
           uniqueMembers.forEach(username => fetchMemberProfile(username, false))
         }
       } catch (err) {
-        console.error('Error auto-refreshing group data:', err)
+        console.error('Error auto-refreshing groop data:', err)
       }
     }
 
@@ -243,9 +243,9 @@ const GroupDetails = () => {
         
         if (!response.ok) {
           if (response.status === 404) {
-            setError('Group not found')
+            setError('Groop not found')
           } else {
-            setError('Failed to load group details')
+            setError('Failed to load groop details')
           }
           return
         }
@@ -265,8 +265,8 @@ const GroupDetails = () => {
         }
         
       } catch (err) {
-        console.error('Error fetching group details:', err)
-        setError('Failed to load group details')
+        console.error('Error fetching groop details:', err)
+        setError('Failed to load groop details')
       } finally {
         setLoading(false)
       }
@@ -406,11 +406,11 @@ const GroupDetails = () => {
         showToast('Join request sent successfully!', 'success')
       } else {
         const data = await response.json()
-        showToast(data.error || 'Failed to join group')
+        showToast(data.error || 'Failed to join groop')
       }
     } catch (err) {
-      console.error('Error joining group:', err)
-      showToast('Failed to join group')
+      console.error('Error joining groop:', err)
+      showToast('Failed to join groop')
     } finally {
       setJoinLoading(false)
     }
@@ -430,11 +430,11 @@ const GroupDetails = () => {
         navigate('/')
       } else {
         const data = await response.json()
-        showToast(data.error || 'Failed to leave group')
+        showToast(data.error || 'Failed to leave groop')
       }
     } catch (err) {
-      console.error('Error leaving group:', err)
-      showToast('Failed to leave group')
+      console.error('Error leaving groop:', err)
+      showToast('Failed to leave groop')
     } finally {
       setLeaveLoading(false)
       setLeaveModalOpen(false)
@@ -465,7 +465,7 @@ const GroupDetails = () => {
                 : member
             ) || []
           }))
-          showToast(`${username} has been approved to join the group`, 'success')
+          showToast(`${username} has been approved to join the groop`, 'success')
         } else if (action === 'reject') {
           // Remove member from group entirely
           setGroup(prev => ({
@@ -506,7 +506,7 @@ const GroupDetails = () => {
         
         // Remove from pending members if they were there
         setPendingMembers(prev => prev.filter(member => member.username !== username))
-        showToast(`${username} has been removed from the group`, 'success')
+        showToast(`${username} has been removed from the groop`, 'success')
       } else {
         const data = await response.json()
         showToast(data.error || 'Failed to remove member')
@@ -950,11 +950,11 @@ const GroupDetails = () => {
         navigate('/')
       } else {
         const data = await response.json()
-        showToast(data.error || 'Failed to delete group')
+        showToast(data.error || 'Failed to delete groop')
       }
     } catch (err) {
-      console.error('Error deleting group:', err)
-      showToast('Failed to delete group')
+      console.error('Error deleting groop:', err)
+      showToast('Failed to delete groop')
     } finally {
       setDeleteLoading(false)
       setDeleteModalOpen(false)
@@ -1189,10 +1189,10 @@ const GroupDetails = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
-                  Leave Group
+                  Leave Groop
                 </h3>
                 <p className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
-                  You can rejoin later if the group is still active
+                  You can rejoin later if the groop is still active
                 </p>
               </div>
             </div>
@@ -1203,7 +1203,7 @@ const GroupDetails = () => {
                 Are you sure you want to leave <strong style={{ color: 'rgb(238, 238, 238)' }}>"{group?.name}"</strong>?
               </p>
               <p className="text-sm" style={{ color: 'rgb(156, 163, 175)', lineHeight: '1.5' }}>
-                You will no longer receive updates about this group and won't be able to participate in the event.
+                You will no longer receive updates about this groop and won't be able to participate in the event.
               </p>
             </div>
 
@@ -1241,7 +1241,7 @@ const GroupDetails = () => {
                 ) : (
                   <>
                     <UserX size={16} />
-                    Leave Group
+                    Leave Groop
                   </>
                 )}
               </button>
@@ -1289,7 +1289,7 @@ const GroupDetails = () => {
                   Remove Member
                 </h3>
                 <p className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
-                  This action will remove them from the group
+                  This action will remove them from the groop
                 </p>
               </div>
             </div>
@@ -1297,10 +1297,10 @@ const GroupDetails = () => {
             {/* Content */}
             <div className="mb-6">
               <p className="mb-3" style={{ color: 'rgb(201, 209, 217)', lineHeight: '1.5' }}>
-                Are you sure you want to remove <strong style={{ color: 'rgb(238, 238, 238)' }}>{memberToRemove}</strong> from this group?
+                Are you sure you want to remove <strong style={{ color: 'rgb(238, 238, 238)' }}>{memberToRemove}</strong> from this groop?
               </p>
               <p className="text-sm" style={{ color: 'rgb(156, 163, 175)', lineHeight: '1.5' }}>
-                They will no longer be able to participate in the event and will lose access to the group chat.
+                They will no longer be able to participate in the event and will lose access to the groop chat.
               </p>
             </div>
 
@@ -1549,7 +1549,7 @@ const GroupDetails = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold" style={{ color: 'rgb(238, 238, 238)' }}>
-                  Delete Group
+                  Delete Groop
                 </h3>
                 <p className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
                   This action cannot be undone
@@ -1566,7 +1566,7 @@ const GroupDetails = () => {
                 This will permanently remove:
               </p>
               <ul className="text-sm mt-2 space-y-1" style={{ color: 'rgb(156, 163, 175)' }}>
-                <li>• All group data and settings</li>
+                <li>• All groop data and settings</li>
                 <li>• All member information</li>
                 <li>• All notifications and activity logs</li>
                 <li>• The event and location details</li>
@@ -1607,7 +1607,7 @@ const GroupDetails = () => {
                 ) : (
                   <>
                     <Trash2 size={16} />
-                    Delete Group
+                    Delete Groop
                   </>
                 )}
               </button>
@@ -1774,7 +1774,7 @@ const GroupDetails = () => {
                       }
                     }}
                     disabled={isEventTooSoon()}
-                    title={isEventTooSoon() ? "Cannot edit group within 1 hour of the event" : "Edit group details"}
+                    title={isEventTooSoon() ? "Cannot edit groop within 1 hour of the event" : "Edit groop details"}
                   >
                     <Edit size={16} />
                     Edit
@@ -1813,7 +1813,7 @@ const GroupDetails = () => {
                       }
                     }}
                     disabled={isEventTooSoon()}
-                    title={isEventTooSoon() ? "Cannot delete group within 1 hour of the event" : "Delete group permanently"}
+                    title={isEventTooSoon() ? "Cannot delete groop within 1 hour of the event" : "Delete groop permanently"}
                   >
                     <Trash2 size={16} />
                     Delete
@@ -1832,7 +1832,7 @@ const GroupDetails = () => {
                   }}
                 >
                   <UserPlus size={16} />
-                  {joinLoading ? 'Joining...' : 'Join Group'}
+                  {joinLoading ? 'Joining...' : 'Join Groop'}
                 </button>
               )}
               
@@ -2176,7 +2176,7 @@ const GroupDetails = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold flex items-center gap-2" style={{ color: 'rgb(238, 238, 238)' }}>
                 <MessageCircle size={20} style={{ color: 'rgb(0, 173, 181)' }} />
-                Group Chat
+                Groop Chat
               </h3>
             </div>
 

@@ -235,7 +235,7 @@ const Groops = () => {
       const response = await fetch(`${API_BASE_URL}/groups?${queryString}`)
       
       if (!response.ok) {
-        throw new Error('Failed to fetch groups')
+        throw new Error('Failed to fetch groops')
       }
       
       const data = await response.json()
@@ -262,7 +262,7 @@ const Groops = () => {
       
     } catch (err) {
       setError(err.message)
-      console.error('Error fetching groups:', err)
+      console.error('Error fetching groops:', err)
     } finally {
       setLoading(false)
       setLoadingMore(false)
@@ -364,8 +364,8 @@ const Groops = () => {
             </h1>
             <p style={{ color: 'rgb(156, 163, 175)' }}>
               {userLocation ? 
-                `Discover and join groups within 50km of ${isUsingPreciseLocation ? 'your current location' : userLocation.address}` :
-                'Discover and join groups that match your interests'
+                `Discover and join groops within 50km of ${isUsingPreciseLocation ? 'your current location' : userLocation.address}` :
+                'Discover and join groops that match your interests'
               }
             </p>
           </div>
@@ -422,7 +422,7 @@ const Groops = () => {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search groups..."
+                placeholder="Search groops..."
                 className="pl-10"
                 style={{
                   backgroundColor: 'rgba(31, 41, 55, 0.5)',
@@ -854,7 +854,7 @@ const Groops = () => {
             {!hasMore && groups.length > 0 && (
               <div className="text-center py-8">
                 <p className="text-sm" style={{ color: 'rgb(107, 114, 128)' }}>
-                  No more groups to load
+                  No more groops to load
                 </p>
               </div>
             )}
@@ -867,14 +867,14 @@ const Groops = () => {
             <div className="mb-4">
               <Search size={48} className="mx-auto mb-4 opacity-50" style={{ color: 'rgb(156, 163, 175)' }} />
               <h3 className="text-xl font-semibold mb-2" style={{ color: 'rgb(238, 238, 238)' }}>
-                No groups found
+                No groops found
               </h3>
               <p style={{ color: 'rgb(156, 163, 175)' }}>
                 {searchQuery || selectedActivityType || selectedSkillLevel 
                   ? 'Try adjusting your search or filters'
                   : userLocation 
-                    ? `No groups found within 50km of ${isUsingPreciseLocation ? 'your current location' : userLocation.address}` 
-                    : 'No groups available at the moment'
+                    ? `No groops found within 50km of ${isUsingPreciseLocation ? 'your current location' : userLocation.address}` 
+                    : 'No groops available at the moment'
                 }
               </p>
             </div>

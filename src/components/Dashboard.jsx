@@ -118,7 +118,7 @@ const Dashboard = () => {
                   if (pendingResponse.ok) {
                     const pendingMembers = await pendingResponse.json()
                     pendingMembersData[membership.group_id] = pendingMembers
-                    console.log(`Fetched ${pendingMembers.length} pending members for group ${membership.group_id}`)
+                    console.log(`Fetched ${pendingMembers.length} pending members for groop ${membership.group_id}`)
                   }
                 } catch (pendingErr) {
                   console.error('Error fetching pending members for group:', membership.group_id, pendingErr)
@@ -138,7 +138,7 @@ const Dashboard = () => {
       setUpcomingGroups(sortedUpcomingGroups)
       setGroupPendingMembers(pendingMembersData)
     } catch (err) {
-      console.error('Error fetching upcoming groups:', err)
+      console.error('Error fetching upcoming groops:', err)
     } finally {
       setUpcomingGroupsLoading(false)
     }
@@ -406,7 +406,7 @@ const Dashboard = () => {
                       <div className="p-4 max-h-64 overflow-y-auto">
                         {pastGroups.length === 0 ? (
                           <p className="text-sm text-center py-4" style={{ color: 'rgb(156, 163, 175)' }}>
-                            No past groups yet
+                            No past groops yet
                           </p>
                         ) : (
                           <div className="space-y-2">
@@ -560,7 +560,7 @@ const Dashboard = () => {
                     No Upcoming Groops
                   </p>
                   <p className="text-xs mt-1" style={{ color: 'rgb(107, 114, 128)' }}>
-                    Join or create a group to see it here
+                    Join or create a groop to see it here
                   </p>
                 </div>
               )}

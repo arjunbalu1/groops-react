@@ -1,7 +1,7 @@
 {
   "name": "Groops - Find Your People, Join Your Tribe",
   "short_name": "Groops",
-  "description": "Join activity-based groups in your area. From sports to social events, find like-minded people and create lasting connections.",
+  "description": "Join activity-based groops in your area. From sports to social events, find like-minded people and create lasting connections.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -43,9 +43,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Find Groups",
+      "name": "Find Groops",
       "short_name": "Find",
-      "description": "Discover groups in your area",
+      "description": "Discover groops in your area",
       "url": "/?action=find",
       "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     }

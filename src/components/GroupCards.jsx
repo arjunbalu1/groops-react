@@ -42,7 +42,7 @@ const GroupCards = () => {
       try {
         const response = await fetch(`${API_BASE_URL}/groups?limit=${GROUPS_TO_FETCH}&sort=created_desc`)
         if (!response.ok) {
-          throw new Error('Failed to fetch groups')
+          throw new Error('Failed to fetch groops')
         }
         const data = await response.json()
         setGroups(data || [])
@@ -59,7 +59,7 @@ const GroupCards = () => {
         })
       } catch (err) {
         setError(err.message)
-        console.error('Error fetching groups:', err)
+        console.error('Error fetching groops:', err)
       } finally {
         setLoading(false)
       }
@@ -106,7 +106,7 @@ const GroupCards = () => {
             style={{ borderColor: 'rgb(0, 173, 181)', borderTopColor: 'transparent' }}
           />
           <p className="mt-4" style={{ color: 'rgb(156, 163, 175)' }}>
-            Loading groups...
+            Loading groops...
           </p>
         </div>
       </section>
@@ -118,7 +118,7 @@ const GroupCards = () => {
       <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
           <p style={{ color: 'rgb(239, 68, 68)' }}>
-            Error loading groups: {error}
+            Error loading groops: {error}
           </p>
         </div>
       </section>

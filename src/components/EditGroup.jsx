@@ -54,9 +54,9 @@ const EditGroup = () => {
         
         if (!response.ok) {
           if (response.status === 404) {
-            setError('Group not found')
+            setError('Groop not found')
           } else {
-            setError('Failed to load group details')
+            setError('Failed to load groop details')
           }
           return
         }
@@ -66,7 +66,7 @@ const EditGroup = () => {
         
         // Check if user is the organizer
         if (data.organizer_username !== user?.username) {
-          setError('Only the organizer can edit this group')
+          setError('Only the organizer can edit this groop')
           return
         }
         
@@ -98,8 +98,8 @@ const EditGroup = () => {
         setLocationSearch(data.location?.formatted_address || '')
         
       } catch (err) {
-        console.error('Error fetching group details:', err)
-        setError('Failed to load group details')
+        console.error('Error fetching groop details:', err)
+        setError('Failed to load groop details')
       } finally {
         setFetchLoading(false)
       }
@@ -381,7 +381,7 @@ const EditGroup = () => {
                 }}
               >
                 <ArrowLeft className="w-4 h-4 inline mr-2" />
-                Back to Group
+                Back to Groop
               </button>
             </div>
           </div>
@@ -401,7 +401,7 @@ const EditGroup = () => {
               Groop Updated Successfully!
             </h2>
             <p style={{ color: 'rgb(156, 163, 175)' }}>
-              Redirecting you back to the group page...
+              Redirecting you back to the groop page...
             </p>
           </div>
         </div>

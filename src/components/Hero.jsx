@@ -55,7 +55,7 @@ const Hero = () => {
               className="text-lg xs:text-xl sm:text-2xl lg:text-3xl mb-4 xs:mb-6 max-w-4xl mx-auto leading-relaxed"
               style={{ color: 'rgb(156, 163, 175)' }}
             >
-              Turn your interests into real connections. Find local groups, join exciting activities, 
+              Turn your interests into real connections. Find local groops, join exciting activities, 
               and meet people who get you - all in one place.
             </p>
 
