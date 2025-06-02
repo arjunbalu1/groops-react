@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Calendar, MapPin, Users, IndianRupee, MessageCircle, Settings, UserPlus, UserX, Edit, Trash2, Check, X, Clock } from 'lucide-react'
+import { Calendar, MapPin, Users, IndianRupee, MessageCircle, Settings, UserPlus, UserX, Edit, Trash2, Check, X, Clock, Send } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 const GroupDetails = () => {
@@ -48,7 +48,34 @@ const GroupDetails = () => {
   // Toast notification state
   const [toasts, setToasts] = useState([])
 
+  // Chat state
+  const [messages, setMessages] = useState([])
+  const [newMessage, setNewMessage] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false)
+  const [hasMoreMessages, setHasMoreMessages] = useState(true)
+  const messagesEndRef = useRef(null)
+  const messageInputRef = useRef(null) // Add ref for message input
+
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
+
+  // Get user's membership status - moved here to be accessible throughout component
+  const getUserMembershipStatus = () => {
+    if (!user?.username || !group) return 'non-member'
+    
+    if (group.organizer_username === user.username) return 'organizer'
+    
+    const member = group.members?.find(m => m.username === user.username)
+    if (!member) return 'non-member'
+    
+    return member.status // 'approved', 'pending', etc.
+  }
+
+  const membershipStatus = getUserMembershipStatus()
+  const isOrganizer = membershipStatus === 'organizer'
+  const isMember = membershipStatus === 'approved'
+  const isPending = membershipStatus === 'pending'
+  const isNonMember = membershipStatus === 'non-member'
 
   // Toast notification functions
   const showToast = (message, type = 'error') => {
@@ -348,18 +375,6 @@ const GroupDetails = () => {
     const now = new Date()
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
     return eventTime <= oneHourFromNow
-  }
-
-  // Get user's membership status
-  const getUserMembershipStatus = () => {
-    if (!user?.username || !group) return 'non-member'
-    
-    if (group.organizer_username === user.username) return 'organizer'
-    
-    const member = group.members?.find(m => m.username === user.username)
-    if (!member) return 'non-member'
-    
-    return member.status // 'approved', 'pending', etc.
   }
 
   // Join group
@@ -951,7 +966,149 @@ const GroupDetails = () => {
     setDeleteModalOpen(true)
   }
 
-  // Toast Container Component
+  // Chat functions
+  const fetchMessages = async (isInitialLoad = true) => {
+    if (!groupId || (!isMember && !isOrganizer)) return
+
+    try {
+      // For initial load, get the latest 50 messages
+      const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}/messages?limit=50`, {
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Reverse the array since backend returns newest first, but we want oldest first for chat UI
+        const reversedMessages = data.messages.reverse()
+        
+        if (isInitialLoad) {
+          setMessages(reversedMessages)
+          // Check if we got fewer than 50 messages, meaning there are no more
+          setHasMoreMessages(data.messages.length === 50)
+        } else {
+          // For polling updates, only add new messages that aren't already in the state
+          setMessages(prev => {
+            const lastMessageId = prev.length > 0 ? prev[prev.length - 1].id : 0
+            const newMessages = reversedMessages.filter(msg => msg.id > lastMessageId)
+            
+            // If there are new messages, scroll to bottom after state update
+            if (newMessages.length > 0) {
+              setTimeout(() => {
+                scrollToBottom()
+              }, 100)
+            }
+            
+            return [...prev, ...newMessages]
+          })
+        }
+      } else {
+        console.error('Failed to fetch messages:', response.status)
+      }
+    } catch (err) {
+      console.error('Error fetching messages:', err)
+    }
+  }
+
+  const loadOlderMessages = async () => {
+    if (!groupId || (!isMember && !isOrganizer) || !hasMoreMessages || loadingOlderMessages) return
+
+    setLoadingOlderMessages(true)
+    try {
+      // Get the oldest message ID to fetch messages before it
+      const oldestMessageId = messages.length > 0 ? messages[0].id : 0
+      const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}/messages?limit=50&before=${oldestMessageId}`, {
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.messages.length > 0) {
+          // Reverse the array since backend returns newest first
+          const reversedMessages = data.messages.reverse()
+          setMessages(prev => [...reversedMessages, ...prev])
+          
+          // Check if we got fewer than 50 messages, meaning there are no more
+          setHasMoreMessages(data.messages.length === 50)
+        } else {
+          setHasMoreMessages(false)
+        }
+      } else {
+        console.error('Failed to fetch older messages:', response.status)
+      }
+    } catch (err) {
+      console.error('Error fetching older messages:', err)
+    } finally {
+      setLoadingOlderMessages(false)
+    }
+  }
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || sendingMessage) return
+
+    setSendingMessage(true)
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ content: newMessage.trim() })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setMessages(prev => [...prev, data.message])
+        setNewMessage('')
+        scrollToBottom()
+        // Refocus the input after sending message
+        setTimeout(() => {
+          messageInputRef.current?.focus()
+        }, 50)
+      } else {
+        const errorData = await response.json()
+        showToast(errorData.error || 'Failed to send message', 'error')
+      }
+    } catch (err) {
+      console.error('Error sending message:', err)
+      showToast('Failed to send message', 'error')
+    } finally {
+      setSendingMessage(false)
+    }
+  }
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
+
+  // Fetch messages when group loads or membership status changes
+  useEffect(() => {
+    if (group && (isMember || isOrganizer)) {
+      fetchMessages()
+      scrollToBottom() // Scroll to bottom on initial load to show latest messages
+    }
+  }, [group, isMember, isOrganizer])
+
+  // Poll for new messages every 5 seconds
+  useEffect(() => {
+    if (!group || (!isMember && !isOrganizer)) return
+
+    const interval = setInterval(() => {
+      fetchMessages(false) // Pass false for polling updates to avoid resetting state
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [group, isMember, isOrganizer])
+
   const ToastContainer = () => {
     if (toasts.length === 0) return null
 
@@ -1229,12 +1386,6 @@ const GroupDetails = () => {
   }
 
   if (!group) return null
-
-  const membershipStatus = getUserMembershipStatus()
-  const isOrganizer = membershipStatus === 'organizer'
-  const isMember = membershipStatus === 'approved'
-  const isPending = membershipStatus === 'pending'
-  const isNonMember = membershipStatus === 'non-member'
 
   const approvedMembers = group.members?.filter(m => m.status === 'approved') || []
   const nonOrganizerMembers = approvedMembers.filter(m => m.username !== group.organizer_username)
@@ -2013,7 +2164,7 @@ const GroupDetails = () => {
           </div>
         )}
 
-        {/* Chat Section - Placeholder for approved members */}
+        {/* Chat Section */}
         {(isMember || isOrganizer) && (
           <div 
             className="p-6 rounded-lg border mt-6"
@@ -2022,15 +2173,180 @@ const GroupDetails = () => {
               borderColor: 'rgba(75, 85, 99, 0.3)'
             }}
           >
-            <div className="flex items-center justify-center py-8">
-              <div className="text-center">
-                <MessageCircle size={48} style={{ color: 'rgba(75, 85, 99, 0.5)' }} className="mx-auto mb-3" />
-                <h4 className="font-medium mb-2" style={{ color: 'rgb(156, 163, 175)' }}>
-                  Group Chat
-                </h4>
-                <p className="text-sm" style={{ color: 'rgba(75, 85, 99, 0.8)' }}>
-                  Chat functionality coming soon
-                </p>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold flex items-center gap-2" style={{ color: 'rgb(238, 238, 238)' }}>
+                <MessageCircle size={20} style={{ color: 'rgb(0, 173, 181)' }} />
+                Group Chat
+              </h3>
+            </div>
+
+            {/* Messages Container */}
+            <div 
+              className="bg-gray-900/50 rounded-lg p-4 mb-4 max-h-80 overflow-y-auto"
+              style={{ 
+                backgroundColor: 'rgba(15, 20, 25, 0.8)',
+                border: '1px solid rgba(75, 85, 99, 0.2)'
+              }}
+            >
+              {messages.length === 0 ? (
+                <div className="text-center py-8">
+                  <MessageCircle size={48} style={{ color: 'rgba(75, 85, 99, 0.5)' }} className="mx-auto mb-3" />
+                  <p className="text-sm" style={{ color: 'rgb(156, 163, 175)' }}>
+                    No messages yet. Start the conversation!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Load More Messages Button */}
+                  {hasMoreMessages && (
+                    <div className="text-center pb-3">
+                      <button
+                        onClick={loadOlderMessages}
+                        disabled={loadingOlderMessages}
+                        className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        style={{
+                          backgroundColor: loadingOlderMessages ? 'rgba(75, 85, 99, 0.3)' : 'rgba(0, 173, 181, 0.2)',
+                          color: loadingOlderMessages ? 'rgb(156, 163, 175)' : 'rgb(0, 173, 181)',
+                          border: `1px solid ${loadingOlderMessages ? 'rgba(75, 85, 99, 0.5)' : 'rgba(0, 173, 181, 0.3)'}`,
+                          cursor: loadingOlderMessages ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        {loadingOlderMessages ? (
+                          <>
+                            <div 
+                              className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin inline-block mr-2"
+                              style={{ borderColor: 'rgb(156, 163, 175)', borderTopColor: 'transparent' }}
+                            />
+                            Loading...
+                          </>
+                        ) : (
+                          'Load More Messages'
+                        )}
+                      </button>
+                    </div>
+                  )}
+                  
+                  {messages.map((message) => (
+                    <div key={message.id} className="flex items-start gap-3">
+                      {/* Avatar */}
+                      <div 
+                        className="w-8 h-8 rounded-full border overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        style={{ borderColor: message.username === group.organizer_username ? 'rgb(0, 173, 181)' : 'rgba(75, 85, 99, 0.5)' }}
+                        onClick={(event) => handleMemberClick(message.username, event)}
+                      >
+                        {memberProfiles[message.username]?.avatar_url ? (
+                          <img
+                            src={`${API_BASE_URL}/profiles/${message.username}/image`}
+                            alt={message.username}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div 
+                            className="w-full h-full flex items-center justify-center text-xs font-medium"
+                            style={{ 
+                              backgroundColor: message.username === group.organizer_username ? 'rgba(0, 173, 181, 0.2)' : 'rgba(75, 85, 99, 0.3)',
+                              color: message.username === group.organizer_username ? 'rgb(0, 173, 181)' : 'rgb(156, 163, 175)'
+                            }}
+                          >
+                            {message.username?.slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Message Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium" style={{ color: 'rgb(238, 238, 238)' }}>
+                            {memberProfiles[message.username]?.full_name || message.username}
+                          </span>
+                          {message.username === group.organizer_username && (
+                            <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0, 173, 181, 0.2)', color: 'rgb(0, 173, 181)' }}>
+                              Organizer
+                            </span>
+                          )}
+                          <span className="text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
+                            {new Date(message.created_at).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </span>
+                        </div>
+                        <p 
+                          className="text-sm break-words"
+                          style={{ 
+                            color: 'rgb(201, 209, 217)',
+                            wordWrap: 'break-word',
+                            lineHeight: '1.4'
+                          }}
+                        >
+                          {message.content}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
+
+            {/* Message Input */}
+            <div className="flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <textarea
+                    ref={messageInputRef}
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Type your message..."
+                    rows={2}
+                    disabled={sendingMessage}
+                    className="flex-1 min-w-0 px-3 sm:px-4 py-3 rounded-lg border resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                    style={{
+                      backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                      borderColor: 'rgba(107, 114, 128, 0.5)',
+                      color: 'rgb(238, 238, 238)',
+                      fontSize: '14px',
+                      minHeight: '80px' // Ensures consistent height
+                    }}
+                    maxLength={1000}
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim() || sendingMessage}
+                    className="px-2 sm:px-4 rounded-lg font-medium flex items-center justify-center gap-1 sm:gap-2 transition-colors flex-shrink-0"
+                    style={{
+                      backgroundColor: (!newMessage.trim() || sendingMessage) ? 'rgba(75, 85, 99, 0.5)' : 'rgb(0, 173, 181)',
+                      color: 'white',
+                      cursor: (!newMessage.trim() || sendingMessage) ? 'not-allowed' : 'pointer',
+                      height: '80px', // Match textarea height
+                      minWidth: '60px', // Smaller minimum width for mobile
+                      width: 'auto' // Allow button to size based on content
+                    }}
+                  >
+                    {sendingMessage ? (
+                      <>
+                        <div 
+                          className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
+                          style={{ borderColor: 'white', borderTopColor: 'transparent' }}
+                        />
+                        <span className="hidden md:inline text-sm">Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send size={16} className="flex-shrink-0" />
+                        <span className="hidden md:inline text-sm">Send</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="flex items-center justify-end mt-1">
+                  <div className="text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
+                    <span className="hidden sm:inline">Press Enter to send</span>
+                    <span className="sm:hidden">Tap to send</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
