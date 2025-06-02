@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
-import { Calendar, MapPin, Users, IndianRupee, Plus, AlertCircle, CheckCircle, ChevronRight, ArrowLeft, ArrowRight, Loader2, Sparkles, Tag, Target, Minus, Check } from 'lucide-react'
+import { Calendar, MapPin, Users, IndianRupee, Plus, AlertCircle, CheckCircle, ChevronRight, ArrowLeft, ArrowRight, Loader2, Sparkles, Tag, Target, Minus, Check, Trophy, PartyPopper, Gamepad2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -44,6 +44,30 @@ const CreateGroup = () => {
   const [showLocationResults, setShowLocationResults] = useState(false)
   const [debouncedLocationSearch, setDebouncedLocationSearch] = useState('')
 
+  // Activity types and skill levels
+  const activityTypes = ['sport', 'social', 'games']
+  
+  const activitySubTypes = {
+    sport: [
+      'Badminton', 'Football', 'Cricket', 'Tennis', 'Table Tennis', 'Basketball',
+      'Swimming', 'Volleyball', 'Hockey', 'Running', 'Cycling', 'Boxing'
+    ],
+    social: [
+      'Drinking', '420', 'Chai Sutta', 'Music', 'Movies', 'Food', 'Coffee',
+      'Chill Hangout', 'Sunset Vibes', 'Rooftop Party', 'Club Night', 'Late Night Food Run', 'Karaoke', 'Dancing'
+    ],
+    games: [
+      'Board Games', 'Video Games', 'Card Games', 'Chess', 'Poker', 'Dungeons & Dragons',
+      'Escape Room', 'Trivia', 'Arcade Games', 'Pool/Billiards', 'Darts', 'Mini Golf'
+    ]
+  }
+  
+  const skillLevels = ['beginner', 'intermediate', 'advanced']
+
+  // Activity selection state
+  const [selectedMainActivity, setSelectedMainActivity] = useState('')
+  const [selectedSubActivity, setSelectedSubActivity] = useState('')
+
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.groops.fun'
 
   // Check if Google Maps is already loaded (it should be loaded by LocationSearch in Header)
@@ -76,13 +100,6 @@ const CreateGroup = () => {
       clearTimeout(timeout)
     }
   }, [])
-
-  // Activity types and skill levels
-  const activityTypes = [
-    'sport', 'social', 'games', 'fitness', 'outdoor', 
-    'educational', 'arts', 'wellness', 'music', 'other'
-  ]
-  const skillLevels = ['beginner', 'intermediate', 'advanced']
 
   // Get activity type color
   const getActivityTypeColor = (type) => {
@@ -352,6 +369,15 @@ const CreateGroup = () => {
           agreesToGuidelines: false
         }))
       }
+      // If leaving step 3, reset activity selections
+      if (currentStep === 3) {
+        setSelectedMainActivity('')
+        setSelectedSubActivity('')
+        setFormData(prev => ({
+          ...prev,
+          activity_type: ''
+        }))
+      }
       setCurrentStep(currentStep - 1)
     }
   }
@@ -360,7 +386,7 @@ const CreateGroup = () => {
   const isCurrentStepValid = () => {
     switch (currentStep) {
       case 1: return formData.name.trim().length >= 5 && formData.description.trim().length >= 10
-      case 2: return formData.activity_type !== ''
+      case 2: return selectedSubActivity !== '' && formData.activity_type !== ''
       case 3: {
         // Check if all required fields are filled
         if (!formData.date || !formData.time || !formData.location.place_id) {
@@ -460,25 +486,64 @@ const CreateGroup = () => {
   // Step 2: Activity Type Selection (was step 1)
   const renderStep2 = () => (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3">
+      {/* Main Activity Categories */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {activityTypes.map((type) => (
           <button
             key={type}
             type="button"
-            onClick={() => handleInputChange('activity_type', type)}
+            onClick={() => {
+              setSelectedMainActivity(type)
+              setSelectedSubActivity('')
+              setFormData(prev => ({ ...prev, activity_type: '' }))
+            }}
             className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
-              formData.activity_type === type
+              selectedMainActivity === type
                 ? 'border-teal-500 bg-teal-500/10 text-teal-300'
                 : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:border-teal-400'
             }`}
           >
             <div className="text-sm sm:text-lg">
-              {type === 'games' ? '🎮' : type === 'social' ? '🍽️' : type === 'educational' ? '📚' : '🏃‍♂️'}
+              {type === 'games' ? (
+                <Gamepad2 className="w-4 h-4 sm:w-6 sm:h-6 mx-auto" />
+              ) : type === 'social' ? (
+                <PartyPopper className="w-4 h-4 sm:w-6 sm:h-6 mx-auto" />
+              ) : (
+                <Trophy className="w-4 h-4 sm:w-6 sm:h-6 mx-auto" />
+              )}
             </div>
             <div className="text-xs sm:text-sm font-medium">{type.charAt(0).toUpperCase() + type.slice(1)}</div>
           </button>
         ))}
       </div>
+
+      {/* Sub-Activity Selection */}
+      {selectedMainActivity && (
+        <div className="mt-4 pt-4 border-t border-gray-700">
+          <div className="text-sm font-medium text-gray-300 mb-3">
+            Choose specific {selectedMainActivity} activity:
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+            {activitySubTypes[selectedMainActivity].map((subType) => (
+              <button
+                key={subType}
+                type="button"
+                onClick={() => {
+                  setSelectedSubActivity(subType)
+                  setFormData(prev => ({ ...prev, activity_type: subType }))
+                }}
+                className={`p-2 sm:p-3 rounded-lg border transition-all duration-200 hover:scale-105 text-xs sm:text-sm ${
+                  selectedSubActivity === subType
+                    ? 'border-teal-500 bg-teal-500/10 text-teal-300'
+                    : 'border-gray-600 bg-gray-800/30 text-gray-300 hover:border-teal-400'
+                }`}
+              >
+                {subType}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 
