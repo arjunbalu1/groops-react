@@ -396,7 +396,18 @@ const CreateGroup = () => {
         const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
         return selectedDateTime > oneHourFromNow
       }
-      case 4: return formData.max_members && formData.max_members >= 2
+      case 4: {
+        // Check if max_members is valid (required and within range)
+        if (!formData.max_members || formData.max_members < 2 || formData.max_members > 50) {
+          return false
+        }
+        // Check if cost is valid (optional but if specified must be within range)
+        if (formData.cost !== null && formData.cost !== undefined && formData.cost !== '' && 
+            (formData.cost < 0 || formData.cost > 100000)) {
+          return false
+        }
+        return true
+      }
       case 5: return validateForm() === null
       default: return false
     }
