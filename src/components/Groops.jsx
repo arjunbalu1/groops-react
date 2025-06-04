@@ -21,6 +21,15 @@ const Groops = () => {
   const [selectedSkillLevel, setSelectedSkillLevel] = useState(searchParams.get('skill') || '')
   const [showFilters, setShowFilters] = useState(false)
   
+  // New filter states
+  const [minPrice, setMinPrice] = useState(searchParams.get('min_price') || '')
+  const [maxPrice, setMaxPrice] = useState(searchParams.get('max_price') || '')
+  const [dateFrom, setDateFrom] = useState(searchParams.get('date_from') || '')
+  const [dateTo, setDateTo] = useState(searchParams.get('date_to') || '')
+  const [minMembers, setMinMembers] = useState(searchParams.get('min_members') || '')
+  const [maxMembers, setMaxMembers] = useState(searchParams.get('max_members') || '')
+  const [radius, setRadius] = useState(searchParams.get('radius') || '')
+  
   // Location state for distance sorting
   const [userLocation, setUserLocation] = useState(null)
   const [locationLoading, setLocationLoading] = useState(true)
@@ -35,8 +44,9 @@ const Groops = () => {
 
   // Activity types for filter
   const activityTypes = [
-    'sport', 'social', 'games', 'fitness', 'outdoor', 
-    'educational', 'arts', 'wellness', 'music', 'other'
+    'cricket', 'football', 'basketball', 'tennis', 'badminton', 'swimming', 
+    'running', 'cycling', 'volleyball', 'yoga', 'chess', 'gaming', 
+    'photography', 'cooking', 'music', 'dancing'
   ]
 
   // Skill levels for filter
@@ -201,10 +211,26 @@ const Groops = () => {
     if (selectedActivityType) params.append('activity_type', selectedActivityType)
     if (selectedSkillLevel) params.append('skill_level', selectedSkillLevel)
     
+    // Price filters
+    if (minPrice && !isNaN(minPrice)) params.append('min_price', minPrice)
+    if (maxPrice && !isNaN(maxPrice)) params.append('max_price', maxPrice)
+    
+    // Date filters
+    if (dateFrom) params.append('date_from', dateFrom)
+    if (dateTo) params.append('date_to', dateTo)
+    
+    // Group size filters
+    if (minMembers && !isNaN(minMembers)) params.append('min_members', minMembers)
+    if (maxMembers && !isNaN(maxMembers)) params.append('max_members', maxMembers)
+    
     // Add location parameters for distance sorting
     if (userLocation) {
       params.append('user_lat', userLocation.lat.toString())
       params.append('user_lng', userLocation.lng.toString())
+      
+      // Add radius filter if specified
+      if (radius && !isNaN(radius)) params.append('radius', radius)
+      
       params.append('sort_by', 'distance')
       params.append('sort_order', 'asc')
     } else {
@@ -219,7 +245,7 @@ const Groops = () => {
     params.append('limit', limit.toString())
     
     return params.toString()
-  }, [debouncedSearchQuery, selectedActivityType, selectedSkillLevel, userLocation])
+  }, [debouncedSearchQuery, selectedActivityType, selectedSkillLevel, minPrice, maxPrice, dateFrom, dateTo, minMembers, maxMembers, radius, userLocation])
 
   // Fetch groups
   const fetchGroups = useCallback(async (pageNum = 1, append = false) => {
@@ -275,9 +301,16 @@ const Groops = () => {
     if (debouncedSearchQuery) params.set('search', debouncedSearchQuery)
     if (selectedActivityType) params.set('activity', selectedActivityType)
     if (selectedSkillLevel) params.set('skill', selectedSkillLevel)
+    if (minPrice) params.set('min_price', minPrice)
+    if (maxPrice) params.set('max_price', maxPrice)
+    if (dateFrom) params.set('date_from', dateFrom)
+    if (dateTo) params.set('date_to', dateTo)
+    if (minMembers) params.set('min_members', minMembers)
+    if (maxMembers) params.set('max_members', maxMembers)
+    if (radius) params.set('radius', radius)
     
     setSearchParams(params)
-  }, [debouncedSearchQuery, selectedActivityType, selectedSkillLevel, setSearchParams])
+  }, [debouncedSearchQuery, selectedActivityType, selectedSkillLevel, minPrice, maxPrice, dateFrom, dateTo, minMembers, maxMembers, radius, setSearchParams])
 
   // Fetch groups when filters change
   useEffect(() => {
@@ -303,6 +336,13 @@ const Groops = () => {
     setDebouncedSearchQuery('')
     setSelectedActivityType('')
     setSelectedSkillLevel('')
+    setMinPrice('')
+    setMaxPrice('')
+    setDateFrom('')
+    setDateTo('')
+    setMinMembers('')
+    setMaxMembers('')
+    setRadius('')
     setShowFilters(false)
   }
 
@@ -445,9 +485,9 @@ const Groops = () => {
             >
               <Filter size={16} />
               Filters
-              {(selectedActivityType || selectedSkillLevel) && (
+              {(selectedActivityType || selectedSkillLevel || minPrice || maxPrice || dateFrom || dateTo || minMembers || maxMembers || radius) && (
                 <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {[selectedActivityType, selectedSkillLevel].filter(Boolean).length}
+                  {[selectedActivityType, selectedSkillLevel, minPrice, maxPrice, dateFrom, dateTo, minMembers, maxMembers, radius].filter(Boolean).length}
                 </span>
               )}
             </Button>
@@ -462,11 +502,11 @@ const Groops = () => {
                 borderColor: 'rgba(0, 173, 181, 0.2)'
               }}
             >
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold" style={{ color: 'rgb(238, 238, 238)' }}>
                   Filters
                 </h3>
-                {(searchQuery || selectedActivityType || selectedSkillLevel) && (
+                {(searchQuery || selectedActivityType || selectedSkillLevel || minPrice || maxPrice || dateFrom || dateTo || minMembers || maxMembers || radius) && (
                   <Button
                     onClick={clearFilters}
                     variant="ghost"
@@ -479,54 +519,168 @@ const Groops = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Activity Type Filter */}
-                <div>
-                  <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
-                    Activity Type
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {activityTypes.map(type => (
-                      <button
-                        key={type}
-                        onClick={() => setSelectedActivityType(selectedActivityType === type ? '' : type)}
-                        className="p-2 rounded-lg text-sm font-medium transition-colors text-left"
-                        style={{
-                          backgroundColor: selectedActivityType === type ? getActivityTypeColor(type) + '20' : 'rgba(75, 85, 99, 0.2)',
-                          color: selectedActivityType === type ? getActivityTypeColor(type) : 'rgb(156, 163, 175)',
-                          border: selectedActivityType === type ? `1px solid ${getActivityTypeColor(type)}` : '1px solid rgba(75, 85, 99, 0.3)'
-                        }}
-                      >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </button>
-                    ))}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  {/* Activity Type Filter */}
+                  <div>
+                    <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
+                      Activity Type
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {activityTypes.map(type => (
+                        <button
+                          key={type}
+                          onClick={() => setSelectedActivityType(selectedActivityType === type ? '' : type)}
+                          className="p-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 text-left"
+                          style={{
+                            backgroundColor: selectedActivityType === type ? getActivityTypeColor(type) + '20' : 'rgba(75, 85, 99, 0.2)',
+                            color: selectedActivityType === type ? getActivityTypeColor(type) : 'rgb(156, 163, 175)',
+                            border: selectedActivityType === type ? `1px solid ${getActivityTypeColor(type)}` : '1px solid rgba(75, 85, 99, 0.3)'
+                          }}
+                        >
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Skill Level Filter */}
+                  <div>
+                    <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
+                      Skill Level
+                    </label>
+                    <div className="space-y-2">
+                      {skillLevels.map(level => {
+                        const skillStyle = getSkillLevelBadge(level)
+                        return (
+                          <button
+                            key={level}
+                            onClick={() => setSelectedSkillLevel(selectedSkillLevel === level ? '' : level)}
+                            className="w-full p-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 text-left"
+                            style={{
+                              backgroundColor: selectedSkillLevel === level ? skillStyle.bg : 'rgba(75, 85, 99, 0.2)',
+                              color: selectedSkillLevel === level ? skillStyle.text : 'rgb(156, 163, 175)',
+                              border: selectedSkillLevel === level ? `1px solid ${skillStyle.text}` : '1px solid rgba(75, 85, 99, 0.3)'
+                            }}
+                          >
+                            {level.charAt(0).toUpperCase() + level.slice(1)}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Price Range Filter */}
+                  <div>
+                    <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
+                      Price Range (₹)
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="number"
+                          placeholder="Min"
+                          value={minPrice}
+                          onChange={(e) => setMinPrice(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg text-sm bg-gray-800/50 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          min="0"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          placeholder="Max"
+                          value={maxPrice}
+                          onChange={(e) => setMaxPrice(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg text-sm bg-gray-800/50 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          min="0"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Skill Level Filter */}
-                <div>
-                  <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
-                    Skill Level
-                  </label>
-                  <div className="space-y-2">
-                    {skillLevels.map(level => {
-                      const skillStyle = getSkillLevelBadge(level)
-                      return (
-                        <button
-                          key={level}
-                          onClick={() => setSelectedSkillLevel(selectedSkillLevel === level ? '' : level)}
-                          className="w-full p-2 rounded-lg text-sm font-medium transition-colors text-left"
-                          style={{
-                            backgroundColor: selectedSkillLevel === level ? skillStyle.bg : 'rgba(75, 85, 99, 0.2)',
-                            color: selectedSkillLevel === level ? skillStyle.text : 'rgb(156, 163, 175)',
-                            border: selectedSkillLevel === level ? `1px solid ${skillStyle.text}` : '1px solid rgba(75, 85, 99, 0.3)'
-                          }}
-                        >
-                          {level.charAt(0).toUpperCase() + level.slice(1)}
-                        </button>
-                      )
-                    })}
+                {/* Right Column */}
+                <div className="space-y-6">
+                  {/* Date Range Filter */}
+                  <div>
+                    <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
+                      Date Range
+                    </label>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">From</label>
+                        <input
+                          type="date"
+                          value={dateFrom}
+                          onChange={(e) => setDateFrom(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg text-sm bg-gray-800/50 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">To</label>
+                        <input
+                          type="date"
+                          value={dateTo}
+                          onChange={(e) => setDateTo(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg text-sm bg-gray-800/50 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Group Size Filter */}
+                  <div>
+                    <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
+                      Group Size
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="number"
+                          placeholder="Min members"
+                          value={minMembers}
+                          onChange={(e) => setMinMembers(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg text-sm bg-gray-800/50 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          min="1"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          placeholder="Max members"
+                          value={maxMembers}
+                          onChange={(e) => setMaxMembers(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg text-sm bg-gray-800/50 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          min="1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Radius Filter (only show if user has location) */}
+                  {userLocation && (
+                    <div>
+                      <label className="block text-sm font-medium mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
+                        Distance Radius (km)
+                      </label>
+                      <div className="space-y-3">
+                        <input
+                          type="number"
+                          placeholder="e.g., 10"
+                          value={radius}
+                          onChange={(e) => setRadius(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg text-sm bg-gray-800/50 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          min="1"
+                        />
+                        <div className="text-xs text-gray-400">
+                          {isUsingPreciseLocation ? 'From your current location' : `From ${userLocation.address}`}
+                          {radius && ` • Within ${radius}km`}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

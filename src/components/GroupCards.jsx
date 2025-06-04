@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, Users, IndianRupee } from 'lucide-react'
+import { Calendar, MapPin, Users, IndianRupee, Plus } from 'lucide-react'
 
 const GroupCards = () => {
   const navigate = useNavigate()
@@ -120,6 +120,79 @@ const GroupCards = () => {
           <p style={{ color: 'rgb(239, 68, 68)' }}>
             Error loading groops: {error}
           </p>
+        </div>
+      </section>
+    )
+  }
+
+  // Empty state when no groups are available
+  if (!loading && groups.length === 0) {
+    return (
+      <section className="py-6">
+        {/* Section Header - Constrained */}
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end">
+            <div className="text-center sm:text-left mb-4 sm:mb-0">
+              <h2 
+                className="text-3xl sm:text-4xl font-bold mb-2"
+                style={{ color: 'rgb(238, 238, 238)' }}
+              >
+                Trending Groops
+              </h2>
+              <p 
+                className="text-lg"
+                style={{ color: 'rgb(156, 163, 175)' }}
+              >
+                Browse popular activities happening near you
+              </p>
+            </div>
+            <div className="text-center sm:text-right">
+              <button
+                className="text-xl font-bold transition-colors hover:underline"
+                style={{ 
+                  color: 'rgb(34, 211, 238)',
+                  textShadow: '0 0 10px rgba(34, 211, 238, 0.4), 0 0 20px rgba(34, 211, 238, 0.2)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.color = 'rgb(255, 255, 255)'
+                  e.target.style.textShadow = '0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = 'rgb(34, 211, 238)'
+                  e.target.style.textShadow = '0 0 10px rgba(34, 211, 238, 0.4), 0 0 20px rgba(34, 211, 238, 0.2)'
+                }}
+                onClick={() => navigate('/groops')}
+              >
+                See all Groops →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Empty State */}
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-16">
+            <div className="mb-6">
+              <div className="relative inline-block">
+                <Users size={64} className="mx-auto mb-4 opacity-50" style={{ color: 'rgb(0, 173, 181)' }} />
+                <div className="absolute -top-2 -right-2">
+                  <div 
+                    className="w-6 h-6 rounded-full animate-pulse"
+                    style={{ backgroundColor: 'rgb(34, 211, 238)' }}
+                  />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold mb-3" style={{ color: 'rgb(238, 238, 238)' }}>
+                No groops near you yet
+              </h3>
+              <p className="text-lg mb-2" style={{ color: 'rgb(156, 163, 175)' }}>
+                Be the first to bring your community together! 🌟
+              </p>
+              <p className="text-sm max-w-md mx-auto" style={{ color: 'rgb(107, 114, 128)' }}>
+                Start something amazing - create the first groop in your area and watch your community come alive with new connections and friendships.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
     )
