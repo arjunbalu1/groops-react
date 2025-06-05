@@ -1,5 +1,5 @@
 import React from 'react'
-import { Heart, Mail } from 'lucide-react'
+import { Github } from 'lucide-react'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
@@ -29,48 +29,23 @@ const Footer = () => {
             </span>
           </div>
 
-          {/* Center - Links */}
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
-            <div 
-              className="hover:text-cyan-400 transition-colors cursor-pointer"
-              style={{ color: 'rgb(156, 163, 175)' }}
-            >
-              About
-            </div>
-            <div 
-              className="hover:text-cyan-400 transition-colors cursor-pointer"
-              style={{ color: 'rgb(156, 163, 175)' }}
-            >
-              Privacy
-            </div>
-            <div 
-              className="hover:text-cyan-400 transition-colors cursor-pointer"
-              style={{ color: 'rgb(156, 163, 175)' }}
-            >
-              Terms
-            </div>
-            <div 
-              className="hover:text-cyan-400 transition-colors cursor-pointer"
-              style={{ color: 'rgb(156, 163, 175)' }}
-            >
-              Support
-            </div>
-          </div>
-
           {/* Right side - Social & Copyright */}
           <div className="flex flex-col sm:items-end gap-2">
             <div className="flex items-center gap-3">
-              <div 
-                className="hover:text-cyan-400 transition-colors cursor-pointer"
+              <a 
+                href="https://github.com/arjunbalu1" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-cyan-400 transition-colors cursor-pointer"
                 style={{ color: 'rgb(156, 163, 175)' }}
-                title="Contact us"
+                title="GitHub Profile"
               >
-                <Mail size={16} />
-              </div>
+                <Github size={20} />
+                <span className="text-sm">github</span>
+              </a>
             </div>
             <div className="flex items-center gap-1 text-xs" style={{ color: 'rgb(107, 114, 128)' }}>
-              <span>Made with</span>
-              <Heart size={12} className="text-red-400" />
+              <span>made by arjun balu</span>
               <span>© {currentYear} Groops</span>
             </div>
           </div>
