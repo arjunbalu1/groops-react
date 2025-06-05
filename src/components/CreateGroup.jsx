@@ -53,7 +53,7 @@ const CreateGroup = () => {
       'Swimming', 'Volleyball', 'Running', 'Cycling', 'Boxing', 'Something Else?'
     ],
     social: [
-      'Drinking', '420', 'Chill Hangout', 'Party', 'Chai Sutta', 'Music', 'Movies', 'Food', 'Coffee',
+      'Networking', 'Book Club', 'Chill Hangout', 'Party', 'Art & Crafts', 'Music', 'Movies', 'Food', 'Coffee',
       'Karaoke', 'Dancing', 'Something Else?'
     ],
     games: [
