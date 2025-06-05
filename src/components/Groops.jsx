@@ -28,7 +28,7 @@ const Groops = () => {
   const [dateTo, setDateTo] = useState(searchParams.get('date_to') || '')
   const [minMembers, setMinMembers] = useState(searchParams.get('min_members') || '')
   const [maxMembers, setMaxMembers] = useState(searchParams.get('max_members') || '')
-  const [radius, setRadius] = useState(searchParams.get('radius') || '50')
+  const [radius, setRadius] = useState(searchParams.get('radius') || '')
   
   // Location state for distance sorting
   const [userLocation, setUserLocation] = useState(null)
@@ -404,7 +404,7 @@ const Groops = () => {
             </h1>
             <p style={{ color: 'rgb(156, 163, 175)' }}>
               {userLocation ? 
-                `Discover and join groops within ${radius || '50'}km of ${isUsingPreciseLocation ? 'your current location' : userLocation.address}` :
+                (radius ? `Discover and join groops within ${radius}km of ${isUsingPreciseLocation ? 'your current location' : userLocation.address}` : 'Discover and join all groops worldwide') :
                 'Discover and join groops that match your interests'
               }
             </p>
@@ -1027,7 +1027,7 @@ const Groops = () => {
                 {searchQuery || selectedActivityType || selectedSkillLevel 
                   ? 'Try adjusting your search or filters'
                   : userLocation 
-                    ? `No groops found within ${radius || '50'}km of ${isUsingPreciseLocation ? 'your current location' : userLocation.address}` 
+                    ? (radius ? `No groops found within ${radius}km of ${isUsingPreciseLocation ? 'your current location' : userLocation.address}` : 'No groops found worldwide')
                     : 'No groops available at the moment'
                 }
               </p>
